@@ -7,10 +7,7 @@ agents:
 - OpenCode (DeepSeek V4.1 Flash)
 humans:
 - '@Selene0623'
-date: '2026-10-05'
-links:
-- https://open-source-modding.github.io
-- https://github.com/Open-Source-Modding/open-source-modding.github.io
+date: '2026-10-06'
 tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolchain, ubisoft]
 ---
 # Disrupt engine cross-game toolchain: picking tools for WD1, WD2 and Legion
@@ -19,9 +16,9 @@ tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolc
 > silently corrupt your data. Disrupt is a Dunia 2 (Far Cry 3) fork, so tool conventions and the
 > compiled-XML object serialization run through Far Cry 3–6 too — but the container and the details
 > fork per game (WD1/WD2 pack `Depload`, WDL packs `BigFile`; Dunia uses `FAT2`/BigFile v11), so never
-> assume a tool or an offset carries across. Distilled from the Open-Source-Modding Disrupt/Far Cry
-> reference docs; no unpack→repack cycle was run by this agent for this note, and the per-claim source
-> is marked in the text.
+> assume a tool or an offset carries across. Distilled from an earlier public Disrupt/Far Cry reference
+> write-up by @Selene0623 (unlinked); no unpack→repack cycle was run by this agent for this note, and the
+> per-claim source is marked in the text.
 
 ## When to use it
 Any session on a Disrupt game: unpacking/repacking `.dat`/`.fat` archives, converting binary objects,
@@ -30,8 +27,13 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 ## How
 - **Unpack:** `UnpackLegion.exe` for WDL; `UnpackWD2.exe` for WD2; Gibbed.Disrupt for WD1 (archives
   under 4GB only).
-- **Pack:** DisruptManager (rootCBR) for WDL — packs only into `patch*` archives, it skips
-  `installpackage/`.
+- **Pack:** `Gibbed.Disrupt.Packing.dll [OPTIONS]+ <output.fat> <input_dir>+` is the tool that actually
+  works, and its fixes live on the [Open-Source-Modding Gibbed.Disrupt fork](https://github.com/Open-Source-Modding/Gibbed.Disrupt)
+  (`main` carries the BigFileV13 packer and the LZ4LW fix; the `x360-fat2-unpack-fix` branch carries the
+  X360 FAT2 entry decode). Options that matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack
+  version), `--cv` (compression version), `--nhv` (name hash version). It also **writes the `.nfo` next to
+  the `.fat` itself** — do not hand-roll one. DisruptManager (rootCBR) is the older WDL packer; it packs
+  only into `patch*` archives and skips `installpackage/`, so prefer Gibbed.
 - **Binary objects:** `Gibbed.Disrupt.ConvertBinaryObject.exe` — use the **WD2 build**, it is the one
   that handles WDL's binary objects.
 - **Where files load from — per game, not shared:** the priority list is hardcoded per title
@@ -61,14 +63,13 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
   dead at the time of writing, so the mod-set rules matter for arranged sessions on that community server,
   not for matchmaking.
 - **Anti-cheat status:** WD1 ships none. WD2 ships EasyAntiCheat: while EAC's service was live, modded files
-  tripped it and EAC-gated online play was closed to mods; the documented community launch parameter
-  `-eac_launcher` skips the check only by giving up multiplayer, so that route is single-player-only. WD2's
-  EAC service lapsed earlier in 2026 (reported by @Selene0623, 2026-10-05), so the check no longer runs and
-  modded multiplayer is gated by mod-set compatibility rather than by anti-cheat. WDL shipped BattlEye, whose
-  modified-file check trips on a patched DLL (documented bypass: `-BattlEyeLauncher`); BattlEye was removed in
-  the final WDL update, so the check no longer applies there. Online behaviour is nowhere in the reference
-  docs — it is community-reported only — and bypassing an anti-cheat client stays out of scope for anything
-  published here.
+  tripped it and EAC-gated online play was closed to mods, and the only known way past the check gives up
+  multiplayer, so that route is single-player-only. WD2's EAC service lapsed earlier in 2026 (reported by
+  @Selene0623, 2026-10-05), so the check no longer runs and modded multiplayer is gated by mod-set
+  compatibility rather than by anti-cheat. WDL shipped BattlEye, whose modified-file check trips on a patched
+  DLL; BattlEye was removed in the final WDL update, so the check no longer applies there. Online behaviour is
+  nowhere in the reference docs — it is community-reported only. Circumventing an anti-cheat client is out of
+  scope for anything published here, and no bypass is described or named.
 
 ## Gotchas
 1. **Symptom:** unpacked WDL files are garbage. **Cause:** UnpackWD2 or Gibbed.Disrupt was used on
@@ -98,14 +99,29 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
    character files crashing while another tool note claims support landed 2026-09-05, so test it on the
    actual file before promising anything.
 
+8. **Symptom:** `dotnet Gibbed.Disrupt.Packing.dll out.fat dir/` dies with *Nullable object must have a
+   value*. **Cause:** `--pv` was omitted (`Pack.cs` reads `Version = version.Value`). **Fix:** pass the pack
+   version explicitly — WD1/WD2 `--pv 8`, WDL `--pv 13 --cv 8 --nhv 70`.
+9. **Symptom:** unpack invocation errors with `Could not locate FAT file '8.fat'` (or any bare number).
+   **Cause:** `--jobs` was abbreviated to `-j`, and the value was parsed as the archive path. **Fix:** spell
+   it `--jobs=8` (or `--jobs 8`).
+10. **Symptom:** unpacking a retail archive throws `System.IO.FileNotFoundException: Could not load file or
+    assembly 'XCompression, Version=1.0.0.0'` from `EntryDecompression.DecompressXMemCompress`. **Cause:**
+    the archive's entries are XMemCompress-compressed and the `XCompression` dependency is missing/stale in
+    the build you are running (an uncompressed mod archive never hits this, so it can hide for a while).
+    **Fix:** rebuild the fork (the dependency is part of the solution), do not fall back to a global tool
+    install.
+11. **Symptom:** a repacked archive is accepted but the game renders nothing / boots into a black screen.
+    **Cause:** the container format is fine — pack/unpack was verified byte-for-byte; the *content* was
+    wrong (e.g. a whole-archive shader pack carrying bytecode the engine rejects silently). **Fix:** verify
+    by repacking the unmodified retail files through your own pipeline and testing that control pack before
+    blaming the packer.
+
 ## Seen in
 - No `knowledge/games/` note exists for WD1, WD2 or Legion yet. A Watch Dogs: Legion game note referenced by
   the first revision of this file is no longer in the tree (it was never committed), so its link is gone.
-- Source material: the Disrupt/Far Cry pages on the Open-Source-Modding site (links above), specifically
-  `disrupt/tool-gotchas`, `disrupt/installpackage-patch`, `disrupt/watch_dogs/archive-priorities`,
-  `disrupt/watch_dogs/hashing`, `disrupt/watch_dogs/fat-archive-format`,
-  `disrupt/watch_dogs_legion/modding-workflow`, `disrupt/watch_dogs_legion/vehicle-add-process` and
-  `disrupt/blender-addon`.
+- Source material: an earlier public Disrupt/Far Cry reference write-up by @Selene0623 (unlinked; page list
+  dropped on review).
 
 ---
 
@@ -118,14 +134,24 @@ still records WD2 character files crashing.
 
 **Clarified after review (2026-10-05, same session):** the anti-cheat and multiplayer bullets were rewritten
 once @Selene0623 filled in the online side. Mods do reach multiplayer, through a community NexusTools server;
-`-eac_launcher` costs multiplayer rather than being a free bypass; per-mod compatibility rules exist on top of
+skipping the anti-cheat check costs multiplayer rather than being a free bypass; per-mod compatibility rules exist on top of
 the same-mod requirement (WD2 Extended needs both players to have it, mismatch drops someone out of the
 session); and WD2's EAC service lapsed earlier in 2026, so nothing anti-cheat-related gates mods there any
 more. The earlier "mods and multiplayer do not work together" line was the pre-lapse state, not the current
 one.
 
-**Credits:** distilled from [Open-Source-Modding](https://open-source-modding.github.io) Disrupt and
-Far Cry reference docs, assembled by @Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
+**Corrections (2026-10-06, @Selene0623 with OpenCode/DeepSeek V4.1 Flash):** the pack/unpack story was
+rewritten against the fork that carries our fixes. `Gibbed.Disrupt.Packing.dll` is the working packer and it
+writes its own `.nfo`; `--pv` is mandatory (WD1/WD2 `--pv 8`, WDL `--pv 13 --cv 8 --nhv 70`); unpack takes
+`--jobs=N` (`-j 8` is parsed as an archive named `8.fat`); and `XCompression` missing from the build breaks
+unpacking of any compressed retail archive. Gotchas 8-11 were added for those. The link points at
+[Open-Source-Modding/Gibbed.Disrupt](https://github.com/Open-Source-Modding/Gibbed.Disrupt) rather than the
+upstream project, because the V13 packer, the LZ4LW offset fix and the CI fix are on that fork's `main`. The
+pairing of jobs and (prefer gibbed) tool is the same engine contract the WD1 shader-pack work
+(see the WD1 shader notes) relies on.
+
+**Credits:** distilled from an earlier public Disrupt and Far Cry reference write-up compiled by
+@Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
 Discord communities, with in-doc confirmations credited to Pesky Fly (HeySlickThatsMe, aka slick),
 qstlijku, and rootCBR (jason098/Cobra — same person). NexusTools multiplayer behaviour reported by
 @Selene0623 (2026-10-03) and marked unverified above.
