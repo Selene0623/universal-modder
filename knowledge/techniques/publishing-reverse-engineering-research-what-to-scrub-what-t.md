@@ -48,13 +48,11 @@ travel.
    Sweep the whole docs tree, including drafts and directories you think are out of scope.
 3. **Triage every hit into drop, genericise, or keep.** The keep list matters as much as the drop list: a
    scrub that strips documentation-target paths or a quoted tutorial's wording damages the note.
-4. **Secrets move; they do not just vanish.** Publish the shape, store the literals privately. For licence
-   keys that means: where in the file they live, the byte-level method that finds them, the format grammar,
-   and what each field means (client codename, module list, expiry date) — with the key strings themselves in
-   a local note under a gitignored directory. Prefer a workspace-level private file over a repo-local one, so a
-   future clone or worktree cannot inherit it. Keep the extraction method next to the keys: a scrub that
-   deletes the method turns the next researcher into a re-discoverer, and the method is the part that is
-   legitimately publishable.
+4. **Delete secrets; do not relocate them.** Third-party licence keys, tokens, activation data and serials
+   are deleted outright: keep none in the repo, none in a private file, and publish no extraction method.
+   A method for recovering someone else's keys is not publishable knowledge, however interesting the format
+   is. What stays is the shape: where in the file the value lives, the format grammar, and what each field
+   means (client codename, module list, expiry date).
 5. **Hunt the residue a scrub leaves behind.** Removing a link or a sentence leaves dangling prose: "samples
    available in ." where the path used to be, "cross-game work lives in" followed by an empty line, a table
    row whose only column is `AGENTS.md`, a sentence citing an internal file the reader cannot open. After the
@@ -67,13 +65,18 @@ travel.
 7. **Re-sweep the second checkout.** A scrub is per-tree, not per-repo. If a migration worktree, a branch or a
    stale clone exists, the pre-scrub text is still there — and it will be published the moment that branch
    merges.
+8. **Treat history and deploys as already published.** The working tree is not the boundary. A scrub changes
+   what the next commit contains, while the old blob stays reachable in git history and any built output
+   branch (`gh-pages`, a build artifact, a mirrored site) stays online on its own. Either rewrite history and
+   force-push, then confirm the deploy branch was replaced, or accept that everything ever committed to those
+   branches is public and act accordingly. The second option is what happens by default.
 
 What to drop, genericise and keep:
 
 | Hit | Verdict |
 |---|---|
 | Home directories, usernames, `~/Tools/...`, personal project paths, `/tmp` clone paths, internal research-repo paths | Drop, or genericise to the tool or repo name alone |
-| Licence keys, tokens, activation data, serials | Drop from the repo; keep in the private key file with the method |
+| Licence keys, tokens, activation data, serials | Drop entirely — delete the values, keep none privately, publish no extraction method |
 | Agent-only instruction files (`AGENTS.md`, internal notes) cited in public prose | Drop the reference, keep the fact |
 | Extracted game data paths under a personal workspace | Genericise to the unpack directory name, or drop |
 | Personal machine details: hostname, CPU/GPU model, distro tuning knobs, `~/.config` snippet, a Wine/Proton prefix path | Drop — the finding is the method, not the box it ran on |
@@ -122,6 +125,11 @@ What to drop, genericise and keep:
    upstream project, but the fix lives on a fork or branch (the packer change, the format fix, the CI repair).
    **Fix:** link the fork and name the branch, and say what it fixes; keep the upstream link too, so the note
    stays honest about lineage.
+10. **Symptom:** the keys are gone from every file, yet someone finds one. **Cause:** the scrub only touched the
+    working tree — the blob is still reachable in history (`git log -S<literal> --all`, `git log --all -- <path>`)
+    and in whatever a deploy branch already shipped. **Fix:** check history and the output branch before
+    claiming clean; either purge (`git filter-repo` or BFG, force-push, then redeploy so the branch is
+    replaced) or say plainly that everything ever committed there stays published.
 
 ## Seen in
 
@@ -132,4 +140,7 @@ was itself written from the same docs corpus.
 Re-swept in 2026-10-06: the Watch Dogs 1 shader-pack game note in `games/watch-dogs/` cites the Gibbed fork that carries
 the packer fix (gotcha 9) instead of only the upstream project, and a hardware-specific line was removed from
 the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-content row were added after both
-kinds of hit showed up in drafts written from Discord-sourced findings.
+kinds of hit showed up in drafts written from Discord-sourced findings. Step 4 and the licence-key row were
+tightened after review to delete keys outright rather than relocate them, and step 8 plus gotcha 10 were added
+for the history and deploy-branch boundary. The site links stay: the page carrying the SDK torrent, Drive
+folders and keygen leads was cleaned instead of delinked.
