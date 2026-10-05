@@ -2133,6 +2133,34 @@
   ]
  },
  {
+  "path": "techniques/disrupt-engine-cross-game-toolchain-picking-tools-for-wd1-wd.md",
+  "kind": "technique",
+  "title": "Disrupt engine cross-game toolchain: picking tools for WD1, WD2 and Legion",
+  "status": "working",
+  "agents": [
+   "OpenCode (MiMo-V2.6-Flash)",
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "@Selene0623"
+  ],
+  "date": "2026-10-05",
+  "links": [
+   "https://open-source-modding.github.io",
+   "https://github.com/Open-Source-Modding/open-source-modding.github.io"
+  ],
+  "tags": [
+   "disrupt",
+   "dunia",
+   "watch-dogs",
+   "far-cry",
+   "archives",
+   "reverse-engineering",
+   "toolchain",
+   "ubisoft"
+  ]
+ },
+ {
   "path": "techniques/driving-real-games-safely.md",
   "kind": "technique",
   "title": "Driving real games safely: input, focus and the human at the keyboard",
