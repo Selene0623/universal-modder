@@ -1,0 +1,117 @@
+---
+kind: technique
+title: 'Publishing reverse-engineering research: what to scrub, what to keep, and how to know you are clean'
+status: working
+agents:
+- OpenCode (DeepSeek V4.1 Flash)
+humans:
+- '@Selene0623'
+date: '2026-10-05'
+links:
+- https://open-source-modding.github.io
+- https://github.com/Open-Source-Modding/open-source-modding.github.io
+- https://github.com/rehan-remade/universal-modder/pull/65
+tags: [publishing, sanitization, secrets, license-keys, local-paths, documentation, attribution, docusaurus, grep]
+---
+# Publishing reverse-engineering research: what to scrub, what to keep, and how to know you are clean
+
+> Research notes taken from retail builds, leaks and engine internals can be published safely, as long as the
+> write-up carries the knowledge and the repository carries none of the material: no pasted code, no licence
+> keys, no download links, no home directories. This is the pass that takes a docs repo from "we wrote it all
+> down" to "clean enough to publish", and the residue that survives a careless scrub. The point is not only to
+> satisfy your own rules but to match what the community the notes are published into expects: attributed
+> findings in the author's own words, and none of the material itself. Worked out on a Docusaurus RE reference
+> site (~175 pages); nothing here is specific to that stack beyond the build step.
+
+## When to use it
+
+Before any research note leaves the private workspace: pushing a docs repo public, moving notes into a shared
+knowledge base, or handing a draft to another agent. It also applies when the target is someone else's
+publication: a site, wiki or knowledge base that a community reads and contributes to, where the standard is
+whatever that community expects rather than whatever your workspace tolerated. Run it again whenever a file is
+swept into a commit by accident — a repo-wide commit is where unrelated drafts, private paths and stray keys
+travel.
+
+## How
+
+1. **Fix the policy line first, in writing.** Knowledge in your own words (formats, layouts, symbol names,
+   behaviour, gotchas) is publishable with attribution. The material is not: decompiled or leaked source,
+   SDK/firmware files, extracted game data, licence keys, download links, or instructions to go fetch a leak.
+   A project that already publishes under a contribution policy is the cheapest source of that line — see the
+   universal-modder PR above for a policy written exactly this way (closes the "is my leak-derived note
+   allowed?" question without a per-note debate). When the destination is an existing community publication,
+   its own standard wins: attributed, own-words findings are welcome; the material is not. Do not import the
+   tolerance of a private workspace into someone else's public wiki.
+2. **Sweep with literal strings, not regex heuristics.** A drive-letter pattern like `[A-Za-z]:\\` misses
+   lowercase drives and everything outside Windows. Grep for the literal fragments instead: `~/`, `/home/`,
+   `C:\Users\`, `Documents/`, `/tmp/`, plus the site's own internal repo names and any agent-only file names.
+   Sweep the whole docs tree, including drafts and directories you think are out of scope.
+3. **Triage every hit into drop, genericise, or keep.** The keep list matters as much as the drop list: a
+   scrub that strips documentation-target paths or a quoted tutorial's wording damages the note.
+4. **Secrets move; they do not just vanish.** Publish the shape, store the literals privately. For licence
+   keys that means: where in the file they live, the byte-level method that finds them, the format grammar,
+   and what each field means (client codename, module list, expiry date) — with the key strings themselves in
+   a local note under a gitignored directory. Prefer a workspace-level private file over a repo-local one, so a
+   future clone or worktree cannot inherit it. Keep the extraction method next to the keys: a scrub that
+   deletes the method turns the next researcher into a re-discoverer, and the method is the part that is
+   legitimately publishable.
+5. **Hunt the residue a scrub leaves behind.** Removing a link or a sentence leaves dangling prose: "samples
+   available in ." where the path used to be, "cross-game work lives in" followed by an empty line, a table
+   row whose only column is `AGENTS.md`, a sentence citing an internal file the reader cannot open. After the
+   main pass, grep for the leftovers (lines ending in "in .", empty table cells, `AGENTS.md`) and repair them
+   into plain sentences — the fact belongs in the doc, the reference to a private process file does not.
+6. **Verify by building, then re-sweep before publishing.** A static-site build with strict link
+   checking (`onBrokenLinks: 'throw'` on Docusaurus, plus a pre-build link script) catches the damage from
+   step 5. Record what the build still warns about, so the next agent does not treat an old warning as new
+   breakage.
+7. **Re-sweep the second checkout.** A scrub is per-tree, not per-repo. If a migration worktree, a branch or a
+   stale clone exists, the pre-scrub text is still there — and it will be published the moment that branch
+   merges.
+
+What to drop, genericise and keep:
+
+| Hit | Verdict |
+|---|---|
+| Home directories, usernames, `~/Tools/...`, personal project paths, `/tmp` clone paths, internal research-repo paths | Drop, or genericise to the tool or repo name alone |
+| Licence keys, tokens, activation data, serials | Drop from the repo; keep in the private key file with the method |
+| Agent-only instruction files (`AGENTS.md`, internal notes) cited in public prose | Drop the reference, keep the fact |
+| Extracted game data paths under a personal workspace | Genericise to the unpack directory name, or drop |
+| Generic example paths (`C:\Modding\...`, `<Steam library>/...`, `C:\DEV\<tool>\`, a game's own documented settings search order such as the `Public\Documents\<publisher>\...` subtree) | Keep |
+| Placeholders already in the text (`C:\Users\<USERNAME>`) | Keep — do not re-substitute a real name |
+| Verbatim third-party content: a quoted gist's paths, a scraped tutorial's drive letters, a contributor's handle | Keep the quote intact, attribute it; only strip a *personal* username if it is clearly not part of the quote's meaning |
+
+## Gotchas
+
+1. **Symptom:** the local link checker is green but the published site throws on a broken link. **Cause:** the
+   checker validates that file paths exist in the repo, not that the site's routes resolve — a deleted hub page
+   still passes every file-path test while every page linking to `/docs/` breaks. **Fix:** after deleting or
+   renaming a page, run the real build, and check the route (`/docs/...`), not just the file.
+2. **Symptom:** a "docs-only" commit touches a hundred unrelated files. **Cause:** commit helpers that stage
+   everything (`git add -A` wrappers, "smart commit" scripts) sweep whatever happens to be dirty, including
+   private drafts. **Fix:** stage explicitly by path; before committing, `git status` and check whether the
+   file list matches the intended change; prefer separate commits once unrelated work is in the tree.
+3. **Symptom:** the keys are gone from the main checkout but still published. **Cause:** a second worktree or
+   branch carries the pre-scrub copy, and its build is what deploys if it merges. **Fix:** sweep every
+   checkout (`git worktree list`, then grep each tree), and re-check branches that could publish.
+4. **Symptom:** a literal path search reports "nothing left" while paths are still there. **Cause:** regex
+   narrowing or a search that excluded the very directory holding the hits (a too-clever pattern will miss
+   lowercase drives, alternate separators, and the excluded workspace). **Fix:** sweep by literal fragment over
+   the whole tree, and when a result contradicts what you saw in a file, re-read the file instead of trusting
+   the search.
+5. **Symptom:** a scrub silently loses information. **Cause:** deleting a whole paragraph because it contained
+   one private path. **Fix:** edit to the smallest span that removes the private part; re-read the section after
+   editing, and keep the surrounding facts.
+6. **Symptom:** published notes cite things readers cannot open — internal worktree names, agent-only files,
+   paths from someone's private repo. **Cause:** a citation was written for a teammate instead of a reader, so
+   the standards the note documents end up outside the community's reach. **Fix:** cite public sources (docs
+   sites, upstream repos, forum threads, PRs) or state the fact outright.
+7. **Symptom:** prose renders mangled after a placeholder substitution. **Cause:** markdown swallows
+   angle-bracketed text (`<YourName>` in a paragraph becomes an HTML tag). **Fix:** in prose use
+   `%USERPROFILE%` or `~`; keep angle-bracket placeholders for fenced code blocks and tables.
+
+## Seen in
+
+No game note uses this yet; the audit was run on the Open-Source-Modding Disrupt/Far Cry/Havok reference site
+(the first `links:` entry above) after an upstream project declined to link to it for publishing licence keys
+extracted from a retail build. Related: the Disrupt cross-game toolchain technique note in this folder, which
+was itself written from the same docs corpus.
