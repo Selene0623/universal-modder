@@ -8,6 +8,9 @@ agents:
 humans:
 - '@Selene0623'
 date: '2026-10-06'
+links:
+- https://open-source-modding.github.io
+- https://github.com/Open-Source-Modding/open-source-modding.github.io
 tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolchain, ubisoft]
 ---
 # Disrupt engine cross-game toolchain: picking tools for WD1, WD2 and Legion
@@ -16,9 +19,9 @@ tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolc
 > silently corrupt your data. Disrupt is a Dunia 2 (Far Cry 3) fork, so tool conventions and the
 > compiled-XML object serialization run through Far Cry 3–6 too — but the container and the details
 > fork per game (WD1/WD2 pack `Depload`, WDL packs `BigFile`; Dunia uses `FAT2`/BigFile v11), so never
-> assume a tool or an offset carries across. Distilled from an earlier public Disrupt/Far Cry reference
-> write-up by @Selene0623 (unlinked); no unpack→repack cycle was run by this agent for this note, and the
-> per-claim source is marked in the text.
+> assume a tool or an offset carries across. Distilled from the [Open-Source-Modding Disrupt/Far Cry
+> reference docs](https://open-source-modding.github.io); no unpack→repack cycle was run by this agent for
+> this note, and the per-claim source is marked in the text.
 
 ## When to use it
 Any session on a Disrupt game: unpacking/repacking `.dat`/`.fat` archives, converting binary objects,
@@ -62,14 +65,15 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
   shadows every file beneath it. Weight this accordingly: WD2's public/competitive multiplayer is largely
   dead at the time of writing, so the mod-set rules matter for arranged sessions on that community server,
   not for matchmaking.
-- **Anti-cheat status:** WD1 ships none. WD2 ships EasyAntiCheat: while EAC's service was live, modded files
-  tripped it and EAC-gated online play was closed to mods, and the only known way past the check gives up
-  multiplayer, so that route is single-player-only. WD2's EAC service lapsed earlier in 2026 (reported by
-  @Selene0623, 2026-10-05), so the check no longer runs and modded multiplayer is gated by mod-set
-  compatibility rather than by anti-cheat. WDL shipped BattlEye, whose modified-file check trips on a patched
-  DLL; BattlEye was removed in the final WDL update, so the check no longer applies there. Online behaviour is
-  nowhere in the reference docs — it is community-reported only. Circumventing an anti-cheat client is out of
-  scope for anything published here, and no bypass is described or named.
+- **Anti-cheat status:** WD1 ships none. WD2 shipped EasyAntiCheat: while EAC's service ran, modded files
+  tripped it and the only way past the check cost multiplayer, so the launch flag people passed around was
+  never a free bypass, it disabled multiplayer and nothing else. That service lapsed earlier in 2026
+  (reported by @Selene0623, 2026-10-05), so nothing anti-cheat-related gates mods there now, which leaves
+  the flag pointless as a workaround and useful only as a multiplayer toggle. Modded multiplayer is gated by
+  mod-set compatibility instead. WDL shipped BattlEye, whose modified-file check trips on a patched DLL;
+  BattlEye was removed in the final WDL update, so the check no longer applies there. Online behaviour is
+  nowhere in the reference docs, it is community-reported only. Circumventing an anti-cheat client stays out
+  of scope for anything published here, and no flag is named.
 
 ## Gotchas
 1. **Symptom:** unpacked WDL files are garbage. **Cause:** UnpackWD2 or Gibbed.Disrupt was used on
@@ -120,8 +124,11 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 ## Seen in
 - No `knowledge/games/` note exists for WD1, WD2 or Legion yet. A Watch Dogs: Legion game note referenced by
   the first revision of this file is no longer in the tree (it was never committed), so its link is gone.
-- Source material: an earlier public Disrupt/Far Cry reference write-up by @Selene0623 (unlinked; page list
-  dropped on review).
+- Source material: the Disrupt/Far Cry pages on the Open-Source-Modding site (links above), specifically
+  `disrupt/tool-gotchas`, `disrupt/installpackage-patch`, `disrupt/watch_dogs/archive-priorities`,
+  `disrupt/watch_dogs/hashing`, `disrupt/watch_dogs/fat-archive-format`,
+  `disrupt/watch_dogs_legion/modding-workflow`, `disrupt/watch_dogs_legion/vehicle-add-process` and
+  `disrupt/blender-addon`.
 
 ---
 
@@ -134,7 +141,7 @@ still records WD2 character files crashing.
 
 **Clarified after review (2026-10-05, same session):** the anti-cheat and multiplayer bullets were rewritten
 once @Selene0623 filled in the online side. Mods do reach multiplayer, through a community NexusTools server;
-skipping the anti-cheat check costs multiplayer rather than being a free bypass; per-mod compatibility rules exist on top of
+skipping the anti-cheat check only disables multiplayer, it bypasses nothing; per-mod compatibility rules exist on top of
 the same-mod requirement (WD2 Extended needs both players to have it, mismatch drops someone out of the
 session); and WD2's EAC service lapsed earlier in 2026, so nothing anti-cheat-related gates mods there any
 more. The earlier "mods and multiplayer do not work together" line was the pre-lapse state, not the current
@@ -148,10 +155,12 @@ unpacking of any compressed retail archive. Gotchas 8-11 were added for those. T
 [Open-Source-Modding/Gibbed.Disrupt](https://github.com/Open-Source-Modding/Gibbed.Disrupt) rather than the
 upstream project, because the V13 packer, the LZ4LW offset fix and the CI fix are on that fork's `main`. The
 pairing of jobs and (prefer gibbed) tool is the same engine contract the WD1 shader-pack work
-(see the WD1 shader notes) relies on.
+(see the WD1 shader notes) relies on. The Open-Source-Modding links stay, because the site pages that
+carried redistributed SDK, torrent or keygen links were cleaned instead (site commit 2026-10-06), and no
+anti-cheat bypass is named here.
 
-**Credits:** distilled from an earlier public Disrupt and Far Cry reference write-up compiled by
-@Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
+**Credits:** distilled from the [Open-Source-Modding](https://open-source-modding.github.io) Disrupt and
+Far Cry reference docs compiled by @Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
 Discord communities, with in-doc confirmations credited to Pesky Fly (HeySlickThatsMe, aka slick),
 qstlijku, and rootCBR (jason098/Cobra — same person). NexusTools multiplayer behaviour reported by
 @Selene0623 (2026-10-03) and marked unverified above.
