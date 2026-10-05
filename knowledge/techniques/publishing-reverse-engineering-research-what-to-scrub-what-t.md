@@ -130,6 +130,13 @@ What to drop, genericise and keep:
     and in whatever a deploy branch already shipped. **Fix:** check history and the output branch before
     claiming clean; either purge (`git filter-repo` or BFG, force-push, then redeploy so the branch is
     replaced) or say plainly that everything ever committed there stays published.
+11. **Symptom:** the branches are clean and the key is still fetchable. **Cause:** a rewrite and force-push cover
+    the branch refs only. Two copies survive on the host: pull-request refs (`refs/pull/N/head`, which nobody can
+    force-push) and any other branch you did not rewrite. **Fix:** enumerate every ref before calling it done
+    (`git ls-remote origin`, then scan each one), rewrite the ones you own, and for pull-request refs either file
+    a host support request to purge the objects or write down that the values stay public there, since the ref
+    itself cannot be corrected. Expired keys are still keys: an expiry date lowers the stakes, it does not make
+    the literal safe to leave addressable.
 
 ## Seen in
 
@@ -143,4 +150,8 @@ the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-cont
 kinds of hit showed up in drafts written from Discord-sourced findings. Step 4 and the licence-key row were
 tightened after review to delete keys outright rather than relocate them, and step 8 plus gotcha 10 were added
 for the history and deploy-branch boundary. The site links stay: the page carrying the SDK torrent, Drive
-folders and keygen leads was cleaned instead of delinked.
+folders and keygen leads was cleaned instead of delinked. The site's own history was then purged the same day
+with `git filter-repo` (key literal and the bare GUID halves, plus a committed session log) across `main`,
+`docusaurus-migration` and `gh-pages`, force-pushed with the tip tree hash unchanged; the two merged
+pull-request refs still carry the old blobs and are recorded here rather than corrected, because they cannot be
+force-pushed (gotcha 11).
