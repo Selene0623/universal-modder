@@ -6,7 +6,7 @@ agents:
 - OpenCode (DeepSeek V4.1 Flash)
 humans:
 - '@Selene0623'
-date: '2026-10-05'
+date: '2026-10-06'
 links:
 - https://open-source-modding.github.io
 - https://github.com/Open-Source-Modding/open-source-modding.github.io
@@ -76,6 +76,8 @@ What to drop, genericise and keep:
 | Licence keys, tokens, activation data, serials | Drop from the repo; keep in the private key file with the method |
 | Agent-only instruction files (`AGENTS.md`, internal notes) cited in public prose | Drop the reference, keep the fact |
 | Extracted game data paths under a personal workspace | Genericise to the unpack directory name, or drop |
+| Personal machine details: hostname, CPU/GPU model, distro tuning knobs, `~/.config` snippet, a Wine/Proton prefix path | Drop — the finding is the method, not the box it ran on |
+| Private conversation content: DMs, screenshots of someone's messages, a handle attached to a claim they did not make publicly | Drop the content; publish the finding only if it is independently verifiable, and credit by handle only with permission |
 | Generic example paths (`C:\Modding\...`, `<Steam library>/...`, `C:\DEV\<tool>\`, a game's own documented settings search order such as the `Public\Documents\<publisher>\...` subtree) | Keep |
 | Placeholders already in the text (`C:\Users\<USERNAME>`) | Keep — do not re-substitute a real name |
 | Verbatim third-party content: a quoted gist's paths, a scraped tutorial's drive letters, a contributor's handle | Keep the quote intact, attribute it; only strip a *personal* username if it is clearly not part of the quote's meaning |
@@ -109,9 +111,25 @@ What to drop, genericise and keep:
    angle-bracketed text (`<YourName>` in a paragraph becomes an HTML tag). **Fix:** in prose use
    `%USERPROFILE%` or `~`; keep angle-bracket placeholders for fenced code blocks and tables.
 
+8. **Symptom:** a note reads as unsourced or over-claimed after publishing. **Cause:** the finding came from a
+   conversation, a screenshot or a DM, and the evidence itself cannot be published (nor can the person be cited
+   as agreeing with a rephrasing). **Fix:** publish the finding, mark it community-reported with the reporter's
+   handle and date *if* they are fine with it, otherwise attribute it to the community thread generically;
+   keep "unverified" explicit rather than upgrading it to fact. A person declining to collaborate does not make
+   their statements unquotable, but it does mean their files and private messages stay out, and their work is
+   not the source you built on.
+9. **Symptom:** a reader follows your note and reproduces a bug you already fixed. **Cause:** the note links the
+   upstream project, but the fix lives on a fork or branch (the packer change, the format fix, the CI repair).
+   **Fix:** link the fork and name the branch, and say what it fixes; keep the upstream link too, so the note
+   stays honest about lineage.
+
 ## Seen in
 
 No game note uses this yet; the audit was run on the Open-Source-Modding Disrupt/Far Cry/Havok reference site
 (the first `links:` entry above) after an upstream project declined to link to it for publishing licence keys
 extracted from a retail build. Related: the Disrupt cross-game toolchain technique note in this folder, which
 was itself written from the same docs corpus.
+Re-swept in 2026-10-06: the Watch Dogs 1 shader-pack game note in `games/watch-dogs/` cites the Gibbed fork that carries
+the packer fix (gotcha 9) instead of only the upstream project, and a hardware-specific line was removed from
+the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-content row were added after both
+kinds of hit showed up in drafts written from Discord-sourced findings.
