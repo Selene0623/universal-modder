@@ -31,10 +31,29 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 - **Pack:** `Gibbed.Disrupt.Packing.dll [OPTIONS]+ <output.fat> <input_dir>+` is the tool that actually
   works. Its upstream is [gibbed/Gibbed.Disrupt](https://github.com/gibbed/Gibbed.Disrupt), but the fixes
   below are **not upstream yet** — they live on a downstream fork, and readers should apply them to
-  upstream (or use that fork's `main`): the BigFileV11/V13 split plus the V13 packer (`80d5320`), the
-  LZ4LW offset fix (`f0a8be0`), the CI symlink fix (`5a1719b`) and the Modifier lowercase change
-  (`da06273`); branch `x360-fat2-unpack-fix` (`311b25f`): the X360 FAT2 entry decode, where
-  `fieldB = (uncompressedSize << 3) | scheme`. Options that
+  upstream (or use that fork's `main`). The fork stays under the **same zlib license as upstream, with
+  each set of changes attributed to its respective author**. Major changes, by commit:
+  - **Archive formats:** the old BigFileV5 decoder split into BigFileV11 (WD2) + BigFileV13 (WDL), plus
+    a working V13 **packer** (`80d5320`); X360 FAT2 entry decode on branch `x360-fat2-unpack-fix`
+    (`311b25f`), where `fieldB = (uncompressedSize << 3) | scheme`.
+  - **Compression correctness:** LZ4LW emits the offset before the match-length extension — archives
+    packed without it are corrupt (`f0a8be0`); PS4/Orbis big-file support with LZ4LW + LZMA decompression
+    (`5b1a51f`); the Troplo-fork merge that integrates the XNA compression path so pack/unpack actually
+    works (`96b7a68`, `c60ddf7`).
+  - **Robustness:** `EntryDecompression` skips entries whose XMemCompress frame fails instead of aborting
+    the whole unpack (`be88090`) — that is a **workaround, not the proper fix**; a real fix should still
+    decode why those frames fail and repair or retry them.
+  - **Path/extension parity:** Modifier path lowercase-sanitize for Dunia parity (`da06273`); file-extension
+    mapping fixes (`fd58623`, `430cc41`).
+  - **Build/infrastructure:** net8.0-only submodule builds (`0dc7488`) — **major, not noise: the Linux
+    build depends on it**; CI broken-symlink fix (`5a1719b`); GitHub Actions v4→v5 (`9e84628`).
+  - **Data:** WDL animation filelist (24,982 entries), WD2 469K-line filelist, WD2 debug-dialog filelist
+    (`e55b033`, `13558df`, `c46195b`); HashList collision detection in the ProjectData submodule
+    (`0788c76`).
+  - **Minor but worth knowing:** dead LZO1x decompression branch removed and the `-c` flag docs corrected
+    (`b16b80b`).
+
+  Options that
   matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack version), `--cv` (compression version),
   `--nhv` (name hash version). It also **writes the `.nfo` next to the `.fat` itself** — do not hand-roll
   one. DisruptManager (rootCBR) is the older WDL packer; it packs only into `patch*` archives and skips
@@ -151,7 +170,8 @@ rewritten against the fork that carries our fixes. `Gibbed.Disrupt.Packing.dll` 
 writes its own `.nfo`; `--pv` is mandatory (WD1/WD2 `--pv 8`, WDL `--pv 13 --cv 8 --nhv 70`); unpack takes
 `--jobs=N` (`-j 8` is parsed as an archive named `8.fat`); and `XCompression` missing from the build breaks
 unpacking of any compressed retail archive. Gotchas 8-11 were added for those. The fixes referenced here
-(the V13 packer, the LZ4LW offset fix and the CI fix) are on a downstream fork's `main`, not upstream on
+are on a downstream fork's `main` — the full fork-vs-upstream change list (with the zlib-license /
+per-author attribution) is in the Pack entry above — not upstream on
 gibbed/Gibbed.Disrupt. The pairing of jobs and (prefer gibbed) tool is the same engine contract the WD1
 shader-pack work (see the WD1 shader notes) relies on. No anti-cheat bypass is named here.
 
