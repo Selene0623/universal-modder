@@ -93,6 +93,29 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
   (`x : x`) produces those literal names in `ISGN`/`OSGN`; that is legal and is what one shipping shader mod
   does.
 
+## The compiler logic (what a recompiler must do)
+A working recompiler is a five-stage pipeline over the shipped sources — this is the logic, spelled out so it
+can be reimplemented from a retail unpack alone:
+1. **Enumerate.** One command per permutation: profile (`ps_5_0`/`vs_5_0`/`cs_5_0`/`gs_5_0`), entry point,
+   comma-separated defines from the family's `meta/*.meta.xml` option sets, and an output name that is the
+   shader ID (`pixel_<id>.pso` etc.). Family name = the `.fx` filename; there are **178 families**, listed in
+   `meta/filelist.meta.xml.txt`, with subdirectories (`DeferredFx/`, `PostEffect/`, `Sky/`, `Terrain/`…).
+   Substring-matching a family name selects its slice (case-insensitive).
+2. **Compile the WHOLE database first, then any single family.** The engine requires consistent input/output
+   signatures across the full set; a family compiled in isolation drifts from the rest and fails at load even
+   though its own command lines succeed. Only after one full pass is per-family iteration safe.
+3. **Annotate before compiling, not by hand.** Era fxc rejects bare struct members and unannotated returns
+   (see gotchas 3-4); carry an automatic semantic-annotation/repair pass over the sources in the toolchain,
+   and never renumber an existing semantic.
+4. **Prepend the header stub — mandatory.** Every shipped entry's bytes before `DXBC` are its engine
+   I/O-signature metadata (`obj/hXX/<name>.<type>.header`); a bare DXBC blob is rejected. Prepend is
+   idempotent (skip files that already start with one).
+5. **Define the platform explicitly.** The default define is `NOMAD_PLATFORM_WINDOWS` (the game runs on the
+   Windows ABI); `SHADERMODEL` is a compiler built-in that must be passed too — neither is implied.
+Build-host notes: the command list has Windows title-case paths while on-disk files are lowercase — resolve
+the case when loading, don't rewrite paths; make reruns resume-safe (skip outputs that already exist), since
+a full pass is ~39k invocations; keep build output out of version control.
+
 ## Build steps
 1. Compile every permutation from the shipped `meta/*.meta.xml` option sets (one `<option>` per permutation)
    with an era-correct fxc (Wine + a real `d3dcompiler_*.dll`), one shim invocation per permutation, output
