@@ -32,11 +32,13 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
   under 4GB only).
 - **Pack:** `Gibbed.Disrupt.Packing.dll [OPTIONS]+ <output.fat> <input_dir>+` is the tool that actually
   works, and its fixes live on the [Open-Source-Modding Gibbed.Disrupt fork](https://github.com/Open-Source-Modding/Gibbed.Disrupt)
-  (`main` carries the BigFileV13 packer and the LZ4LW fix; the `x360-fat2-unpack-fix` branch carries the
-  X360 FAT2 entry decode). Options that matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack
-  version), `--cv` (compression version), `--nhv` (name hash version). It also **writes the `.nfo` next to
-  the `.fat` itself** — do not hand-roll one. DisruptManager (rootCBR) is the older WDL packer; it packs
-  only into `patch*` archives and skips `installpackage/`, so prefer Gibbed.
+  — `main`: the BigFileV11/V13 split plus the V13 packer (`80d5320`), the LZ4LW offset fix (`f0a8be0`), the
+  CI symlink fix (`5a1719b`) and the Modifier lowercase change (`da06273`); branch `x360-fat2-unpack-fix`
+  (`311b25f`): the X360 FAT2 entry decode, where `fieldB = (uncompressedSize << 3) | scheme`. Options that
+  matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack version), `--cv` (compression version),
+  `--nhv` (name hash version). It also **writes the `.nfo` next to the `.fat` itself** — do not hand-roll
+  one. DisruptManager (rootCBR) is the older WDL packer; it packs only into `patch*` archives and skips
+  `installpackage/`, so prefer Gibbed.
 - **Binary objects:** `Gibbed.Disrupt.ConvertBinaryObject.exe` — use the **WD2 build**, it is the one
   that handles WDL's binary objects.
 - **Where files load from — per game, not shared:** the priority list is hardcoded per title
