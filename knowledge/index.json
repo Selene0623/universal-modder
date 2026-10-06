@@ -2212,6 +2212,31 @@
   ]
  },
  {
+  "path": "techniques/havok-sdk-derived-knowledge-and-enforcement-record.md",
+  "kind": "technique",
+  "title": "Havok SDK-derived knowledge: what the licence forbids, what actually gets enforced, and how to write it up",
+  "tags": [
+   "havok",
+   "hkx",
+   "licensing",
+   "leaks",
+   "provenance",
+   "takedowns",
+   "research-ethics"
+  ],
+  "date": "2026-10-06",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "links": [
+   "https://www.havok.com/havok-for-unity-license-1-0/",
+   "https://courtlistener.com/docket/6256484/crytek-gmbh-v-cloud-imperium-games-corp/"
+  ]
+ },
+ {
   "path": "techniques/loading-pre-sequel-assets-in-borderlands-2.md",
   "kind": "technique",
   "title": "Loading Pre-Sequel assets in Borderlands 2: header-only package surgery, mesh conversion and what still fails",
