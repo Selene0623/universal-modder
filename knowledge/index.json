@@ -3030,7 +3030,7 @@
   ],
   "game_version": "WD1 (BigFileV3-era) / WD2 (V11) / Legion (V13)",
   "platform": "windows",
-  "engine": "Disrupt (Dunia 2 fork)",
+  "engine": "unknown",
   "route": "data",
   "tools": [
    "Gibbed.Disrupt",
@@ -3124,7 +3124,7 @@
   ],
   "game_version": "see note",
   "platform": "windows",
-  "engine": "dunia",
+  "engine": "unknown",
   "route": "data",
   "tools": [
    "JPEXS FFDec",

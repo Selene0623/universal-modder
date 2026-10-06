@@ -54,7 +54,7 @@ Repacking Legion means writing the header's version fields to match the retail f
 - compression version — `8`. This is the compression *scheme family*; it selects the scheme table below.
 - name-hash version — `70`.
 
-(Those fields are what a repacker must set; a maintainer fork of the Gibbed tool exposes them as `-pv`/`-cv`/`-nhv` flags, but the fields themselves are what matter. Retail WD2 files use compression version 6; Legion uses 8.)
+(Those fields are what a repacker must set. Retail WD2 files use compression version 6; Legion uses 8.)
 
 ### Compression schemes
 
