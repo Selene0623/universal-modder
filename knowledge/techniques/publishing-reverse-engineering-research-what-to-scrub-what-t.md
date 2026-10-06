@@ -142,9 +142,9 @@ What to drop, genericise and keep:
 No game note uses this yet; the audit was run on a community reference site for Disrupt, Dunia and Havok
 formats after an upstream project declined to link to it for publishing licence keys extracted from a retail
 build. Related: the Disrupt cross-game toolchain technique note in this folder.
-Re-swept in 2026-10-06: the Watch Dogs 1 shader-pack game note in `games/watch-dogs/` cites the Gibbed fork that carries
-the packer fix (gotcha 9) instead of only the upstream project, and a hardware-specific line was removed from
-the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-content row were added after both
+Re-swept in 2026-10-06: the Watch Dogs 1 shader-pack game note in `games/watch-dogs/` cites upstream
+`gibbed/Gibbed.Disrupt` and describes the packer fix it needs (gotcha 9) instead of pointing at a fork, and a
+hardware-specific line was removed from the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-content row were added after both
 kinds of hit showed up in drafts written from Discord-sourced findings. Step 4 and the licence-key row were
 tightened after review to delete keys outright rather than relocate them, and step 8 plus gotcha 10 were added
 for the history and deploy-branch boundary.
