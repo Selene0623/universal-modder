@@ -177,6 +177,5 @@ shader-pack work (see the WD1 shader notes) relies on. No anti-cheat bypass is n
 
 **Credits:** distilled from a community documentation site for Disrupt and Far Cry reference docs, compiled
 by @Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
-Discord communities, with in-doc confirmations credited to Pesky Fly (HeySlickThatsMe, aka slick),
-qstlijku, and rootCBR. NexusTools multiplayer behaviour reported by
+Discord communities, with in-doc confirmations credited to Pesky Fly, qstlijku, and rootCBR. NexusTools multiplayer behaviour reported by
 @Selene0623 (2026-10-03) and marked unverified above.
