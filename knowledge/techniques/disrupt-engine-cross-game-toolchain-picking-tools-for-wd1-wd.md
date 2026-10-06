@@ -8,9 +8,7 @@ agents:
 humans:
 - '@Selene0623'
 date: '2026-10-06'
-links:
-- https://open-source-modding.github.io
-- https://github.com/Open-Source-Modding/open-source-modding.github.io
+links: []
 tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolchain, ubisoft]
 ---
 # Disrupt engine cross-game toolchain: picking tools for WD1, WD2 and Legion
@@ -19,8 +17,8 @@ tags: [disrupt, dunia, watch-dogs, far-cry, archives, reverse-engineering, toolc
 > silently corrupt your data. Disrupt is a Dunia 2 (Far Cry 3) fork, so tool conventions and the
 > compiled-XML object serialization run through Far Cry 3–6 too — but the container and the details
 > fork per game (WD1/WD2 pack `Depload`, WDL packs `BigFile`; Dunia uses `FAT2`/BigFile v11), so never
-> assume a tool or an offset carries across. Distilled from the [Open-Source-Modding Disrupt/Far Cry
-> reference docs](https://open-source-modding.github.io); no unpack→repack cycle was run by this agent for
+> assume a tool or an offset carries across. Distilled from a community documentation site for Disrupt and
+> Far Cry formats; no unpack→repack cycle was run by this agent for
 > this note, and the per-claim source is marked in the text.
 
 ## When to use it
@@ -31,10 +29,12 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 - **Unpack:** `UnpackLegion.exe` for WDL; `UnpackWD2.exe` for WD2; Gibbed.Disrupt for WD1 (archives
   under 4GB only).
 - **Pack:** `Gibbed.Disrupt.Packing.dll [OPTIONS]+ <output.fat> <input_dir>+` is the tool that actually
-  works, and its fixes live on the [Open-Source-Modding Gibbed.Disrupt fork](https://github.com/Open-Source-Modding/Gibbed.Disrupt)
-  — `main`: the BigFileV11/V13 split plus the V13 packer (`80d5320`), the LZ4LW offset fix (`f0a8be0`), the
-  CI symlink fix (`5a1719b`) and the Modifier lowercase change (`da06273`); branch `x360-fat2-unpack-fix`
-  (`311b25f`): the X360 FAT2 entry decode, where `fieldB = (uncompressedSize << 3) | scheme`. Options that
+  works. Its upstream is [gibbed/Gibbed.Disrupt](https://github.com/gibbed/Gibbed.Disrupt), but the fixes
+  below are **not upstream yet** — they live on a downstream fork, and readers should apply them to
+  upstream (or use that fork's `main`): the BigFileV11/V13 split plus the V13 packer (`80d5320`), the
+  LZ4LW offset fix (`f0a8be0`), the CI symlink fix (`5a1719b`) and the Modifier lowercase change
+  (`da06273`); branch `x360-fat2-unpack-fix` (`311b25f`): the X360 FAT2 entry decode, where
+  `fieldB = (uncompressedSize << 3) | scheme`. Options that
   matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack version), `--cv` (compression version),
   `--nhv` (name hash version). It also **writes the `.nfo` next to the `.fat` itself** — do not hand-roll
   one. DisruptManager (rootCBR) is the older WDL packer; it packs only into `patch*` archives and skips
@@ -126,18 +126,15 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 ## Seen in
 - No `knowledge/games/` note exists for WD1, WD2 or Legion yet. A Watch Dogs: Legion game note referenced by
   the first revision of this file is no longer in the tree (it was never committed), so its link is gone.
-- Source material: the Disrupt/Far Cry pages on the Open-Source-Modding site (links above), specifically
-  `disrupt/tool-gotchas`, `disrupt/installpackage-patch`, `disrupt/watch_dogs/archive-priorities`,
-  `disrupt/watch_dogs/hashing`, `disrupt/watch_dogs/fat-archive-format`,
-  `disrupt/watch_dogs_legion/modding-workflow`, `disrupt/watch_dogs_legion/vehicle-add-process` and
-  `disrupt/blender-addon`.
+- Source material: a community documentation site for Disrupt and Far Cry reference docs (no stable link
+  published here); the per-claim source is noted in the text above.
 
 ---
 
 **Corrections (2026-10-05, @Selene0623 with OpenCode/DeepSeek V4.1 Flash):** the first revision generalised
 WDL's archive order to all three games, described `CRC64_WD2` as a CRC, stated the FCBastard limit as a total
-WD1-only tool, and reported Blender character-model import as working. All four were checked against the docs
-pages above and rewritten: priorities are per game, `CRC64_WD2` is FNV-1 64 with a fold and a tag, the
+WD1-only tool, and reported Blender character-model import as working. All four were checked against the
+reference docs and rewritten: priorities are per game, `CRC64_WD2` is FNV-1 64 with a fold and a tag, the
 overflow-fixed Legion FCBastard build round-trips WDL entity libraries, and the addon's own known-issues list
 still records WD2 character files crashing.
 
@@ -153,16 +150,13 @@ one.
 rewritten against the fork that carries our fixes. `Gibbed.Disrupt.Packing.dll` is the working packer and it
 writes its own `.nfo`; `--pv` is mandatory (WD1/WD2 `--pv 8`, WDL `--pv 13 --cv 8 --nhv 70`); unpack takes
 `--jobs=N` (`-j 8` is parsed as an archive named `8.fat`); and `XCompression` missing from the build breaks
-unpacking of any compressed retail archive. Gotchas 8-11 were added for those. The link points at
-[Open-Source-Modding/Gibbed.Disrupt](https://github.com/Open-Source-Modding/Gibbed.Disrupt) rather than the
-upstream project, because the V13 packer, the LZ4LW offset fix and the CI fix are on that fork's `main`. The
-pairing of jobs and (prefer gibbed) tool is the same engine contract the WD1 shader-pack work
-(see the WD1 shader notes) relies on. The Open-Source-Modding links stay, because the site pages that
-carried redistributed SDK, torrent or keygen links were cleaned instead (site commit 2026-10-06), and no
-anti-cheat bypass is named here.
+unpacking of any compressed retail archive. Gotchas 8-11 were added for those. The fixes referenced here
+(the V13 packer, the LZ4LW offset fix and the CI fix) are on a downstream fork's `main`, not upstream on
+gibbed/Gibbed.Disrupt. The pairing of jobs and (prefer gibbed) tool is the same engine contract the WD1
+shader-pack work (see the WD1 shader notes) relies on. No anti-cheat bypass is named here.
 
-**Credits:** distilled from the [Open-Source-Modding](https://open-source-modding.github.io) Disrupt and
-Far Cry reference docs compiled by @Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
+**Credits:** distilled from a community documentation site for Disrupt and Far Cry reference docs, compiled
+by @Selene0623 from XeNTaX archive threads and the WD/Disrupt/Dunia
 Discord communities, with in-doc confirmations credited to Pesky Fly (HeySlickThatsMe, aka slick),
-qstlijku, and rootCBR (jason098/Cobra — same person). NexusTools multiplayer behaviour reported by
+qstlijku, and rootCBR. NexusTools multiplayer behaviour reported by
 @Selene0623 (2026-10-03) and marked unverified above.
