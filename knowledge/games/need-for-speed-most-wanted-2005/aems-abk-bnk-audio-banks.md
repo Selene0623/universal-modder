@@ -7,9 +7,9 @@ game_version: "Black Box-era AEMS audio (ABK header reports Aimex 1.1.1; sample 
 platform: windows
 engine: unknown
 route: data
-tools: ["ABKTool.exe (EA Black Box AEMS Bank tool)", "SX.EXE (EA wave extractor, shipped alongside)", "Wine (wine-staging) for the Windows binaries"]
+tools: ["ABKTool.exe (xan1242's EA Black Box AEMS Bank tool)", "SX.EXE (EA wave extractor, shipped alongside ABKTool; not linked here)", "Wine (wine-staging) for the Windows binaries"]
 anti_cheat: "none — offline audio extraction"
-status: working
+status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 date: 2026-10-05
@@ -22,15 +22,17 @@ tags: [nfs, most-wanted, aems, abk, bnk, audio, soundbank, ea-black-box, x86, wi
 > AEMS is EA Black Box's audio system; a `.abk` is the top-level bank that points at a `.bnk` sample
 > bank (plus SFX/MIDI banks), and `ABKTool.exe` parses the header and shells out to EA's `SX.EXE` to dump
 > the samples as WAV. These notes reconstruct the container layout from the tool's PDB symbols, its
-> embedded format strings and hexdumps of a real sample pair. Status **working** for reading/extraction
-> via the shipped tool; the byte-exact field order is only partly confirmed.
+> embedded format strings and hexdumps of a real sample pair. Status **in-progress** for
+> reading/extraction via the shipped tool; the byte-exact field order is only partly confirmed.
 
 ## Setup
 
 - Everything ran under **Wine (`wine-staging`)** on Linux; the tool is a 32-bit MSVC 2015 console app
   (PDB records `/m Machine:X86`, built from `E:\MyNFSCode\ABKTool\ABKTool\ABKTool.cpp`).
-- Files used from
-  `~/Documents/Code/game-tools/EA Games/ABKTool/`: `ABKTool.exe` (13 KB), `ABKTool.pdb` (503 KB, symbols),
+- `ABKTool` is **xan1242's** tool. It bundles EA's `SX.EXE`, so it is credited here in plain text and
+  intentionally **not linked**.
+- Files used from an unpublished local copy of the tool set:
+  `ABKTool.exe` (13 KB), `ABKTool.pdb` (503 KB, symbols),
   `SX.EXE` (577 KB, EA's wave dumper) and the sample pair `CAR_66_M3GTR.abk` (147 665 B) /
   `CAR_66_M3GTR.bnk` (136 825 B).
 - A pre-extracted `CAR_66_M3GTR/` folder with eight `.wav` files is the expected output shape.
@@ -51,45 +53,56 @@ engine's sound loader was rejected as unnecessary and as touching a retail game 
 - Types: `AemsDef_ModuleBank`, `AemsDef_Snd10SampleBankHeader`, `AemsDef_TWEAKHEADER`, `enum AemsPlatform`,
   `PlatformStrings`.
 
-### `.abk` header (from the tool's own format strings, in order)
+### `.abk` header (per ABKTool's `AemsDef_ModuleBank`)
 
-`ID` (`%c%c%c%c`), Aimex Version (`%hhd %hhd.%hhd patch: %hhd`), `Platform` (`%s`), Target type (`%hhd`),
-Num. modules (`%hd`), Debug CRC, Unique ID, Total size, Resident size, Module offset, SFX bank offset,
-SFX bank size padded, MIDI bank offset, MIDI bank size padded, Func Fixup offset, Static data Fixup offset,
-Interface offset. Corresponding struct fields include `nummodules`, `moduleoffset`, `sfxbankoffset`,
-`sfxbanksizepadded`, `midibankoffset`, `midibanksizepadded`, `funcfixupoffset`, `staticdatafixupoffset`,
-`interfaceOffset`, `residentsize`, `debugcrc`, `platform`, `target`/`targetType`, `rva_target`, `DataOffset`,
-`streamfileoffset`, `cdOffset`, `InBank` (`AemsDef_ModuleBank`), `pSnd10SampleBankHeader`, `ptweakheader`.
+Field order from ABKTool's struct: `ID` (`%c%c%c%c`), Aimex Version (`%hhd %hhd.%hhd patch: %hhd`),
+`Platform`, Target type, Num. modules (`%hd`), Debug CRC, Unique ID, Total size, Resident size, Module
+offset, SFX bank offset, SFX bank size padded, MIDI bank offset, MIDI bank size padded, Func Fixup offset,
+Static data Fixup offset, Interface offset. Struct fields include `nummodules`, `moduleoffset`,
+`sfxbankoffset`, `sfxbanksizepadded`, `midibankoffset`, `midibanksizepadded`, `funcfixupoffset`,
+`staticdatafixupoffset`, `interfaceOffset`, `residentsize`, `debugcrc`, `platform`, `target`/`targetType`,
+`rva_target`, `DataOffset`, `streamfileoffset`, `cdOffset`, `InBank` (`AemsDef_ModuleBank`),
+`pSnd10SampleBankHeader`, `ptweakheader`.
 
-Observed bytes in `CAR_66_M3GTR.abk`:
+Header field offsets:
 
-| Offset | Bytes | Reading |
-|--------|-------|---------|
-| `0x00` | `41 42 4B 43` | magic **`ABKC`** |
-| `0x04` | `01 01 01 00` | Aimex version 1.1.1 (+ patch 0) |
-| `0x10` | `d1 40 02 00` | `0x000240D1` = 147 665 = **file length** |
-| `0x14` | `80 26 00 00` | `0x2680` = **SFX bank offset** |
-| `0x20` | `79 16 02 00` | `0x00021679` = 136 825 = **`.bnk` length** |
+| Offset | Field |
+|--------|-------|
+| `0x00` | magic **`ABKC`** |
+| `0x04` | Aimex version (`01 01 01 00` = 1.1.1 + patch 0) |
+| `0x08` | platform |
+| `0x09` | target type |
+| `0x0A` | `u16` module count |
+| `0x0C` | debug CRC |
+| `0x10` | unique ID |
+| `0x14` | total size |
+| `0x18` | resident size |
+| `0x1C` | module offset |
+| `0x20` | SFX bank offset |
+| `0x24` | SFX bank size |
 
-The `Platform`/target fields sit between the version and `0x10`; exact byte boundaries there are **not**
-confirmed (see Open questions).
+Observed dwords in `CAR_66_M3GTR.abk`: `0x10` → `0x000240D1` (147 665), `0x14` → `0x00002680`
+(9 856), `0x20` → `0x00021679` (136 825, the `.bnk` size). The field labels above follow ABKTool's
+struct; the sample's dword-to-field mapping was not re-validated byte-for-byte.
 
 ### `.bnk` sample bank
+
+Per ABKTool and vgmstream the header is: magic (4 bytes), `0x04` version, `0x06` `u16` sound slots,
+`0x08` `u32` size, `0x14` per-sound offsets.
 
 `CAR_66_M3GTR.bnk` begins:
 
 | Offset | Bytes | Reading |
 |--------|-------|---------|
-| `0x00` | `42 4E 4B 6C` | magic **`BNKl`** (the tool's generic magic is `BNKx`) |
-| `0x02` | `05 00` | `u16` = 5 |
-| `0x04` | `09 00` | `u16` = 9 |
-| `0x06` | `79 16 02 00` | `u32` = 136 825 = file length |
-| `0x18` | `20 00 00 00` | start of a `u32` offset table: `0x20, 0x50, 0x80, 0xB0, 0xE0, 0x110, 0x140, 0x170` (0x30 apart) |
+| `0x00` | `42 4E 4B 6C` | magic **`BNKl`** (`l` = little-endian; `BNKb` is the big-endian variant) |
+| `0x04` | `05 00` | `u16` version = 5 |
+| `0x06` | `09 00` | `u16` sound slots = 9 |
+| `0x08` | `79 16 02 00` | `u32` = 136 825 = file length |
+| `0x14` | — | per-sound offset table (observed `u32` values `0x20, 0x50, 0x80, 0xB0, 0xE0, 0x110, 0x140, 0x170`, 0x30 apart) |
 | `0x38` | `50 54 00 00` | `PT` sample marker |
 
 `GetBNKNumElements` reads the element count; the tool errors with
-`File should start with BNKx but this one starts with %c%c%c%c` on a bad magic. The `05`/`09` pair and which
-one is the count is **unverified**.
+`File should start with BNKx but this one starts with %c%c%c%c` on a bad magic.
 
 ### Extraction pipeline
 
@@ -116,8 +129,9 @@ sounds. The eight `CAR_66_M3GTR` WAVs are engine-sound variations.
 
 ## Verification
 
-- Magic bytes, the `0x240D1`/`0x21679` sizes and the `0x2680` SFX offset were read directly from the sample
-  files with `xxd`, so those **are** confirmed.
+- Magic bytes and the observed `0x10`/`0x14`/`0x20` dwords (`0x000240D1`, `0x2680`, `0x00021679`) were read
+  directly from the sample files with `xxd`, so those **are** confirmed; their field labels follow ABKTool's
+  struct.
 - The field *order* comes from the tool's own `printf` strings and PDB field names, which is strong but not
   byte-proven.
 - No WAV was re-generated in this session — the pre-extracted `CAR_66_M3GTR/` output was not re-run.
@@ -131,8 +145,8 @@ sounds. The eight `CAR_66_M3GTR` WAVs are engine-sound variations.
 3. **Off-by-a-field reads of the header.** **Cause:** assuming the struct order from the string list is exact.
    **Fix:** validate against the confirmed anchors (`ABKC` magic, file-size word, SFX offset) before trusting
    neighbouring fields.
-4. **`BNKx` vs `BNKl`.** **Cause:** the printable magic varies by bank; the tool checks only the first three
-   bytes. **Fix:** accept `BNK?`; don't hardcode `l`.
+4. **`BNKl` vs `BNKb`.** **Cause:** the trailing magic byte encodes endianness (`l` = little-endian,
+   `b` = big-endian), not a bank subtype. **Fix:** branch on it rather than hardcoding `l`.
 
 ## Assets
 
@@ -144,9 +158,9 @@ One subagent session (PDB symbol dump, `strings` on both EXEs, hexdumps of the s
 
 ## Open questions
 
-- Exact byte offsets of `Platform`, `Target type` and `Num. modules` in the `.abk` header (between `0x08` and
-  `0x10`) are not pinned.
-- Meaning of the `.bnk` `05`/`09` `u16` pair, and whether the `u32` table at `0x18` is a chunk-offset table.
+- Field labels in the `.abk`/`.bnk` headers follow ABKTool's and vgmstream's structs; the sample's
+  dword-to-field mapping was not re-validated byte-for-byte.
+- Whether the `.bnk` `u32` table at `0x14` is strictly a per-sound offset table.
 - Which AEMS codecs, beyond PCM, the samples use, and whether SX supports them.
 - Which games ship `ABKC` v1.1.1 (`CAR_66_M3GTR` names a BMW M3 GTR, the NFS Most Wanted 2005 hero car, but
   the exact title build was not confirmed from the files).

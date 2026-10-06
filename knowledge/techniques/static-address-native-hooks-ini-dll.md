@@ -1,19 +1,20 @@
 ---
 kind: technique
-title: "Static-address native hooks from an INI-driven DLL (ThirteenAG injector pattern)"
-tags: [native-hook, x86, injector, thirteenag, code-cave, game-mod, no-source, static-addresses, ini]
+title: "Static-address native hooks from an INI-driven DLL (LINK/2012 injector pattern)"
+tags: [native-hook, x86, injector, link2012, code-cave, game-mod, no-source, static-addresses, ini]
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
+  - "https://github.com/thelink2012/injector"
   - "https://github.com/ThirteenAG/Ultimate-ASI-Loader"
 ---
 
-# Static-address native hooks from an INI-driven DLL (ThirteenAG injector pattern)
+# Static-address native hooks from an INI-driven DLL (LINK/2012 injector pattern)
 
 > When a shipped PC game has no source, no loader API and no script hook, the pragmatic route is a DLL
-> that overwrites known instructions at fixed addresses and reads its settings from an INI. The
-> ThirteenAG `injector` header makes that safe enough to be maintainable: `WriteMemory`, `MakeNOP`,
+> that overwrites known instructions at fixed addresses and reads its settings from an INI.
+> LINK/2012's `injector` header makes that safe enough to be maintainable: `WriteMemory`, `MakeNOP`,
 > `MakeJMP`/`MakeCALL` and hand-written naked code caves that return to a saved exit address. This is
 > the pattern behind NFS Most Wanted (2005)'s *Extra Options* mod.
 
@@ -41,7 +42,7 @@ Do not use it where an official script/mod API exists, and stay away from multip
    original bytes in mind:
 
    ```cpp
-   // dllmain.cpp pattern (ThirteenAG injector.hpp)
+   // dllmain.cpp pattern (LINK/2012 injector.hpp)
    injector::WriteMemory<unsigned char>(0x7AC3EC, minLaps, true);   // overwrite a compare's operand
    injector::WriteMemory<DWORD>(0x8F5790, 0x0BE6E0, true);          // grow an engine memory pool size
    injector::MakeNOP(0x551455, 7, true);                            // erase a call/check
@@ -51,7 +52,8 @@ Do not use it where an official script/mod API exists, and stay away from multip
    `MakeJMP`/`MakeCALL` to a `__declspec(naked)` function lets you run custom asm and then `jmp` back to a
    saved **cave-exit** address. The mod keeps a table of those exits (`CameraNamesCodeCaveExit = 0x51C98C`,
    `HeatLevelsCodeCaveExit = 0x443dc9`, …) so each cave returns exactly where the overwritten instruction
-   would have continued. `MakeRangedNOP` handles multi-byte NOPs across instruction boundaries.
+   would have continued. `MakeRangedNOP(at, until)` handles multi-byte NOPs across instruction boundaries
+   (it takes an **end** address, not a length).
 4. **Configure from a file.** Settings live in `NFSMWExtraOptionsSettings.ini`, read with a tiny
    `CIniReader`; the DLL reads the INI once in `DllMain` (or a worker thread, `DWORD WINAPI Thing(LPVOID)`),
    then installs the patches. This keeps every magic number out of the binary and makes the mod a single
@@ -73,16 +75,17 @@ Do not use it where an official script/mod API exists, and stay away from multip
 4. **Settings silently ignored.** **Cause:** INI next to the wrong module (working directory vs DLL dir).
    **Fix:** resolve the INI relative to the DLL/`GetModuleFileName`.
 5. **NOP too short.** **Cause:** erasing fewer bytes than the instruction occupies, leaving a partial
-   instruction. **Fix:** measure the instruction length; use `MakeRangedNOP(addr, len)`.
+   instruction. **Fix:** measure the instruction length; use `MakeRangedNOP(at, until)` with the **end**
+   address.
 6. **"Modded game check" style guards.** Some builds verify their own files/save integrity. Clearing such a
    check is a game-integrity tweak, not an ownership/DRM bypass — decide deliberately whether it is in scope
    for your mod, and never touch anti-cheat or licence checks.
 
 ## Seen in
 
-- **NFS Most Wanted (2005) — *NFSMW Extra Options*** (`~/Documents/Code/game-tools/EA Games/NFSMWExOpts-master/`,
+- **NFS Most Wanted (2005) — *NFSMW Extra Options*** (https://github.com/ExOptsTeam/NFSMWExOpts;
   `NFSMWExtraOptions/dllmain.cpp`, 1500+ lines): lap/opponent/traffic limits, heat override, rain parameters,
   vinyl categories, hidden cameras, split-screen, windowed mode, starting cash, car scale, memory-pool growth.
-  Uses `includes/injector/injector.hpp` (ThirteenAG), `includes/IniReader.h`, `includes/CPatch.h` and
+  Uses `includes/injector/injector.hpp` (LINK/2012), `includes/IniReader.h`, `includes/CPatch.h` and
   `DialogInterfaceHook.h`.
 - Same pattern (different games/harness) recurs across the ThirteenAG ecosystem's ASI mods.

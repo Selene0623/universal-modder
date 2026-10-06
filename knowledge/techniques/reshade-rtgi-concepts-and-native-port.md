@@ -18,7 +18,7 @@ links:
 
 # ReShade RTGI concepts and porting to a native engine pipeline
 
-> Ray-traced global illumination can be delivered as a ReShade post-process shader in any DX9/DX10/DX11/DX12 game, or moved into an engine's own render pipeline. This note covers the general concepts any such implementation shares — depth/normal estimation, stochastic screen-space tracing, BRDF importance sampling, denoising and temporal accumulation, blue-noise dithering, and ray-based AO — then outlines the open-source references that document them concretely and what a native port requires. The concepts here were learned by studying **iMMERSE Pro** by Marty McModding; that work is proprietary and this note documents only general RTGI theory, not its code or implementation tricks.
+> Ray-traced global illumination can be delivered as a ReShade post-process shader in any DX9/DX10/DX11/DX12 game, or moved into an engine's own render pipeline. This note covers the general concepts any such implementation shares — depth/normal estimation, stochastic screen-space tracing, BRDF importance sampling, denoising and temporal accumulation, blue-noise dithering, and ray-based AO — then outlines the open-source references that document them concretely and what a native port requires. The concepts here were learned from open, readable implementations — in particular **DAMP RT** (the active fork of ZN_FX, `dtrail/ZN_FX-Updated`) — and not from iMMERSE Pro's shader files; this note documents general RTGI theory only, not any proprietary implementation.
 
 ## When to use it
 
@@ -27,7 +27,7 @@ links:
 - You are deciding between a screen-space (DX11, no RT hardware) and a hardware-RT (DX12/DXR) path.
 - You want to understand the shared skeleton behind every RTGI shader before reading any single implementation.
 
-**Credit and prior art.** The practical, game-agnostic form of this technique was popularized by **iMMERSE Pro** (Pascal Gilcher / Marty's Mods) — see https://martysmods.com. It is the reference for how RTGI can run as a universal ReShade shader rather than a per-engine integration. This note is educational documentation, not a competitor or replacement; buy the original if you want the working product. Concrete, readable detail is drawn from the open-source projects listed below.
+**Credit and prior art.** The practical, game-agnostic form of this technique was popularized by **iMMERSE Pro** (Pascal Gilcher / Marty's Mods) — see https://martysmods.com. It is the reference for how RTGI can run as a universal ReShade shader rather than a per-engine integration. This note is educational documentation, not a competitor or replacement; buy the original if you want the working product. Concrete, readable detail here is drawn from the open-source projects listed below (DAMP RT / ZN_FX-Updated in particular), not from iMMERSE Pro's source.
 
 ## How
 
@@ -98,10 +98,10 @@ write_accumulation_buffer(final)
 | XeGTAO (Intel) | MIT | Template for screen-space effects as compute passes (Prefilter → Main → Denoise), header-only HLSL, DX11/DX12 |
 | DAMP RT / ZN_FX-Updated | GPL v3 | Full screen-space RTGI pipeline: depth-mip cone tracing, temporal accumulation with variance clamping, motion-vector support, bounce lighting |
 | RadiantGI (AstrayFX) | CC BY-ND 4.0 | Alternative approach — disk-to-disk radiance transfer instead of path tracing; **no derivatives allowed** |
-| kiselgra/rtgi (Kiel University) | Educational | Textbook wavefront path tracing; uniform/cosine/light/BRDF sampling, NEE + MIS, OpenImageDenoise integration |
+| kiselgra/rtgi (Kiel University) | GPL-3.0 | Textbook wavefront path tracing; uniform/cosine/light/BRDF sampling, NEE + MIS, OpenImageDenoise integration |
 | RTXGI v1.x DDGI (NVIDIA) | Custom | Probe-based irradiance caching, spherical harmonics, engine-integration docs |
 | RTXGI v2.0 NRC/SHaRC (NVIDIA) | Custom | Radiance caching: neural (NRC, needs Tensor Cores) and spatially hashed (SHaRC, vendor-agnostic) |
-| Quake II RTGI (vkPT) | MIT | Complete real-time Vulkan path tracer (hardware RT) |
+| Quake II RTGI (vkPT) | GPL-2.0 | Complete real-time Vulkan path tracer (hardware RT) |
 
 ### Moving a ReShade GI shader into a native pipeline
 
@@ -156,10 +156,10 @@ Standard screen-space compute shape: 8×8 thread groups, one dispatch per pass, 
 
 ## Seen in
 
-- **iMMERSE Pro** (Pascal Gilcher / Marty's Mods) — universal ReShade RTGI for DX9/DX10/DX11/DX12 games; the practical reference this note was studied against. https://martysmods.com
+- **iMMERSE Pro** (Pascal Gilcher / Marty's Mods) — universal ReShade RTGI for DX9/DX10/DX11/DX12 games; credited as the popularizer of the technique. https://martysmods.com
 - **DAMP RT** (Zenteon; active fork `dtrail/ZN_FX-Updated`) — GPL v3 ReShade RTGI using depth-mip cone tracing and temporal accumulation.
 - **RadiantGI** (BlueSkyDefender / AstrayFX) — CC BY-ND 4.0 ReShade GI via disk-to-disk radiance transfer.
 - **XeGTAO** (Intel, MIT) — screen-space AO compute architecture, widely used as the structural template for native screen-space passes.
-- **Quake II RTGI (vkPT)** (MIT) — full hardware-RT Vulkan path tracer.
+- **Quake II RTGI (vkPT)** (GPL-2.0) — full hardware-RT Vulkan path tracer.
 - **RTXGI DDGI / SHaRC** (NVIDIA) — probe- and hash-based radiance caching used by engines with DXR.
 - **Disrupt (Watch Dogs 1/2/Legion)** — deferred engine analyzed as a target for a native RTGI port; WD1/WD2 screen-space, WDL hardware RT.

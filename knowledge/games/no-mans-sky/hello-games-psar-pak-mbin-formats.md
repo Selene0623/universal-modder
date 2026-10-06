@@ -7,16 +7,14 @@ game_version: "PC (GOG/Steam), 2016–2023 RE window; PS4 and Switch variants no
 platform: windows
 engine: unknown
 route: data
-tools: ["brink.bms (QuickBMS)", "MBINCompiler (Atvaark/swuforce)", "NMS-Tools (HugoPeters)", "HGPAKtool (monkeyman192)", "Switch-Toolbox (KillzXGaming)", "010 Editor templates"]
+tools: ["brink.bms (QuickBMS)", "MBINCompiler (monkeyman192)", "NMS-Tools (HugoPeters)", "HGPAKtool (monkeyman192)", "Switch-Toolbox (KillzXGaming)", "010 Editor templates"]
 anti_cheat: "none known"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 date: 2026-10-05
 links:
-  - "web/open-source-modding.github.io/docs/nms/nms-formats.md"
-  - "web/open-source-modding.github.io/docs/nms/xentax-nms-knowledge.md"
-  - "web/open-source-modding.github.io/.opencode/docs/xentax-nms-ets2-mtg-raw.md"
+  - "https://github.com/monkeyman192/MBINCompiler"
 tags: ["hello-games", "psar", "hgpak", "mbin", "exml", "mbincompiler", "loose-files", "glsl", "skeleton", "archive"]
 ---
 
@@ -25,23 +23,27 @@ tags: ["hello-games", "psar", "hgpak", "mbin", "exml", "mbincompiler", "loose-fi
 > No Man's Sky runs on a custom Hello Games engine, not Unity or Unreal. Its data
 > lives in `.pak` archives (a PSAR variant on PC, HGPAK on PS4/Switch) and its
 > core data format is `.mbin`, which decompiles to XML (`.exml`). The useful modding
-> lever is that the PC build loads loose files from `GAMEDATA/PCBANKS/` without
+> lever is that the PC build loads loose files from `GAMEDATA/PCBANKS/` (pre-5.50;
+> since 5.50, January 2025, mods go under `GAMEDATA/MODS/`) without
 > repacking, and shaders ship as editable GLSL. This note records the formats and
 > the known gaps from the XeNTaX extraction.
 
 ## Setup
 - Game: No Man's Sky PC (PSAR variant PAK), plus PS4/Switch (HGPAK).
 - Tooling used on the forum: QuickBMS + aluigi's `brink.bms`, HugoPeters'
-  NMS-Tools (`NMS-Extract`, `NMS-View`), MBINCompiler (Atvaark/swuforce) with
+  NMS-Tools (`NMS-Extract`, `NMS-View`), MBINCompiler (monkeyman192) with
   010 Editor templates, HGPAKtool for console PAKs, Switch-Toolbox for console
   textures/audio. hcs64 tools (vgmstream, ww2ogg) for the standard Wwise audio.
 - No version pin was recorded in the dump; treat format details as
-  2016–2023-era. Verify against the current build before relying on them.
+  2016–2023-era. Note: since 5.50 (January 2025) the PC build's `.pak` archives
+  are **HGPAK** too (no longer the PSAR variant), and mods load from
+  `GAMEDATA/MODS/`. Verify against the current build before relying on them.
 
 ## Route and why
 - **Data modding, loose-file first.** The PC game loads loose files from
-  `GAMEDATA/PCBANKS/`, so shader and texture edits (chromatic aberration off,
-  vignette off, shader injection) need no archive repack. Repacking PSAR/HGPAK
+  `GAMEDATA/PCBANKS/` (pre-5.50; `GAMEDATA/MODS/` on 5.50+), so shader and
+  texture edits (chromatic aberration off, vignette off, shader injection) need
+  no archive repack. Repacking PSAR/HGPAK
   is the hard part and was avoided. An emoose Reddit guide (2016) documents the
   loose-file approach.
 - MBIN is the editable data layer: decompile `.mbin` → `.exml` (XML), edit,
@@ -102,8 +104,8 @@ discussed in the source threads.
    (with the `clog` edit). For console, use HGPAKtool.
 2. For data edits: decompile target `.mbin` to `.exml` with MBINCompiler, edit
    the XML, compile back.
-3. For shader/texture edits: drop loose files under `GAMEDATA/PCBANKS/` so the
-   game loads them without repacking.
+3. For shader/texture edits: drop loose files under `GAMEDATA/MODS/` (5.50+) or
+   `GAMEDATA/PCBANKS/` (older) so the game loads them without repacking.
 4. To inspect models: NMS-View (models + skeletons); Blender via OBJ/FBX.
 
 ## Verification
@@ -115,11 +117,13 @@ discussed in the source threads.
 ## Gotchas
 1. **`brink.bms` extracts nothing useful.** **Cause:** files are zlib-compressed
    but the script logs them raw. **Fix:** change `log` → `clog` (size, size).
-2. **PC vs console PAK mismatch.** **Cause:** PS4/Switch use `HGPAK` magic and
-   zstd/Oodle, not the PC PSAR variant. **Fix:** use HGPAKtool for consoles.
+2. **PC vs console PAK mismatch.** **Cause:** on the described 2016–2023 builds
+   PS4/Switch use `HGPAK` magic and zstd/Oodle while the PC uses a PSAR variant;
+   since 5.50 (Jan 2025) the PC build uses HGPAK as well, so the split is no
+   longer clean. **Fix:** use HGPAKtool for HGPAK archives.
 3. **Repacking fails / game rejects rebuilt archives.** **Cause:** no confirmed
    repacker; console repacking is WIP. **Fix:** use loose files in
-   `GAMEDATA/PCBANKS/` and never repack.
+   `GAMEDATA/MODS/` (5.50+) or `GAMEDATA/PCBANKS/` (older) and never repack.
 4. **Skeleton comes out misaligned.** **Cause:** rotation order differs per model
    (XZY vs XYZ). **Fix:** none known — inspect and pick the order per model.
 5. **Only localization MBIN is fully understood.** **Cause:** other `Gc*` types

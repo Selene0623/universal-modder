@@ -3,12 +3,12 @@ kind: game
 title: "Watch Dogs Shadow Engine: practical modding findings (shadows, vehicles, world, Lua)"
 game: "Watch Dogs"
 games_also: []
-game_version: "see note — findings are per RuntimeProfile (Global/04DF, Shev/A4EE, VMPless, Complete Edition, Asia/Miru); policy controls are Global .12–.15"
+game_version: "see note — findings are per RuntimeProfile (Global/04DF, Shev/A4EE, VMPless, Complete Edition, Asia/Miru; VMPless is a shipped build without VMProtect packing, not a cracked dump); policy controls are Global .12–.15"
 platform: windows
 engine: unknown
 route: native-hook
 tools: ["NexusTools host/loader", "Ghidra", "Python (offline harnesses)", "TinyCC 0.9.27 (win64)", "custom population/workload capture", "ETW/DXGI presentation capture"]
-anti_cheat: "No anti-cheat interaction is documented. Watch Dogs 1 is single-player and the mod is a native patch loaded through the NexusTools host on the user's own copy; no protection is described or bypassed."
+anti_cheat: "No anti-cheat interaction is documented. Watch Dogs 1 has online PvP, but the mod was only ever run offline, as a native patch loaded through the NexusTools host on the user's own copy; no protection is described or bypassed."
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
@@ -27,7 +27,7 @@ tags: ["disrupt", "shadow-engine", "shadows", "vehicle-lights", "world-streaming
 
 ## Setup
 
-- Game: Watch Dogs 1 (PC, x64), single-player, loaded via the NexusTools host.
+- Game: Watch Dogs 1 (PC, x64), loaded via the NexusTools host. WD1 has online PvP, but this mod was only run offline.
 - The mod is a native patch plus a Lua menu and a file-mailbox bridge. It changes
   shadow capacity, vehicle-light quality caps and a headlight limiter.
 - Policy values in this note are from the Global profile .12–.15 experiments; other

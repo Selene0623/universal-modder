@@ -1,6 +1,6 @@
 ---
 kind: technique
-title: "ASUS AURA USB protocol: opcodes, zone table and the TUF X570 4-pin header dead end"
+title: "ASUS AURA USB protocol: opcodes, zone table and the unresolved TUF X570 4-pin header"
 tags: [asus, aura, openrgb, usb-hid, rgb, tuf-x570, reverse-engineering, opcodes]
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
@@ -11,13 +11,14 @@ links:
   - "https://github.com/liquidctl/liquidctl/blob/main/docs/asus-aura-led-guide.md"
 ---
 
-# ASUS AURA USB protocol: opcodes, zone table and the TUF X570 4-pin header dead end
+# ASUS AURA USB protocol: opcodes, zone table and the unresolved TUF X570 4-pin header
 
 > The ASUS AURA USB controller is a simple 65-byte HID device driven by four opcode groups
 > (SetEffect / SetEffectColor / Commit / Direct). Reverse-engineering the mainboard HAL
-> (`Aac3572MbHal_x86.exe`) yields the full opcode set and zone table. The important negative result:
-> on a TUF X570 the two **4-pin 12V RGB headers are not on this HID path at all** — they appear to
-> live on the ENE eIO chip over SMBus, so no AURA HID packet can drive them.
+> (`Aac3572MbHal_x86.exe`) yields the full opcode set and zone table. Our own attempt to
+> drive the TUF X570's two **4-pin 12V RGB headers** with these packets was **unresolved** —
+> the packets executed but the header LEDs stayed white — while OpenRGB documents X570 boards
+> driving the 12V headers *from this same controller*, so it is not a hardware limit.
 
 ## When to use it
 
@@ -121,13 +122,15 @@ Do not re-analyze; run postScripts against the existing project.
 
 ## Gotchas
 
-1. **The 4-pin headers are not on AURA HID.** **Symptom:** every packet format (Direct `EC 40`,
-   SetEffect `EC 35`, SetEffectColor `EC 36`, Commit `EC 3F 55`) writes successfully but the header
-   LEDs stay white; the same packets drive onboard and ARGB zones fine. **Cause:** on the TUF X570 the
-   12 V headers are on a different bus (likely the **ENE eIO chip on `/dev/i2c-8`**, same SMBus as DRAM
-   at `0x70–0x73`), not the AURA USB device. **Fix:** stop looking for a different HID opcode — check
-   `i2cdetect -l` / `i2cdetect -y 8` and treat it as an I2C problem. This is a widespread ASUS issue
-   across several board families.
+1. **The 4-pin headers did not respond to AURA HID — unresolved, not a hardware limit.**
+   **Symptom:** every packet format (Direct `EC 40`, SetEffect `EC 35`, SetEffectColor `EC 36`,
+   Commit `EC 3F 55`) writes successfully but the header LEDs stay white; the same packets drive
+   onboard and ARGB zones fine. **Cause:** not established here. OpenRGB documents X570 boards
+   driving the 12V headers *from this controller*, so the headers are reachable over AURA HID in
+   general; our TUF X570 result is an unresolved per-board/address-mapping problem. A different
+   bus (the **ENE eIO chip on `/dev/i2c-8`**, same SMBus as DRAM at `0x70–0x73`) remains a
+   candidate. **Fix:** check `i2cdetect -l` / `i2cdetect -y 8` and re-check the channel/zone
+   mapping; do not conclude the headers are off-limits on all boards.
 2. **`UsbHidControlWithPatch` is dead code.** **Symptom:** a promising "patched HID path" class.
    **Cause:** it has RTTI but zero code references — empty vtable, no constructor. **Fix:** ignore it;
    there is no hidden patched path.
@@ -142,6 +145,6 @@ Do not re-analyze; run postScripts against the existing project.
 
 ## Seen in
 
-- ASUS AURA RE workbench (`re/aura-re/`), target TUF X570, device `0B05:18F3`
-- OpenRGB AURA driver fork (`rgb/OpenRGB/`) — implements Direct-mode emulation and the LED-mask fix
+- An ASUS AURA reverse-engineering workbench (unpublished), target TUF X570, device `0B05:18F3`
+- The OpenRGB AURA driver fork (a local OpenRGB checkout) — implements Direct-mode emulation and the LED-mask fix
   from this protocol knowledge

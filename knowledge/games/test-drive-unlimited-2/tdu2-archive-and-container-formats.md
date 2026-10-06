@@ -117,8 +117,8 @@ Header payload (offsets within the 64-byte header, i.e. byte 8 in the file):
 - `[14:16]` SpecialFlag2 (u16)
 - `[16:20]` file_size (u32, whole file)
 - `[20:24]` packed_size (u32, sum of file payload sizes)
-- `[24:28]` BlockSize1 (u32) — 4 or 32 in scanned TDU2 banks
-- `[28:32]` BlockSize2 (u32) — 16 in scanned TDU2 banks
+- `[24:28]` BlockSize1 (u32) — 4 or 32 per `Bnk.cs`
+- `[28:32]` BlockSize2 (u32) — 16 per `Bnk.cs`
 - `[32:36]` packed_count (u32, number of files)
 - `[36:40]` year (u32)
 - `[40:44]` size_section_addr
@@ -222,7 +222,7 @@ There are two distinct things under the `.xmb` name:
 
 ### The known `.bnk` repack bug
 
-`BNK Manager/AGENTS.md` documents that repack fails under Wine ("end of stream" in
+`BNK Manager/AGENTS.md` (unpublished local notes) documents that repack fails under Wine ("end of stream" in
 `_ReadPackedHierarchy()` when `Read()` runs after `SaveAs()`; all sections pass checksum but the
 tree parser reads more entries than the data holds). Reading `Bnk.cs` shows two concrete
 suspects, both on the write path:
@@ -245,12 +245,12 @@ reasoned from the code, not observed in-game — see Open questions.)
 # Needs bigfile_EU_N.big and bigfile_EU_N.map together.
 # TDU2.Unpacker is .NET 8; it XORs each payload with D7 A8 E2 D4 and writes by resolved path.
 dotnet TDU2.Unpacker/bin/Debug/net8.0/TDU2.Unpacker.dll \
-    ~/Games/TDU2/bigfile_EU_1.big  ~/Documents/Modding/TDU2/Unpacked
+    <install>/bigfile_EU_1.big  <unpacked-tree>
 # (Repeat per bigfile. Names resolve via Projects/FileNames.list; misses land in __Unknown.)
 
 # --- Layer 2: inspect/repack a .bnk -----------------------------------------
-# tdumt2 builds the MiniBnkManager GUI (BNK Manager/ is a Wine prefix for the prebuilt exe):
-WINEPREFIX="~/Documents/Code/game-tools/TDU/BNK Manager" wine MiniBnkManager.exe
+# tdumt2 builds the MiniBnkManager GUI (a Wine prefix for the prebuilt exe):
+WINEPREFIX=<wineprefix> wine MiniBnkManager.exe
 # Logs: Logs/ModdingLib.log (set DEBUG in Conf/log4net.xml for verbose tree parsing).
 
 # --- Independent KNAB packer (no .NET) --------------------------------------
@@ -281,14 +281,15 @@ What is verified from the sources:
   command; `Xmb.cs`'s in/out volume offsets are literal.
 
 Not verified here (no game data touched, nothing run): the repack bug is **not** reproduced —
-the two suspects are read out of `Bnk.cs`, not observed. No `.big`, `.bnk` or `.xmb` bytes were
-examined; every claim is from tool source. The tree-terminator hazard is reasoning only.
+the two suspects are read out of `Bnk.cs`, not observed. The field layout above and the
+tree-terminator hazard are tool-source-only at this point. (`.bnk` bytes are examined in the
+dated byte-level section below; the source-only statement applies to `.big`, `.map` and `.xmb`.)
 
 Added 2026-10-06, from parsing the retail banks directly (`.bnk` only; `.big`, `.map` and
 `.xmb` are still source-only):
 
-- `bnk_extract.py --scan` parses **9660/9660** banks under
-  `~/Documents/Modding/TDU2/Files/Euro/Bnk` with every `(offset, size)` inside the file, and
+- `bnk_extract.py --scan` parses **9660/9660** banks in an extracted retail tree with every
+  `(offset, size)` inside the file, and
   **3573/3573** in the TDU2.Unpacker output tree. Three files under `Interior/`, `Islands/`
   are not KNAB containers.
 - The `.vmf` payload pulled out by path was checked against an independent editor screenshot:
@@ -314,7 +315,7 @@ Added 2026-10-06, from parsing the retail banks directly (`.bnk` only; `.big`, `
    `SaveAs()`, though every section's checksum passed. **Cause:** likely
    `FileMode.OpenOrCreate` not truncating (`Bnk.cs:1286`) so stale tail bytes are re-read, and/or
    the `children_count` → `byte` cast (`Bnk.cs:931`) truncating counts > 255. **Fix (per
-   `BNK Manager/AGENTS.md`):** try native .NET 4.8 under Wine
+   `BNK Manager/AGENTS.md` (unpublished local notes)):** try native .NET 4.8 under Wine
    (`winetricks dotnet48`), and/or change `Save()` to `FileMode.Create` and rebuild.
 6. **`DB.bnk` contents are encrypted.** **Symptom:** `.db` files from `DB.bnk` are unreadable.
    **Cause:** TDU1-era XTEA-CBC DB encryption (key/IV scheme in `bnk_packcdb.py`); decrypted

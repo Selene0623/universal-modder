@@ -45,7 +45,7 @@ A BNK is `magic[4] + u32 length + body`, repeated. Recognised magics (little-end
 Sections written in the order `BKHD`, `DIDX`+`DATA`, `HIRC`, `STID`, unknowns.
 
 - **`BKHD`** — the version gate. Body: `version u32`, `id u32`, `language i32`,
-  `feedback i32`, then `projectID u32` **only if `version > 65`**, then padding ints.
+  `feedback i32`, then `projectID u32` **only if `version > 76`**, then padding ints.
   Everything downstream is keyed off `version`.
 - **`DIDX`** — the media index: `length/12` entries of `{ wemID u32, offset u32, length u32 }`.
   `offset` is relative to the start of the `DATA` body. In BNK the WEMs are packed with
@@ -68,9 +68,9 @@ body    ...   object ID (u32) followed by type-specific fields
 ```
 
 The **`length` includes the 4-byte object ID**, and the object body's first field is that
-ID. The field layout after the ID depends on `type` **and** on `BKHD.version`. Typical
-type IDs seen: `0x02` Sound/SFX-Voice (references a WEM), `0x04` Event Action, `0x05`
-Event, `0x07` Music Segment; the full map is in each `.wschema`'s type-id table.
+ID. The field layout after the ID depends on `type` **and** on `BKHD.version`. The type
+IDs are `0x02` Sound, `0x03` Action, `0x04` Event, `0x05` Random/Sequence container,
+`0x07` Actor-Mixer, `0x0A` Music Segment; the full map is in each `.wschema`'s type-id table.
 
 ### 3. HIRC object serialization is schema-driven (`.wschema`)
 
@@ -140,14 +140,15 @@ OGG file — the codec setup packet is in the WEM.
 
 ### 5. Where the pieces live
 
-- `game-tools/openwwise-toolkit-git/wwise-audio-tools/` — C++ merge target: Kaitai BNK/WEM
-  parsers (`ksy/`), `ww2ogg`/`revorb`, `.wschema` loader
-  (`include/wwtools/schema.hpp`), CLI `wwtools schema <vNN.wschema>`.
-- `game-tools/openwwise-toolkit-git/wwiseutil/` — Go reference (format + `ReplaceWems`
-  algorithm), read-only, no `go.mod`.
-- `re/FusionTools/wschemas/` — the 16 `.wschema` files (v88 is a bundled .NET PE, not a
-  real schema) and `wschema_dump.py`.
-- `game-tools/Wwise/` — authoring installs and the WDL version mapping.
+- **Unpublished local work.** The author's C++ merge target (`wwise-audio-tools`, a local
+  checkout, not published from this work): Kaitai BNK/WEM parsers (`ksy/`),
+  `ww2ogg`/`revorb`, the `.wschema` loader (`include/wwtools/schema.hpp`), and the CLI
+  `wwtools schema <vNN.wschema>`.
+- **Unpublished local work.** A `wwiseutil` Go checkout kept as a read-only reference
+  (format + `ReplaceWems` algorithm), no `go.mod`.
+- **Unpublished local work.** The `FusionTools` `.wschema` files (16 of them; `v88` is a
+  bundled .NET PE, not a real schema) and the `wschema_dump.py` dumper.
+- Local Wwise authoring installs and the WDL version mapping.
 
 ## Gotchas
 
@@ -171,13 +172,13 @@ OGG file — the codec setup packet is in the WEM.
    Wwise banks. **Cause:** `object_type` width changed — `u32` for `BKHD.version <= 48`,
    `u8` after. **Fix:** branch the type read on the bank version before reading `length`.
 
-3. **Two different varint encodings coexist in one BNK.**
+3. **Wwise varints are MSB-first; a Kaitai spec reads them little-endian.**
    **Symptom:** list/parameter counts come out absurdly large or negative.
-   **Cause:** HIRC parameter/count fields use a 7-bit **big-endian** varint (Wwise's
-   `AkBankReadHelpers.h` `ReadVariableSizeBankData`; FusionTools' `ReadVarInt` shifts left),
-   while BNK header-level counts in the Kaitai spec use **little-endian** LEB128
-   (`vlq_base128_le`). **Fix:** use the big-endian form inside HIRC, the little-endian form
-   for header counts — document which is used at each call site; keep both readers available.
+   **Cause:** Wwise varints are 7-bit **MSB-first** (`AkBankReadHelpers.h`
+   `ReadVariableSizeBankData`; FusionTools' `ReadVarInt` shifts left). The KSY's
+   `vlq_base128_le` for the Event action count is a **KSY bug**, not a second encoding.
+   **Fix:** use the MSB-first form everywhere in the bank; do not special-case the
+   header counts as little-endian.
 
 4. **Padding is a per-container invariant, and `alignment = 0` means "don't".**
    **Symptom:** replaced WEMs corrupt following offsets, or a last WEM gets too much
@@ -189,7 +190,7 @@ OGG file — the codec setup packet is in the WEM.
 
 5. **`BKHD` layout is version-gated.** **Symptom:** reading `BKHD` shifts by 4 bytes on some
    versions, giving garbage `projectID`/padding. **Cause:** `projectID u32` exists only when
-   `version > 65`. **Fix:** read it conditionally on the version you just read.
+   `version > 76`. **Fix:** read it conditionally on the version you just read.
 
 6. **`DIDX` offsets are DATA-relative and stale after a replace.** **Symptom:** after
    replacing a WEM, other WEMs read as junk. **Cause:** the offsets don't track DATA-section

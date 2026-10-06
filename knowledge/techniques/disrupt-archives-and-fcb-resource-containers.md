@@ -5,7 +5,7 @@ game: "Watch Dogs: Legion"
 games_also: ["Watch Dogs", "Watch Dogs 2"]
 game_version: "WD1 (BigFileV3-era) / WD2 (V11) / Legion (V13)"
 platform: windows
-engine: Disrupt (Dunia 2 fork)
+engine: unknown
 route: data
 tools: [Gibbed.Disrupt, DisruptEd, encryptedsfbc, fcb_tool.py]
 anti_cheat: unknown
@@ -48,24 +48,25 @@ Legion's `windy_city.fat` holds ~149,013 entries and `installpackage.fat`
 ~31,934, so the index is the authoritative entry list. Most Legion entries use
 scheme 3 (LZ4LW); Oodle/LZMA are rare and the rest are stored.
 
-Repacking Legion with the Gibbed tool requires the version fields:
+Repacking Legion means writing the header's version fields to match the retail file:
 
-```
--pv 13      # platform/package version (BigFileV13)
--cv 8       # compression scheme family
--nhv 70     # name-hash version
-```
+- package/platform version — `13` (`BigFileV13`).
+- compression version — `8`. This is the compression *scheme family*; it selects the scheme table below.
+- name-hash version — `70`.
+
+(Those fields are what a repacker must set; a maintainer fork of the Gibbed tool exposes them as `-pv`/`-cv`/`-nhv` flags, but the fields themselves are what matter. Retail WD2 files use compression version 6; Legion uses 8.)
 
 ### Compression schemes
 
 From the decompressor and the `CompressionScheme*` classes:
 
-- Platform "Orbis" is scheme id 6 with `CompressionSchemeV9B` (v8, CV 9,
-  NHV 21 — a 2013 PS4 beta variant).
+- Platform "Orbis" is scheme id 6 with `CompressionSchemeV9B` (compression version 9,
+  name-hash version 21 — a 2013 PS4 beta variant).
 - Scheme 0, size 0 = stored (raw).
 - Scheme 0, size > 0 = LZMA, with one leading flag byte before a standard LZMA
   header.
-- Scheme 4 = LZ4LW, an in-place LZ4 variant.
+- LZ4LW (an in-place LZ4 variant) is scheme id **3** under compression versions 8
+  and 9, and scheme id **2** under version 6 (WD2 PC).
 
 LZ4LW block layout: `[header varint tailCount][LZ4 block][raw tail]`. The
 decoder emits the match **offset before** the match-length extension, which is
@@ -130,8 +131,9 @@ Gibbed tools.
 
 ## Gotchas
 
-1. **Repacked Legion archive won't load** → wrong version flags → pass
-   `-pv 13 -cv 8 -nhv 70`; Legion needs V13 with the LZ4LW-capable scheme.
+1. **Repacked Legion archive won't load** → wrong header version fields → set
+   package version 13, compression version 8 and name-hash version 70; Legion needs
+   V13 with the LZ4LW-capable scheme.
 2. **Decompressed bytes differ from the original** → LZ4LW interpreted as
    standard LZ4 → use the in-place variant that emits offset before length
    extension and never adds an offset-extension byte.
@@ -150,7 +152,8 @@ Gibbed tools.
 ## Seen in
 
 - `Gibbed.Disrupt` — `BigFileV13`/`V11`/`V3`, `EntryDecompression.cs`,
-  `Big/CompressionSchemeV9B.cs`, `ConvertBinaryObject`, `BinaryObjectInfo`.
+  `ConvertBinaryObject`, `BinaryObjectInfo`, plus the compression-version scheme
+  classes.
 - `DisruptEd` / `FCBastard` — Nomad serializers (`CombinedMoveFile`, `FCXMap`,
   `EntityLibrary`, `Oasis`, generic/RML/XML) and the `encryptedsfbc` branch.
 - `fcb_tool.py` (Disrupt project root) — minimal FCB reader/writer with a

@@ -5,26 +5,24 @@ tags: [test-drive-unlimited-2, runtime-patching, dll-proxy, code-cave, imgui, ru
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-links:
-  - "https://github.com/hkAlice/tdu2-runtime-patch"
+links: []
 ---
 
 # Runtime-patching TDU2 in memory via a version.dll proxy (tdu2-runtime-patch)
 
-> A Rust `cdylib` shipped as a proxy `version.dll` that forwards all twelve version API exports to the system provider, then patches `TestDrive2.exe` **in memory** by `module_base + hardcoded_offset`. No game file on disk is touched. It is a clean worked example of proxy-DLL runtime patching: thread-off-main in `DllMain`, `VirtualProtect`+`FlushInstructionCache` writes, whole-region snapshots for reversible toggles, and an ImGui DX9 overlay bound to `F8`.
-> This note documents the *technique* and the camera/FOV patches. The project also carries patch groups outside this note's scope; per workspace policy those are **not** reproduced here.
+> A Rust `cdylib` shipped as a proxy `version.dll` (hkAlice's `tdu2-runtime-patch`) that forwards twelve of `version.dll`'s exports to the system provider, then patches `TestDrive2.exe` **in memory** by `module_base + hardcoded_offset`. No game file on disk is touched. It is a clean worked example of proxy-DLL runtime patching: thread-off-main in `DllMain`, `VirtualProtect`+`FlushInstructionCache` writes, whole-region snapshots for reversible toggles, and an ImGui DX9 overlay bound to `F8`.
 
 ## When to use it
 
-- You need to change TDU2 behaviour (FOV, camera jitter/bugs, debug flags) on a retail install without shipping a modified executable.
+- You need to change TDU2 behaviour (FOV, camera jitter/bugs) on a retail install without shipping a modified executable.
 - You want a template for proxy-DLL runtime patching of any 32-bit XInput/version/dinput-style proxy target, where offsets are build-specific but the load-and-patch flow is reusable.
-- You are debugging a mod that keeps getting a forced shutdown while hot-patching.
+- Note: SecuROM can close the game when it is patched at runtime. Working around that is out of scope for this KB; the technique description here is about in-memory patching, not about defeating the protection.
 
 ## How
 
 Chain of control (all from `src/`):
 
-1. **Proxy load.** The crate is `crate-type = ["cdylib"]` named `version`; `version.def` re-exports the twelve `version.dll` functions (`GetFileVersionInfoA/W`, `GetFileVersionInfoSizeA/W`, `VerFindFileA/W`, `VerInstallFileA/W`, `VerLanguageNameA/W`, `VerQueryValueA/W`). `src/proxy.rs` resolves each from `kernelbase`/`kernel32` via `GetProcAddress` and forwards. The game loads `version.dll` from its own directory, so the proxy wins the DLL search order.
+1. **Proxy load.** The crate is `crate-type = ["cdylib"]` named `version`; `version.def` re-exports twelve of `version.dll`'s exports (`GetFileVersionInfoA/W`, `GetFileVersionInfoSizeA/W`, `VerFindFileA/W`, `VerInstallFileA/W`, `VerLanguageNameA/W`, `VerQueryValueA/W`); the `…Ex` and `ByHandle` variants are omitted. `src/proxy.rs` resolves each from `kernelbase`/`kernel32` via `GetProcAddress` and forwards. The game loads `version.dll` from its own directory, so the proxy wins the DLL search order.
 2. **Main entry (`src/lib.rs`).** `DllMain(DLL_PROCESS_ATTACH)` only calls `DisableThreadLibraryCalls` and spawns `CreateThread(init_thread)` — never patch under the loader lock.
 3. **`init_thread`.** Logs a banner, reads `tdu2-runtime-patch.ini`, sleeps `StartupDelaySeconds` (default 3), then `GetModuleHandleA("TestDrive2.exe")` → `base = module as usize`, and calls `initialize_runtime_patches(base, config)`.
 4. **Patching primitives (`src/patch_utils.rs`).** `patch_bytes(addr, bytes)`: `VirtualProtect(PAGE_EXECUTE_READWRITE)` → `copy_nonoverlapping` → restore old protection. `patch_nop(addr, len)` writes `0x90`. `relative_jump_displacement(src,dst,5)` computes a `JMP rel32`. `flush_region` calls `FlushInstructionCache(GetCurrentProcess(), addr, len)` — always after code writes.
@@ -45,7 +43,7 @@ jmp  return                   ; E9 <rel32>   -> base+0x892615
 
 ## Gotchas
 
-1. **Crash on a non-matching build.** *Symptom:* instant crash or undefined behaviour. *Cause:* every patch is a hardcoded `base + offset`; offsets are build-specific. *Fix:* the only validated binary is the Steam release `Update v034 DLC2 Build16 - EU`, `sha1 45bfdfe6cb600a32f9c9516bf34e62bea5af2a6`. On any other build you must re-derive offsets; the FOV hook at least self-checks its six expected bytes and skips on mismatch, but the other groups do not.
+1. **Crash on a non-matching build.** *Symptom:* instant crash or undefined behaviour. *Cause:* every patch is a hardcoded `base + offset`; offsets are build-specific. *Fix:* the only validated binary is the Steam release `Update v034 DLC2 Build16 - EU`, `sha1 45bfdfe6cb600a32f9c9516bf34e62bea5af2a6` (39 hex digits — truncated upstream). On any other build you must re-derive offsets; the FOV hook at least self-checks its six expected bytes and skips on mismatch, but the other groups do not.
 2. **Nothing happens / patch not applied.** *Symptom:* game runs unmodified, `tdu2-runtime-patch.log` shows `GetModuleHandleA(TestDrive2.exe) failed`. *Cause:* proxy not loaded, or the process name differs. *Fix:* place `version.dll` + ini next to `TestDrive2.exe`; under Proton ensure the local `version.dll` is actually preferred for the game module.
 3. **Deadlock / stalled launch.** *Symptom:* game hangs at startup. *Cause:* doing real work inside `DllMain` (loader lock). *Fix:* copy the project's pattern — `CreateThread(init_thread)` in `DllMain`, patch on the worker thread after `StartupDelaySeconds`.
 4. **Patched code not taking effect.** *Symptom:* bytes written but old instruction still executes. *Cause:* missing instruction-cache flush after a code write. *Fix:* always call `flush_region`/`FlushInstructionCache` after `patch_bytes`; the project flushes per region with a tag for logging.
@@ -55,7 +53,7 @@ jmp  return                   ; E9 <rel32>   -> base+0x892615
 
 ## Seen in
 
-- `~/Documents/Code/game-tools/TDU/tdu2-runtime-patch/` — `src/lib.rs`, `src/proxy.rs`, `src/patch_utils.rs`, `src/runtime_patches.rs`, `src/config.rs`, `src/features/fov.rs`, `src/features/camera.rs`, `src/overlay/`, `version.def`, `build.rs`, `README.md`. MIT; author hkAlice; version 0.7.0.
+- An unpublished local `tdu2-runtime-patch` crate — `src/lib.rs`, `src/proxy.rs`, `src/patch_utils.rs`, `src/runtime_patches.rs`, `src/config.rs`, `src/features/fov.rs`, `src/features/camera.rs`, `src/overlay/`, `version.def`, `build.rs`, `README.md`. MIT; author hkAlice; version 0.7.0.
 - Related KB context: the `version.dll` proxy pattern is the same mechanism the workspace uses for other titles (`opentdu2/` NULL-ptr fix, WDL save porting), but this one patches by `base + offset` at runtime rather than hooking an IAT entry.
 - Existing KB notes that already cover TDU2 file formats (`.BIG`/`.map`, `.2DB`, KNAB) — this note only concerns in-memory behaviour.
 
