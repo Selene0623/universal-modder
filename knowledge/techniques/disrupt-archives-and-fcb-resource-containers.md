@@ -67,6 +67,10 @@ From the decompressor and the `CompressionScheme*` classes:
   header.
 - LZ4LW (an in-place LZ4 variant) is scheme id **3** under compression versions 8
   and 9, and scheme id **2** under version 6 (WD2 PC).
+- The id is not global across format generations: the older FAT3-era table
+  (`CompressionSchemeV2`, WD1) uses **6 = LZ4LW** and **3 = XMemCompress**, and
+  `CompressionSchemeV9B` maps **4 = LZ4LW** — always check which table the
+  archive's compression version selects.
 
 LZ4LW block layout: `[header varint tailCount][LZ4 block][raw tail]`. The
 decoder emits the match **offset before** the match-length extension, which is
