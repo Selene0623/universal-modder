@@ -7,7 +7,7 @@ agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
   - "https://github.com/TES5Edit/TES5Edit"
-  - "https://github.com/TES5Edit/BSArch"
+  - "https://github.com/jturnley/CC-Packer"
   - "https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TES4"
 ---
 
@@ -15,8 +15,9 @@ links:
 
 > Two engine rules drive a lot of Fallout 4 / Skyrim / Starfield mod packaging: (1) an archive
 > (`.ba2`) is only loaded when a **plugin of the same base name** exists, and (2) a plugin can be a
-> **light master** (`.esl`, the `0x200` flag) that occupies a special slot and does not consume one
-> of the 255 full load-order slots. This note records the rules, the minimal synthetic plugin that
+> **light master** (`.esl`) that occupies a special slot and does not consume one of the 255 full
+> load-order slots. The light flag is `0x200` on Fallout 4 and Skyrim SE, and `0x100` on Starfield.
+> This note records the rules, the minimal synthetic plugin that
 > satisfies rule 1, the loose-file/`plugins.txt` handling, and the practical split thresholds from
 > the FO4 CC-Packer merge tool. For the per-record byte format, see the companion note on
 > ESM/ESP/ESL record layout.
@@ -72,8 +73,9 @@ slot. A dummy `.esp` with the same job also works but costs a slot and, on FO4, 
 ### Rule 2 — light masters and the slot algebra
 
 An ESL/light-flagged plugin occupies a light slot (`0xFE<slot:12>`), up to 4096 of them, and does
-not consume one of the ~255 full slots. Full slot ceiling drops from `0xFE` to `0xFC` when light
-(and medium, on Starfield) modules are supported. The record's object ID must fit in 12 bits — so a
+not consume one of the ~255 full slots. With light modules present the highest usable full slot
+is `0xFD` (`0xFC` on Starfield, which also has medium modules). The record's object ID must fit in
+12 bits — so a
 real gameplay plugin converted to ESL must have its object IDs compacted first. See the companion
 ESM/ESP/ESL note for the exact masks and errors.
 
@@ -154,13 +156,10 @@ CC-Packer (`FO4/CC-Packer-linux/`) merges many `cc*.ba2` Creation Club archives 
 
 ## Seen in
 
-- FO4 CC-Packer-linux (`~/Documents/Code/game-tools/Bethesda/Creation Engine/FO4/CC-Packer-linux/`)
-  — synthetic ESL, merge flow, `plugins.txt` editing, string/sound/split handling.
-- xEdit / BSArch (`~/Documents/Code/game-tools/Bethesda/Creation Engine/TES5Edit/`) — archiving and
-  the plugin-format reference
+- FO4 CC-Packer-linux (unpublished local tooling) — synthetic ESL, merge flow, `plugins.txt`
+  editing, string/sound/split handling.
+- xEdit / BSArch (unpublished local checkout) — archiving and the plugin-format reference
   (`techniques/bethesda-plugin-record-format-esm-esp-esl.md`).
-- Archive container layout and extraction:
-  `techniques/bethesda-bsa-ba2-archive-extraction.md`.
 - Applies to Fallout 4, Skyrim SE, Starfield (medium modules on Starfield), and their VR variants.
 
 ## Open questions

@@ -115,7 +115,8 @@ audio, physics and input are all moddable, and UI (the Flash ActionScript) is th
 
 ```
 # pull one .vmf out of its .bnk (entry names are stems; the extension is the folder)
-python3 bnk_extract.py --scan ~/Documents/Modding/TDU2/Files/Euro/Bnk
+# both scripts are unpublished local tooling; any KNAB reader works
+python3 bnk_extract.py --scan <extracted-bnk-tree>
 python3 vmf_extract.py extract <.../FrontEnd/HiRes/Airport.bnk> airport airport.vmf
 
 # read it
@@ -123,7 +124,7 @@ python3 vmf_extract.py header  airport.vmf      # header fields + offset-table s
 python3 vmf_extract.py strings airport.vmf      # every FF 0A string record
 python3 vmf_extract.py tags    airport.vmf      # every AS block, size + action count
 python3 vmf_extract.py as      airport.vmf --at 0x6C5   # disassemble one block
-python3 vmf_extract.py scan    ~/Documents/Modding/TDU2/Files/Euro/Bnk
+python3 vmf_extract.py scan    <extracted-bnk-tree>
 ```
 
 ## Verification
