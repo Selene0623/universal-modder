@@ -8,6 +8,8 @@ humans: ["Selene0623"]
 links:
   - "https://www.havok.com/havok-for-unity-license-1-0/"
   - "https://courtlistener.com/docket/6256484/crytek-gmbh-v-cloud-imperium-games-corp/"
+  - "https://storage.courtlistener.com/recap/gov.uscourts.cand.384429/gov.uscourts.cand.384429.1.0.pdf"
+  - "https://storage.courtlistener.com/recap/gov.uscourts.rid.56980/gov.uscourts.rid.56980.11.0.pdf"
 ---
 
 # Havok SDK-derived knowledge: what the licence forbids, what actually gets enforced, and how to write it up
@@ -55,6 +57,14 @@ Checked 2026-10-06.
 - **Middleware vendors do sue, but over commercial licence breach.** Crytek v Cloud Imperium (C.D. Cal.
   2:17-cv-08937) was filed December 2017 over an engine licence agreement, settled February 2020 and
   dismissed with prejudice the following month. That is a licensee dispute, not a modder pattern.
+- **When this scene does get hit, the notice lands on the artefact, not the knowledge.** Take-Two's February
+  2021 notice removed the reverse-engineered GTA III and Vice City repositories "against the entire fork
+  network", and the follow-up suit (`Take-Two v. Papenhoff`, N.D. Cal. 3:21-cv-6831) added a Digital
+  Millennium Copyright Act section 512(f) claim over the counter-notices. Nintendo's Switch emulator case
+  (`Nintendo v. Tropic Haze`, D.R.I. 1:24-cv-00082, final judgment 6 March 2024) turned on the same shape:
+  2.4 million dollars, findings under the anti-trafficking provision, the domain surrendered, and an order to
+  destroy the extracted keys and the key-dumping tools. Neither case was about describing a format; both were
+  about distributing circumventing code, keys or tools. That is the line the write-up rules below already draw.
 - **The live risk is platform and publisher policy.** Hosting rules and publisher letters are what actually
   stop projects: the August 2024 H2M case was a retail-copy mod shipping no leaked assets and it still drew a
   pre-launch C&D. Microsoft has been relaxed in the other direction, waiving the Havok fee for Source mods
@@ -99,12 +109,22 @@ Keep the knowledge, drop the artefact.
 6. **The agent is blocked because it wants a header layout.** **Cause:** it is matching a version by name
    instead of reading the file. **Fix:** make the file answer the question — version string plus reflection
    registry — which removes the need for the source entirely.
+7. **"Everyone does it" read as a permission.** **Cause:** a norm describes behaviour, not consent; the
+   tolerated mirrors are tolerated because nobody has bothered to file, and vendor incentives (physics
+   middleware earns from games shipping, enforcement costs more than it returns) explain the silence without
+   implying anyone approved. **Fix:** use the norm to estimate risk, not to justify a publication, and check
+   the artefact line instead: is what you are about to publish knowledge, or the SDK itself.
 
 ## What this does not prove
 
 - Only one notice corpus could be searched exhaustively from the machine that did the check; another large
   one sits behind a bot wall. Private C&D letters are never published, so a null result is not proof that
   none were sent.
+- The surviving mirrors are a biased sample. They are visible because they survived; anything that drew a
+  notice is gone or renamed, and nothing in the record lets us count the ones we cannot see.
+- "Normal practice in this scene" is a description of what modders do, not a legal position. The same record
+  shows how cheap a takedown is: one notice removes a repository and its entire fork network before a
+  counter-notice is even possible, which is a low ceiling on how much any norm protects.
 - Litigation coverage is strongest for US federal dockets; Irish courts are not covered.
 - Nothing here is legal advice, only a record of what happened in public.
 
