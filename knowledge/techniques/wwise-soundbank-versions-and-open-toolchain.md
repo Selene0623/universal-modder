@@ -24,7 +24,7 @@ links:
 > of two abandoned Wwise tools plus a Go reference) that reads/replaces BNKs and WEMs.
 > For the container/HIRC/`.wschema` internals, see the companion generic note below.
 
-Companion note (read first for the format itself): `~/.universal-modder/kb/rehan-remade__universal-modder/knowledge/techniques/wwise-soundbank-hirc-and-wschema.md` — it covers the `BKHD`/`DIDX`/`DATA`/`HIRC` chunk layout, the `HIRC` object framing, the per-version `.wschema` schema, and WEM→OGG. This note only adds the version mapping and the toolchain.
+Companion note (read first for the format itself): `knowledge/techniques/wwise-soundbank-hirc-and-wschema.md` — it covers the `BKHD`/`DIDX`/`DATA`/`HIRC` chunk layout, the `HIRC` object framing, the per-version `.wschema` schema, and WEM→OGG. This note only adds the version mapping and the toolchain.
 
 ## When to use it
 
