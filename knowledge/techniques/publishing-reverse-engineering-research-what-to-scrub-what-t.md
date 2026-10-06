@@ -8,8 +8,6 @@ humans:
 - '@Selene0623'
 date: '2026-10-06'
 links:
-- https://open-source-modding.github.io
-- https://github.com/Open-Source-Modding/open-source-modding.github.io
 - https://github.com/rehan-remade/universal-modder/pull/65
 tags: [publishing, sanitization, secrets, license-keys, local-paths, documentation, attribution, docusaurus, grep]
 ---
@@ -51,8 +49,7 @@ travel.
 4. **Delete secrets; do not relocate them.** Third-party licence keys, tokens, activation data and serials
    are deleted outright: keep none in the repo, none in a private file, and publish no extraction method.
    A method for recovering someone else's keys is not publishable knowledge, however interesting the format
-   is. What stays is the shape: where in the file the value lives, the format grammar, and what each field
-   means (client codename, module list, expiry date).
+   is.
 5. **Hunt the residue a scrub leaves behind.** Removing a link or a sentence leaves dangling prose: "samples
    available in ." where the path used to be, "cross-game work lives in" followed by an empty line, a table
    row whose only column is `AGENTS.md`, a sentence citing an internal file the reader cannot open. After the
@@ -123,8 +120,10 @@ What to drop, genericise and keep:
    not the source you built on.
 9. **Symptom:** a reader follows your note and reproduces a bug you already fixed. **Cause:** the note links the
    upstream project, but the fix lives on a fork or branch (the packer change, the format fix, the CI repair).
-   **Fix:** link the fork and name the branch, and say what it fixes; keep the upstream link too, so the note
-   stays honest about lineage.
+   **Fix:** say what the fix does, and name the branch and the commits that carry it; link the fork only if the
+   account behind it is one you would point a stranger at — if it also hosts things you would rather not
+   advertise (leaked material, expired keys), name the branch and hashes and link the upstream project instead,
+   so the note stays honest about lineage without sending readers through the rest of the account.
 10. **Symptom:** the keys are gone from every file, yet someone finds one. **Cause:** the scrub only touched the
     working tree — the blob is still reachable in history (`git log -S<literal> --all`, `git log --all -- <path>`)
     and in whatever a deploy branch already shipped. **Fix:** check history and the output branch before
@@ -140,18 +139,12 @@ What to drop, genericise and keep:
 
 ## Seen in
 
-No game note uses this yet; the audit was run on the Open-Source-Modding Disrupt/Far Cry/Havok reference site
-(the first `links:` entry above) after an upstream project declined to link to it for publishing licence keys
-extracted from a retail build. Related: the Disrupt cross-game toolchain technique note in this folder, which
-was itself written from the same docs corpus.
+No game note uses this yet; the audit was run on a community reference site for Disrupt, Dunia and Havok
+formats after an upstream project declined to link to it for publishing licence keys extracted from a retail
+build. Related: the Disrupt cross-game toolchain technique note in this folder.
 Re-swept in 2026-10-06: the Watch Dogs 1 shader-pack game note in `games/watch-dogs/` cites the Gibbed fork that carries
 the packer fix (gotcha 9) instead of only the upstream project, and a hardware-specific line was removed from
 the RTX-on-WD1 reference page. The hardware/prefix row and the conversation-content row were added after both
 kinds of hit showed up in drafts written from Discord-sourced findings. Step 4 and the licence-key row were
 tightened after review to delete keys outright rather than relocate them, and step 8 plus gotcha 10 were added
-for the history and deploy-branch boundary. The site links stay: the page carrying the SDK torrent, Drive
-folders and keygen leads was cleaned instead of delinked. The site's own history was then purged the same day
-with `git filter-repo` (key literal and the bare GUID halves, plus a committed session log) across `main`,
-`docusaurus-migration` and `gh-pages`, force-pushed with the tip tree hash unchanged; the two merged
-pull-request refs still carry the old blobs and are recorded here rather than corrected, because they cannot be
-force-pushed (gotcha 11).
+for the history and deploy-branch boundary.
