@@ -7,13 +7,13 @@ game_version: "Watch Dogs 1 retail (Steam/uPlay) + NexusTools 1.1.12/1.1.13"
 platform: windows
 engine: unknown
 route: passthrough
-tools: ["Disrupt-Shader-Compiler", "Gibbed.Disrupt", "NexusTools", "fxc (d3dcompiler_43/46/47)", "dxc"]
+tools: ["Gibbed.Disrupt", "NexusTools", "fxc (d3dcompiler_43/46/47)", "dxc"]
 anti_cheat: "none on WD1; delivering files through NexusTools is first-class, no bypass involved"
 status: working
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["@Selene0623"]
 date: 2026-10-06
-links: ["https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler", "https://github.com/Open-Source-Modding/Gibbed.Disrupt"]
+links: ["https://github.com/gibbed/Gibbed.Disrupt"]
 tags: [shaders, dxbc, fxc, dxc, hlsl, shadersobj, nexus-tools, signatures, semantics, black-screen, disrupt, dunia]
 ---
 
@@ -29,13 +29,29 @@ tags: [shaders, dxbc, fxc, dxc, hlsl, shadersobj, nexus-tools, signatures, seman
 ## Setup
 - Watch Dogs 1 retail, launched through uPlay in a Wine/Proton prefix, with NexusTools 1.1.12+ as the mod
   loader (`bin/dinput8.dll`, `bin/TroploAsiInjectionHelper.asi`, `bin/TroploNexusTools.ipe`).
-- `Disrupt-Shader-Compiler` holds the shipped `.fx`/`.inc.fx` sources, per-file header stubs
-  (`obj/hXX/<name>.pso.header`) and the permutation list `Shader_Compile_Command_Sorted.txt` (about 39k fxc
-  command lines: profile, entry point, `-D` defines, output name).
+- Unpack `engine/shaders/` from your own install with [Gibbed.Disrupt](https://github.com/gibbed/Gibbed.Disrupt).
+  That gives the shipped `.fx`/`.inc.fx` sources, the `meta/*.fx` + `meta/*.meta.xml` family and define
+  definitions, `shaders.crc`, and the compiled archive's `obj/hXX/` entries.
+- Two per-permutation artifacts the recompile needs are not shipped as files; derive them from that unpack:
+  - **Header stubs.** Every shipped compiled entry (`pso`/`vso`/`cso`/`gso`) is a short stub followed by the
+    `DXBC` fourcc, and `DXBC` never sits at offset 0. For each entry the bytes before `DXBC` are its stub.
+    Measured over all 39,136 shipped entries: stable stub lengths of 4/8/12/16/20/24/40 bytes (4 and 12
+    dominate), first `u32` a content version 0-9. Packing must re-prepend the stub, because a bare DXBC blob
+    is not loaded.
+  - **Permutation list.** One fxc command per permutation: profile (`ps_5_0`/`vs_5_0`/`cs_5_0`/`gs_5_0`),
+    entry point, `-D` defines and output name; it matches the retail entry set 1:1 (retail ships 23,359
+    `pso`, 15,651 `vso`, 103 `cso`, 23 `gso`). The engine builds it with `ShaderGenerator2` from the shipped
+    `meta/*.meta.xml`: each `<domain><options><option>` line is one permutation's comma-separated define set,
+    `/E` comes from the family's technique/pass in the `.fx`, and the output name is the shader ID (the
+    filename a compiled entry ships under, e.g. `pixel_0005c780.pso`). Retail supplies the option sets and
+    the compiled entries, but not the expanded list nor the `(family, defines) -> shader ID` pairing, which
+    is the engine's own `ComputeShaderID`. So reproduce the list from the `meta.xml` option sets.
 - Compiler side: `dxc` compiles on Linux but produces DXIL; real `fxc` is a Windows DLL
   (`d3dcompiler_43/46/47.dll`) and can be driven under Wine. A thin shim that forwards each command line to
   `D3DCompileFromFile` in a chosen `d3dcompiler_*.dll` is enough to run the whole list headlessly.
-- `Gibbed.Disrupt` (Open-Source-Modding fork) packs `shadersobj.fat` and writes its own `.nfo`.
+- Pack with upstream `Gibbed.Disrupt`. Its packer writes the `.fat` but not the archive's `.nfo` name table;
+  if you need that regenerated, use a packer build that calls `SerializeNfo` after writing the `.fat`, which
+  emits the entry path/CRC/offset sidecar the unpacker reads.
 
 ## Route and why
 Passthrough: the engine's own family registry and dispatch stay untouched, we only replace compiled shader
@@ -54,10 +70,10 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
   `gso`, plus render-state blobs and a `shaders.crc` verifier that is identical between retail and working
   mods, so it is not a per-build checksum). Retail stores its entries XMemCompress-compressed; a repack with
   raw entries is accepted, so compression is not part of the contract.
-- **Every compiled shader is a stub plus DXBC.** `obj/hXX/<name>.pso` starts with a 4- or 12-byte header stub
-  whose first `u32` is a content version (0-9), and the first `DXBC` four-character code follows it. The
-  per-file stub lives next to the source as `<name>.pso.header`; packing must prepend it, because a bare DXBC
-  blob is not loaded.
+- **Every compiled shader is a stub plus DXBC.** `obj/hXX/<name>.pso` starts with a short header stub (4-40
+  bytes; 4 and 12 dominate) whose first `u32` is a content version (0-9), and the `DXBC` four-character code
+  follows it. The stub is exactly the bytes before `DXBC` in the shipped entry, so unpacking retail yields the
+  whole stub set; packing must prepend it, because a bare DXBC blob is not loaded.
 - **DXBC carries the two signatures that matter.** Brute-scanning the container for the `ISGN`/`OSGN` fourcc
   (element size 24: semantic name offset, index, register, system-value flag, component type, mask,
   read-mask) gives ground truth for what the runtime actually binds. The vertex shader's input signature and
@@ -78,14 +94,17 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
   does.
 
 ## Build steps
-1. Compile every permutation in `Shader_Compile_Command_Sorted.txt` with an era-correct fxc (Wine + a real
-   `d3dcompiler_*.dll`), one shim invocation per line, output under `COMPILED/engine/shaders/obj/hXX/`.
-   Resume-safe reruns matter: a full pass is ~39k invocations.
-2. Prepend each file's `.header` stub (idempotent; skip files that already start with a stub).
+1. Compile every permutation from the shipped `meta/*.meta.xml` option sets (one `<option>` per permutation)
+   with an era-correct fxc (Wine + a real `d3dcompiler_*.dll`), one shim invocation per permutation, output
+   under `COMPILED/engine/shaders/obj/hXX/`. Resume-safe reruns matter: a full pass is ~39k invocations.
+2. Prepend each file's header stub, extracted from the matching retail entry (idempotent; skip files that
+   already start with a stub).
 3. Copy the archive's non-compiled members verbatim from a retail unpack (render-state blobs, `shaders.crc`,
    the index/family blobs, and any family with no source) so the pack is a superset of retail.
 4. Pack: `Gibbed.Disrupt.Packing.dll --pv 8 <out>/shadersobj.fat <COMPILED_DIR>/`, then confirm the `.fat`
-   entry count matches the file count and that the `.nfo` was regenerated by the packer.
+   entry count matches the file count. Upstream's packer writes the `.fat` but not the archive's `.nfo` name
+   table (the entry path/CRC/offset sidecar the unpacker reads); if you need it regenerated, use a packer
+   build that calls `SerializeNfo` after writing the `.fat`.
 5. Deliver. Either replace the archive in the game's `data_win64/` or hand it to NexusTools as a mod pack —
    a mod directory under `data_win64/mods/<id>/` with `modconfig.json` (`packs`, `incompatibleMods`,
    `minTntVersion`) and the `shadersobj` files beside it. NexusTools redirects per file, so a pack need not
@@ -121,14 +140,15 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
 5. **Symptom:** compiling fails with a missing include that exists on disk (`PostEffect/`, `Lightmap/`).
    **Cause:** case-variant directories holding curated symlinks; the compiler resolves the variant directory
    first and cannot see the real files. **Fix:** mirror the real files into every case variant.
-6. **Symptom:** a family compiles from a command line copied by eye but not from the list. **Cause:** the list
-   is the contract (defines included), and `SHADERMODEL` is not implied. **Fix:** drive the compiler from the
-   list, and pass the platform and `SHADERMODEL` defines explicitly.
+6. **Symptom:** a family compiles from a command line copied by eye but not from the permutation set.
+   **Cause:** the permutation's define set is the contract, and `SHADERMODEL` is not implied. **Fix:** drive
+   the compiler from the `meta.xml` option sets, and pass the platform and `SHADERMODEL` defines explicitly.
 7. **Symptom:** the archive is accepted, but only some surfaces look wrong. **Cause:** a per-family source edit
    that changed signatures for that family only. **Fix:** recompile the whole set after touching shared
    includes; the reps in one family are not independent of the others.
 
-**Credits:** built on the Open-Source-Modding `Disrupt-Shader-Compiler` sources and the community's shader
-tooling (Miru's shader-editing work, Troplo's NexusTools, qstlijku's material tooling), and on signatures
-recovered from retail archives. Compile/deploy pipeline and the signature contract were established by
-@Selene0623 with OpenCode (DeepSeek V4.1 Flash) while shipping a Watch Dogs 1 shader mod.
+**Credits:** built on the community's `Disrupt-Shader-Compiler` reconstruction of the Watch Dogs 1 shader
+sources and the community's shader tooling (Miru's shader-editing work, Troplo's NexusTools, qstlijku's
+material tooling), and on signatures recovered from retail archives. Compile/deploy pipeline and the signature
+contract were established by @Selene0623 with OpenCode (DeepSeek V4.1 Flash) while shipping a Watch Dogs 1
+shader mod.

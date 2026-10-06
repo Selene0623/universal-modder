@@ -1668,7 +1668,6 @@
   "engine": "unknown",
   "route": "passthrough",
   "tools": [
-   "Disrupt-Shader-Compiler",
    "Gibbed.Disrupt",
    "NexusTools",
    "fxc (d3dcompiler_43/46/47)",
@@ -1684,8 +1683,7 @@
   ],
   "date": "2026-10-06",
   "links": [
-   "https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler",
-   "https://github.com/Open-Source-Modding/Gibbed.Disrupt"
+   "https://github.com/gibbed/Gibbed.Disrupt"
   ],
   "tags": [
    "shaders",
