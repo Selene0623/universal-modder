@@ -1665,7 +1665,7 @@
   "games_also": [],
   "game_version": "Watch Dogs 1 retail (Steam/uPlay) + NexusTools 1.1.12/1.1.13",
   "platform": "windows",
-  "engine": "disrupt",
+  "engine": "unknown",
   "route": "passthrough",
   "tools": [
    "Disrupt-Shader-Compiler",
@@ -1697,7 +1697,9 @@
    "nexus-tools",
    "signatures",
    "semantics",
-   "black-screen"
+   "black-screen",
+   "disrupt",
+   "dunia"
   ]
  },
  {

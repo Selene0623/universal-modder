@@ -5,7 +5,7 @@ game: "Watch Dogs"
 games_also: []
 game_version: "Watch Dogs 1 retail (Steam/uPlay) + NexusTools 1.1.12/1.1.13"
 platform: windows
-engine: disrupt
+engine: unknown
 route: passthrough
 tools: ["Disrupt-Shader-Compiler", "Gibbed.Disrupt", "NexusTools", "fxc (d3dcompiler_43/46/47)", "dxc"]
 anti_cheat: "none on WD1; delivering files through NexusTools is first-class, no bypass involved"
@@ -14,7 +14,7 @@ agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["@Selene0623"]
 date: 2026-10-06
 links: ["https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler", "https://github.com/Open-Source-Modding/Gibbed.Disrupt"]
-tags: [shaders, dxbc, fxc, dxc, hlsl, shadersobj, nexus-tools, signatures, semantics, black-screen]
+tags: [shaders, dxbc, fxc, dxc, hlsl, shadersobj, nexus-tools, signatures, semantics, black-screen, disrupt, dunia]
 ---
 
 # Watch Dogs 1: compiling and delivering the shader pack (shadersobj)
@@ -45,8 +45,9 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
   replaced. Adding a family means driving the engine's own shader generator at build time, which is a
   different (and much larger) project.
 - **A newer compiler.** `dxc` happily compiles these sources, but it promotes `cs_5_0`/`ps_5_0` to shader
-  model 6 and emits DXIL. The engine's 2014-era runtime rejects that bytecode; the symptom is that everything
-  that depends on the shader renders black (or the game dies at level load) while the log stays clean.
+  model 6 and emits DXIL. The engine's 2014-era runtime takes era `fxc` SM5.0 DXBC and rejects DXIL, and the
+  rejection is total rather than partial: the game boots to a black screen with the menus black too, and the log
+  stays clean (no shader-load or pipeline error).
 
 ## How the game works (what we had to learn)
 - **The archive is the whole shader set.** `shadersobj.dat`/`.fat` ships ~39,370 files (`pso`, `vso`, `cso`,
@@ -62,7 +63,9 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
   read-mask) gives ground truth for what the runtime actually binds. The vertex shader's input signature and
   the pixel shader's output signature are engine-bound (they must match what the vertex declaration and the
   render-target layout expect); the vertex shader's output signature and the pixel shader's input signature
-  must agree with each other, and D3D11 in release mode does **not** validate that pairing at draw time.
+  must agree with each other, and D3D11 in release mode does **not** validate that pairing at draw time. The
+  pairing is the contract, not the numbering: a mod can use different semantic indices from retail and still
+  render, as one shipping shader mod does.
 - **A signature mismatch is silent.** Mismatched semantics/registers do not error and do not crash; the shader
   links to the wrong registers and the frame renders black or garbage. This is the failure mode to suspect
   first when the game runs, no shader-load errors appear, and nothing draws.
@@ -104,8 +107,10 @@ bytes with freshly compiled ones from the shipped sources. The alternatives we r
    an era `d3dcompiler_*.dll` at `ps_5_0`/`vs_5_0`/`cs_5_0`.
 2. **Symptom:** game runs, world loads, nothing renders, no errors. **Cause:** vertex-shader output and
    pixel-shader input no longer agree (semantic name/index/register), which D3D11 release mode never checks.
-   **Fix:** compare `ISGN`/`OSGN` between your build and retail or another working mod; make the numbering
-   permutation-aware rather than a fixed per-file counter.
+   **Fix:** compare `ISGN`/`OSGN` between your build and retail and make the *pairing* hold, i.e. the vertex
+   shader's output signature and the pixel shader's input signature must agree with each other. Do not chase
+   retail's numbering: a shipping shader mod does not reproduce it and still renders, so the contract is the
+   pair, not the numbers.
 3. **Symptom:** `X3502 input parameter 'x' missing semantics` / `X3503 function return value missing
    semantics`. **Cause:** the shipped sources were written for the engine's own generator, which fills these in.
    **Fix:** annotate bare struct members and entry-point returns before compiling; carry the annotation pass in
