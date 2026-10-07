@@ -13,7 +13,7 @@ links: []
 ## Setup
 
 - **Shader source (WD1)**: the game ships full HLSL source in `shaders.dat`/`shaders.fat` (62 MB, 595 entries, magic `0F F5 12 EE`); the extracted tree is `shaders_unpack/engine/shaders/` (775 files, ~107 includes + 234 `.fx`/`.meta.xml`/`parameters`).
-- **Shader compiler**: the `.fx` sources compile with the Windows SDK x64 `fxc.exe` (on `PATH`); on Linux use DXC (e.g. `~/.local/bin/dxc`). The shader source tree comes from unpacking the reader's own `shaders.dat`/`shaders.fat` with Gibbed.Disrupt, not from a bundled third-party package.
+- **Shader compiler**: the `.fx` sources compile with the Windows SDK x64 `fxc.exe` (on `PATH`); on Linux use DXC (e.g. `~/.local/bin/dxc`). The compile-and-repack workflow follows the community's `Disrupt-Shader-Compiler` (Miru), released to the public domain; the shader sources still have to come from unpacking your own `shaders.dat`/`shaders.fat` with Gibbed.Disrupt, not from a bundled third-party package.
 - **Model tooling**: `DisruptEditor` (C++/SDL2/OpenGL, MIT; Linux port builds with CMake + system SDL2/OpenGL), a community Blender add-on, `glm2obj` (C++ GLM→OBJ), `material_bin.py` (TAM material reader/writer).
 - **Archive tooling**: `Gibbed.Disrupt` (.dat/.fat unpack/pack, .NET 8.0) to get at `shadersobj.fat` and asset archives.
 
