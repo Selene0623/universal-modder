@@ -50,8 +50,8 @@ tags: [shaders, dxbc, fxc, dxc, hlsl, shadersobj, nexus-tools, signatures, seman
   (`d3dcompiler_43/46/47.dll`) and can be driven under Wine. A thin shim that forwards each command line to
   `D3DCompileFromFile` in a chosen `d3dcompiler_*.dll` is enough to run the whole list headlessly.
 - Pack with upstream `Gibbed.Disrupt`. Its packer writes the `.fat` but not the archive's `.nfo` name table;
-  if you need that regenerated, use a packer build that calls `SerializeNfo` after writing the `.fat`, which
-  emits the entry path/CRC/offset sidecar the unpacker reads.
+  if you need that regenerated, patch the packer to also write the `.nfo` (the entry path/CRC/offset sidecar
+  the unpacker reads) after the `.fat`.
 
 ## Route and why
 Passthrough: the engine's own family registry and dispatch stay untouched, we only replace compiled shader
@@ -107,8 +107,8 @@ can be reimplemented from a retail unpack alone:
 3. **Annotate before compiling, not by hand.** Era fxc rejects bare struct members and unannotated returns
    (see gotchas 3-4); carry an automatic semantic-annotation/repair pass over the sources in the toolchain,
    and never renumber an existing semantic.
-4. **Prepend the header stub — mandatory.** Every shipped entry's bytes before `DXBC` are its engine
-   I/O-signature metadata (`obj/hXX/<name>.<type>.header`); a bare DXBC blob is rejected. Prepend is
+4. **Prepend the header stub — mandatory.** Every shipped entry's bytes before `DXBC` are its header
+   stub (see Setup); a bare DXBC blob is rejected. Prepend is
    idempotent (skip files that already start with one).
 5. **Define the platform explicitly.** The default define is `NOMAD_PLATFORM_WINDOWS` (the game runs on the
    Windows ABI); `SHADERMODEL` is a compiler built-in that must be passed too — neither is implied.
@@ -124,10 +124,10 @@ a full pass is ~39k invocations; keep build output out of version control.
    already start with a stub).
 3. Copy the archive's non-compiled members verbatim from a retail unpack (render-state blobs, `shaders.crc`,
    the index/family blobs, and any family with no source) so the pack is a superset of retail.
-4. Pack: `Gibbed.Disrupt.Packing.dll --pv 8 <out>/shadersobj.fat <COMPILED_DIR>/`, then confirm the `.fat`
+4. Pack: `Gibbed.WatchDogs.Pack.exe --pv 8 <out>/shadersobj.fat <COMPILED_DIR>/`, then confirm the `.fat`
    entry count matches the file count. Upstream's packer writes the `.fat` but not the archive's `.nfo` name
-   table (the entry path/CRC/offset sidecar the unpacker reads); if you need it regenerated, use a packer
-   build that calls `SerializeNfo` after writing the `.fat`.
+   table (the entry path/CRC/offset sidecar the unpacker reads); if you need it regenerated, patch the
+   packer to also write the `.nfo` after the `.fat`.
 5. Deliver. Either replace the archive in the game's `data_win64/` or hand it to NexusTools as a mod pack —
    a mod directory under `data_win64/mods/<id>/` with `modconfig.json` (`packs`, `incompatibleMods`,
    `minTntVersion`) and the `shadersobj` files beside it. NexusTools redirects per file, so a pack need not
@@ -170,8 +170,7 @@ a full pass is ~39k invocations; keep build output out of version control.
    that changed signatures for that family only. **Fix:** recompile the whole set after touching shared
    includes; the reps in one family are not independent of the others.
 
-**Credits:** built on the community's `Disrupt-Shader-Compiler` reconstruction of the Watch Dogs 1 shader
-sources and the community's shader tooling (Miru's shader-editing work, Troplo's NexusTools, qstlijku's
+**Credits:** built on the community's `Disrupt-Shader-Compiler` work and shader tooling (Miru's shader-editing work, Troplo's NexusTools, qstlijku's
 material tooling), and on signatures recovered from retail archives. Compile/deploy pipeline and the signature
 contract were established by @Selene0623 with OpenCode (DeepSeek V4.1 Flash) while shipping a Watch Dogs 1
 shader mod.
