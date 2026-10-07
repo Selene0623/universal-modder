@@ -6,11 +6,9 @@ date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
-  - "web/open-source-modding.github.io/docs/witcher2/witcher2-formats.md"
-  - "web/open-source-modding.github.io/docs/witcher3/witcher3-formats.md"
-  - "web/open-source-modding.github.io/docs/cyberpunk2077/cyberpunk2077-formats.md"
-  - "web/open-source-modding.github.io/.opencode/docs/xentax-witcher2-raw.md"
-  - "web/open-source-modding.github.io/.opencode/docs/xentax-cyberpunk-raw.md"
+  - "https://github.com/gibbed/Gibbed.RED"
+  - "https://github.com/WolvenKit/WolvenKit"
+  - "https://wiki.redmodding.org/"
 tags: ["redengine", "cr2w", "witcher2", "witcher3", "cyberpunk2077", "rdar", "kark", "oodle", "xbm", "w3strings", "save", "archive", "file-format"]
 ---
 

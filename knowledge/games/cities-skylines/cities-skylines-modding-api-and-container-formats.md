@@ -72,9 +72,9 @@ the in-game editors. A native-hook route is neither needed nor supported here.
 - API/editor/pipeline facts: the official Paradox wikis, *Cities: Skylines* → `Modding` (page id 17140,
   last edited 2024-01-19) and *Cities: Skylines II* → `Modding` (page id 6681, last edited 2026-06-25),
   plus the CS1 sub-pages `Modding_API`, `CRAP_File_Format`, `User_path`, `Heightmap`, `Data_types`.
-- `.crp`/`.locale` format facts: the workspace's XeNTaX-derived docs
-  `web/open-source-modding.github.io/docs/citiesskylines/{citiesskylines-formats,xentax-cities-skylines-knowledge}.md`
-  (threads t=12681, t=12761, t=18672, t=25039).
+- `.crp`/`.locale` format facts: community XeNTaX reverse-engineering threads
+  (t=12681, t=12761, t=18672, t=25039), the usual starting point for the community's
+  container documentation.
 - **Not verified:** I did not open the game, extract a `.crp`, or build a mod. CS2 pages are beta and may be stale.
 
 ## Gotchas
@@ -90,9 +90,10 @@ the in-game editors. A native-hook route is neither needed nor supported here.
    tracks the game build. **Fix:** match the toolchain/game version the guide's badge states.
 5. **Modding "on Linux" fails out of the box.** **Cause:** the CS2 toolchain assumes Windows. **Fix:** follow
    the wiki's Proton setup (`Modding_Toolchain_on_Linux`).
-6. **Building a `.crp` asset by hand doesn't load.** **Cause:** no public spec for the modern `.crp`; a 2022
-   thread asking for one got no answer. **Fix:** create assets through the in-game editors, which write the
-   container correctly.
+6. **Building a `.crp` asset by hand doesn't load.** **Cause:** the wiki's "CRAP File Format"
+   page documents the `.crp` header, but the `.bin` placement/coordinate portion is not covered;
+   a 2022 thread asking for a full spec got no answer. **Fix:** create assets through the in-game
+   editors, which write the container correctly.
 
 ## Assets
 CS1: Asset Editor (buildings/props), Road Editor, Theme Editor, color correction. CS2: first-party asset
@@ -100,12 +101,12 @@ pipelines for buildings/props/decals/trees/surfaces, texture sharing, color vari
 node/tool-driven — no hand-authored container required.
 
 ## Cost and time
-Small: two wiki overview pages plus two workspace format docs. No in-game session, no build.
+Small: the official Paradox wikis plus community XeNTaX threads. No in-game session, no build.
 
 ## Open questions
 - `.crp` `.bin` placement/coordinate binary layout — not publicly documented; only the mesh side is extracted.
 - `.locale` binary format spec, and the game **font** location for non-Latin scripts — both still open.
 - Whether the CS2 `.crp`/asset container is the same family as CS1's, and whether any of it is documented
   outside Paradox's own tools.
-- The wiki's **CRAP file format** page — not read here (the raw/`action=raw` endpoint returned a bot challenge);
-  worth a follow-up read.
+- The wiki's **CRAP file format** page documents the `.crp` header; it was not read here (the
+  raw/`action=raw` endpoint returned a bot challenge), so the exact header fields are a follow-up.

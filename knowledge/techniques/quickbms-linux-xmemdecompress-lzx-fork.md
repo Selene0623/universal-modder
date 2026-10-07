@@ -1,23 +1,23 @@
 ---
 kind: technique
-title: "QuickBMS on Linux: the XMemDecompress/LZX buffer-reuse bug and the 3-patch fork"
-tags: [quickbms, lzx, xmemdecompress, xbox360, myalloc, buffer-reuse, openssl3, mingw, nfs-shift, bff, linux, fork]
+title: "QuickBMS on Linux: the XMemDecompress/LZX buffer-reuse bug and three local patches"
+tags: [quickbms, lzx, xmemdecompress, xbox360, myalloc, buffer-reuse, openssl3, mingw, nfs-shift, bff, linux, patches]
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
-  - "https://github.com/Selene0623/QuickBMS"
   - "https://aluigi.altervista.org/quickbms.htm"
 ---
 
-# QuickBMS on Linux: the XMemDecompress/LZX buffer-reuse bug and the 3-patch fork
+# QuickBMS on Linux: the XMemDecompress/LZX buffer-reuse bug and three local patches
 
 > QuickBMS (aluigi, v0.12.0, unmaintained since 2022) reliably extracts Xbox 360 XMemDecompress/LZX
 > containers on Windows because the official build statically links Microsoft's XDK
 > `XMemDecompress`. Built from source on Linux, or used with its bundled libmspack fallback, it hits a
 > **buffer-reuse bug**: `myalloc()` returns a reused buffer without updating `*currsize`, so the LZX
 > decoder reads a stale (too-large) size and aborts with
-> `uncompressed data (-1) bigger than allocated buffer`. A 3-patch fork fixes that plus two build
+> `uncompressed data (-1) bigger than allocated buffer`. Three local patches (against aluigi's
+> official 0.12.0 source) fix that plus two build
 > blockers (OpenSSL 3.x, x86-only Makefile guards). This note records the bug mechanism and the exact
 > patches.
 
@@ -60,7 +60,7 @@ and fails:
 uncompressed data (-1) bigger than allocated buffer
 ```
 
-**Fix** (commit `4cf8b7d`): on both reuse paths set `*currsize = ows` (the *original* requested size,
+**Fix** (the `myalloc` patch): on both reuse paths set `*currsize = ows` (the *original* requested size,
 before `MYALLOC_ZEROES` padding / 4096 rounding) before `goto quit`:
 
 ```c
@@ -79,9 +79,9 @@ is exactly what XMemDecompress needs, but the *reported* size must be the caller
 Use single-file extraction: `-f "{}filename_part{}"` allocates a clean buffer per call and dodges the
 reuse path. Useful to confirm the diagnosis before rebuilding.
 
-### Fork: 3 patches total
+### Three local patches (against upstream v0.12.0)
 
-Only `master`; 4 commits on top of upstream v0.12.0; no CI, no tests.
+Local patches on top of aluigi's official v0.12.0 source; not upstreamed, no CI, no tests.
 
 | # | Change | File | Detail |
 |---|--------|------|--------|
@@ -103,7 +103,8 @@ use. System deps: `lzo bzip2 zlib openssl` (plus `lib32-*` variants for 32-bit).
   ```sh
   make CFLAGS="-O2 -DQUICKBMS64 $(sed 's/-m32//' <<< "$CFLAGS")"
   ```
-- Arch/CachyOS: `paru -S quickbms` — the AUR PKGBUILD carries the same patches.
+- Arch/CachyOS: `paru -S quickbms` — the AUR PKGBUILD carries patches 2 and 3 (OpenSSL 3.x and the
+  Makefile fixes) but **not** the `myalloc` buffer-reuse fix.
 - Key files: `src/quickbms.c` (entrypoint), `src/utils.c` (`myalloc`), `src/unz.c`
   (`unxmemlzx()` — XMemDecompress entry, ~11.5K lines), `src/compression/unmspack.c`
   (`appDecompressLZX()`, libmspack wrapper), `src/perform.c` (RSA/OpenSSL glue).
@@ -112,11 +113,8 @@ use. System deps: `lzo bzip2 zlib openssl` (plus `lib32-*` variants for 32-bit).
 
 Even patched, `src/libs/mspack/lzxd.c` has inherent limits against some Xbox 360
 XMemDecompress variants that Microsoft's XDK handles. Microsoft's XMemDecompress is **not**
-implemented by Wine, so the Windows exe's success there is the linked XDK DLL, not Wine. Local XDK
-reference (headers/docs/exes) at `re/XDK/`, docs at `re/xdk_docs/` (`XMemDecompress`,
-`XMEMCODEC_PARAMETERS_LZX`); host tools `xbdecompress.exe` / `xbcompress.exe` in `XDK/bin/win32/`
-run under Wine for manual compression testing. If more edge cases appear, a custom LZX decoder may be
-needed.
+implemented by Wine, so the Windows exe's success there is the linked XDK DLL, not Wine. If more edge
+cases appear, a custom LZX decoder may be needed.
 
 ## Gotchas
 
@@ -149,6 +147,4 @@ needed.
   XMemDecompress, LZX window 17, partition 512K) and `dodge_vipersrt10_Cockpit.bff` (87 files, all
   TYPE=2); BFF offset `0x12d` is `0x00` (no encryption). Script `nfsshift.bms` covers Shift 2,
   Project CARS 1/2 and TDFRL (the bundled repo copy is Shift-oriented).
-- The QuickBMS source fork itself — `git show 4cf8b7d`,
-  `f14dc94` (OpenSSL 3 + x86 Makefile fixes), `6301034` (readme header).
-- XDK reference set (`re/XDK/`, `re/xdk_docs/`) and archive.org's XDK collection for more XDK builds.
+- The local QuickBMS source patches (unpublished; against upstream v0.12.0).

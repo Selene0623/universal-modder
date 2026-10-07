@@ -1,6 +1,6 @@
 ---
 kind: game
-title: "OpenTDU — clean-room source port of Test Drive Unlimited (MC 1.66A)"
+title: "OpenTDU — decompilation-based source port of Test Drive Unlimited (MC 1.66A)"
 game: "Test Drive Unlimited"
 games_also: []
 game_version: "MC 1.66A"
@@ -29,7 +29,7 @@ tags:
   - test-drive-unlimited
   - tdu
   - source-port
-  - clean-room
+  - decompilation
   - reverse-engineering
   - ghidra
   - vulkan
@@ -42,7 +42,7 @@ tags:
 
 # OpenTDU — Test Drive Unlimited source port
 
-OpenTDU (`opentestdriveunlimited/OpenTestDriveUnlimited`) is an open-source **clean-room source port of Test Drive Unlimited PC (MC 1.66A)**. It reconstructs the original 32-bit x86 game — structs, classes and functions — in C++17 with Ghidra and reimplements the runtime on Vulkan. It ships **no game assets** and requires the user's own legal copy (`README.md:10`). It is explicitly **work in progress** (`README.md:6`); progress is tracked per game mode (VideoBumper and CarShowCase done; **FreeRide in progress**, `README.md:33-37`).
+OpenTDU (`opentestdriveunlimited/OpenTestDriveUnlimited`) is an open-source **decompilation-based source port of Test Drive Unlimited PC (MC 1.66A)**. It reconstructs the original 32-bit x86 game — structs, classes and functions — in C++17 with Ghidra and reimplements the runtime on Vulkan. It ships **no game assets** and requires the user's own legal copy (`README.md:10`). It is explicitly **work in progress** (`README.md:6`); progress is tracked per game mode (VideoBumper and CarShowCase done; **FreeRide in progress**, `README.md:33-37`).
 
 ## Setup
 
@@ -53,8 +53,8 @@ OpenTDU (`opentestdriveunlimited/OpenTestDriveUnlimited`) is an open-source **cl
 
 ## Route and why
 
-- **Route: clean-room reimplementation.** Not a binary patch, DLL proxy or emulator. The authors decompile the original with Ghidra and rewrite it in modern C++ (Vulkan instead of D3D9), reconstructing each function from P-Code (`CLAUDE.md:7`).
-- Engine is left `unknown`: the repo never names one. TDU1 predates the named Eden/Disrupt/Anvil branding of later titles.
+- **Route: decompilation-based reimplementation.** Not a binary patch, DLL proxy or emulator. The authors decompile the original with Ghidra and rewrite it in modern C++ (Vulkan instead of D3D9), reconstructing each function from P-Code (`CLAUDE.md:7`). It is not a clean-room reimplementation — it is derived from the retail binary.
+- Engine is left `unknown`: the repo never names one. TDU1 predates the named Eden branding of later titles. (Disrupt and Anvil are Ubisoft engines used by the Watch Dogs and Assassin's Creed lines; they are unrelated to TDU.)
 - TDU1 counterpart to the TDU2 NULL-pointer crash work elsewhere in this workspace; the two share RE conventions.
 
 See also `games/test-drive-unlimited/savegame-and-config-formats.md` for the TDU1 `tdudec` XTEA variant, `commondt.sav`/`playersave` offsets and the `XMBF` container — independent RE of the same game's save/config data.

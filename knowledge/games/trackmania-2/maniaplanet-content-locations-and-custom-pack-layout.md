@@ -104,8 +104,8 @@ To install a downloaded skin or mod, or to build your own pack:
    are/were rejected. **Fix:** use a full `http://…` URL, and name the file after the content it locates.
 5. **Content works for you, not for the person who receives your pack.** **Cause:** a pack can carry a
    Planets price and a moderator/"free key" (`pak_key`) in the community site metadata. **Fix:** when
-   handing a pack to someone, ship the `.Pack.Gbx` (and, if the site gated it, note the key) rather
-   than only the raw textures.
+   handing a pack to someone, ship the `.Pack.Gbx`; a priced or keyed pack must be obtained by the
+   recipient themselves, so do not pass a `pak_key` on.
 6. **Thumbnail rejected by the uploader.** **Cause:** the site enforced a 4:3-ish aspect (±0.1) and a
    minimum of 200×150. **Fix:** export the preview at close to 4:3 and at least 200×150.
 

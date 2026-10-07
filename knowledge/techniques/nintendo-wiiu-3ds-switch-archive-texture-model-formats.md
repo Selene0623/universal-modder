@@ -6,8 +6,9 @@ date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
-  - "web/open-source-modding.github.io/docs/zelda/zelda-formats.md"
-  - "web/open-source-modding.github.io/.opencode/docs/xentax-zelda-raw.md"
+  - "https://zeldamods.org/wiki/Yaz0"
+  - "https://zeldamods.org/wiki/SARC"
+  - "https://github.com/zeldamods/oead"
 tags: ["zelda", "nintendo", "yaz0", "sarc", "gtx", "cmb", "csab", "bwav", "bars", "wiiu", "3ds", "switch", "big-endian", "archive", "texture", "file-format"]
 ---
 
@@ -15,9 +16,10 @@ tags: ["zelda", "nintendo", "yaz0", "sarc", "gtx", "cmb", "csab", "bwav", "bars"
 
 > Nintendo's modern formats stack in a predictable way: a container (SARC), often
 > compressed (Yaz0 on Wii U, zstd on Switch), holding assets that are themselves
-> Nintendo-specific (GTX/BWAV on Wii U/Switch, CMB/CSAB on 3DS). The recurring
-> theme is big-endian data on Wii U/3DS and an *unavailable* re-compressor:
-> Yaz0 archives re-encode only at fake compression, which the game rejects. This
+> Nintendo-specific (GTX/BWAV on Wii U/Switch, CMB/CSAB on 3DS). Wii U data is
+> **big-endian**; 3DS and Switch are **little-endian**. Repacking works with real
+> encoders (oead's Yaz0 at levels 6–9 and `SarcWriter`, which preserves endianness
+> and alignment), so the old "no working re-compressor" gap does not apply. This
 > note records the formats across Breath of the Wild, Tears of the Kingdom,
 > Twilight Princess HD, Skyward Sword, Ocarina of Time 3D and the Sonic Lost
 > World Zelda DLC.
@@ -36,7 +38,8 @@ tags: ["zelda", "nintendo", "yaz0", "sarc", "gtx", "cmb", "csab", "bwav", "bars"
   Yaz0 stream wrapping a SARC: `content/Pack/*.pack` (SARC) → `Layout/*.sblarc`
   (Yaz0). Tools: `Syroot.NintenTools.Yaz0` (C#), `Yaz0.exe`.
 - **SARC** — plain container, magic `SARC`. JayK's 2015 unpacker works across
-  BotW, Mario 3D World, Captain Toad. No confirmed Wii U repacker in the source.
+  BotW, Mario 3D World, Captain Toad. oead's `SarcWriter` repacks it correctly,
+  keeping the target's endianness and alignment.
 - **Twilight Princess HD** — `.pack.gz` (gzipped SARC); QuickBMS extracts to
   `geo/` and `tex/`.
 - **TotK** — `.bars.zs` is **zstd**-compressed; decompress to `.bars` (contains
@@ -76,11 +79,12 @@ tags: ["zelda", "nintendo", "yaz0", "sarc", "gtx", "cmb", "csab", "bwav", "bars"
   4th material slot expects the literal string `"water"` or it errors.
 
 ## Gotchas
-1. **Yaz0 repack produces a valid file the game rejects.** **Cause:** the game
-   requires Nintendo's maximum compression; tools use fake compression (level 0)
-   at encode. **Fix:** none public that matches Nintendo's ratio.
-2. **SARC repack crashes even with untouched content.** **Cause:** no confirmed
-   Wii U SARC repacker. **Fix:** avoid repacking where a loose-file path exists.
+1. **Yaz0 repack produces a valid file the game rejects.** **Cause:** early tools
+   re-encoded at fake compression (level 0), which the game rejects. **Fix:** use a
+   real encoder — oead's Yaz0 at levels 6–9 produces files the game accepts.
+2. **SARC repack crashes even with untouched content.** **Cause:** a repacker that
+   did not preserve the container's endianness/alignment. **Fix:** use oead's
+   `SarcWriter`, which keeps both; avoid ad-hoc repackers.
 3. **Only the first texture extracts from a GTX.** **Cause:** TPHD-era GTX
    packs multiple textures; texconv2/Noesis read one. **Fix:** splitter never
    released — unresolved.

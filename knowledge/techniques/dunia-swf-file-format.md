@@ -5,7 +5,7 @@ game: "Far Cry 6"
 games_also: ["Far Cry 5", "Far Cry 4", "Watch Dogs (Disrupt)", "Far Cry New Dawn"]
 game_version: "see note"
 platform: windows
-engine: dunia
+engine: unknown
 route: data
 tools: ["JPEXS FFDec", "FCBConverter", "base64 SWF Texture Tool"]
 anti_cheat: "Format reference only; no anti-cheat interaction."
@@ -14,8 +14,7 @@ agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 date: 2026-10-05
 links:
-  - "spec: re/Ubisoft/Dunia/swf-file-format-spec.md"
-  - "https://github.com/Open-Source-Modding/open-source-modding.github.io/blob/main/docs/disrupt/watch_dogs/feu-format.md"
+  - "https://open-flash.github.io/mirrors/swf-spec-19.pdf"
 tags: ["swf", "feu", "flash", "dunia", "disrupt", "ui", "file-format"]
 ---
 # Adobe SWF and Ubisoft FEU (Flash Export Unit) format
@@ -24,7 +23,7 @@ tags: ["swf", "feu", "flash", "dunia", "disrupt", "ui", "file-format"]
 
 ## Setup
 
-- The Adobe SWF specification (v19, 2012) is the authoritative reference; a converted copy lives at `Ubisoft/Dunia/swf-file-format-spec.md`.
+- The Adobe SWF specification (v19, 2012) is the authoritative reference: https://open-flash.github.io/mirrors/swf-spec-19.pdf (a converted copy is kept locally, unpublished).
 - A Flash decompiler/compiler: **JPEXS FFDec** (`ffdec-cli.jar`) opens `FWS`/`CWS` SWF, `.gfx`, and the `.feu` container.
 - A repacker for the surrounding archive: **FCBConverter** (see the Far Cry 6 game note).
 
@@ -53,7 +52,7 @@ A definition must appear before any control tag that references its CharacterId.
 
 **Dunia-specific content.** FEU movies are Flash movieclips driven by ActionScript 2 classes (names such as `driver.LoadableContainer`, `driver.gamehud.Gh_*`). They reference engine resources by string path — fonts `*.ffd`, supertextures `*.bfd`. UI state that a modder cares about (for example weapon-wheel icons) is carried either in normal definition tags or in a custom `<UnknownTag id="0xF6">` whose payload is a Base64-encoded descriptor.
 
-**Base64 icon descriptor** (little-endian), as decoded by the workspace's SWF Texture Tool:
+**Base64 icon descriptor** (little-endian), as decoded by the (unpublished) SWF Texture Tool:
 
 ```
 0x00  u16  Character ID
@@ -70,8 +69,8 @@ A definition must appear before any control tag that references its CharacterId.
 
 ## Verification
 
-- The header and tag structure are taken directly from the Adobe SWF specification in the workspace.
-- The FEU wrapper and the Base64 descriptor layout are recorded from the project's own docs and tool source.
+- The header and tag structure are taken directly from the Adobe SWF specification (v19, 2012; link above).
+- The FEU wrapper and the Base64 descriptor layout come from community notes (Ekey on XeNTaX, BIRDdude12) and the SWF Texture Tool source.
 - **Not independently reproduced end-to-end by this agent.** Status: in-progress; a first-hand FEU round trip is still owed.
 
 ## Gotchas
@@ -83,8 +82,7 @@ A definition must appear before any control tag that references its CharacterId.
 
 ## Assets
 
-- `Ubisoft/Dunia/swf-file-format-spec.md` / `.pdf` — Adobe SWF v19 spec (converted).
-- Docs site `docs/disrupt/watch_dogs/feu-format.md` and `swf-file-format-spec.md`.
+- A local conversion of the Adobe SWF v19 spec (unpublished; original at the link above).
 
 ## Cost and time
 

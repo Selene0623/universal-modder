@@ -14,8 +14,8 @@ links:
 
 # Analysing PS3 ELF/PRX binaries in Ghidra: TOC/r2, NID and syscall resolution
 
-> PS3 executables (`.elf`) and PRX modules (`.prx`/`.sprx`) are 64-bit big-endian PowerISA with the
-> Cell SPE extension, loaded as `PowerISA-Altivec-64-32addr`. Stock Ghidra loads them but leaves
+> PS3 executables (`.elf`) and PRX modules (`.prx`/`.sprx`) are 64-bit big-endian Cell PPU
+> code (VMX/AltiVec; the SPU is a separate ISA), loaded as `PowerISA-Altivec-64-32addr`. Stock Ghidra loads them but leaves
 > imports, the TOC pointer (`r2`) and linker-provided library calls unresolved, so the decompiler
 > output is full of bogus pointers. The `Ps3GhidraScripts` extension adds three scripts that fix
 > that: it locates the OPD/TOC and sets `r2`, it names NIDs from a lookup table, and it resolves the
@@ -25,7 +25,8 @@ links:
 ## When to use it
 
 - You have a PS3 `.elf`/`.prx`/`.sprx` and want readable decompilation in Ghidra.
-- Library calls show up as anonymous or as `CALL dword ptr GS:[0x10]` (the PS3 syscall trampoline).
+- Library calls show up as anonymous, or as the PowerPC syscall instruction `sc`
+  (`44 00 00 02`) with the syscall number in `r11`.
 - You need to map a function address back to a `sce*` API name via its NID.
 
 If the binary is a plain PowerPC ELF with no Cell/PS3 relocations, vanilla Ghidra may be enough;
@@ -63,8 +64,10 @@ these scripts target the PS3 ABI specifically.
 
 ### What `DefinePS3Syscalls` does
 
-- The PS3 syscall trampoline disassembles to `CALL dword ptr GS:[0x10]` (bytes
-  `0x44 0x00 0x00 0x02`). The script scans for that pattern.
+- The PS3 syscall trampoline is the PowerPC `sc` instruction (bytes
+  `0x44 0x00 0x00 0x02`), with the syscall number in `r11`. The script scans for that
+  pattern. (A `CALL dword ptr GS:[0x10]` in Ghidra output is left over from the x86
+  script, not the PS3 form.)
 - It uses Ghidra **overriding references** plus the **symbolic propagator** to recover the syscall
   *number* passed in a register at each call site, then binds the function to the name from
   `data/syscall.txt` (`<number> <name>`), so `sys_process_*`, `sys_net_*`, etc. resolve.
@@ -91,9 +94,9 @@ These are public PS3 ABI tables; keep them next to the scripts rather than hand-
    so it can pick the OPD from `e_entry`; use `AssignPs3R2FromOpd` when a second TOC is needed.
 4. **Syscalls stay unnamed.** **Cause:** `DefinePS3Syscalls` was run before auto-analysis, so the
    symbolic propagator has no call graph to work with. **Fix:** run it **after** auto-analysis.
-5. **Cell SPE vector instructions fail to decompile (`lvlx`, etc.).** **Cause:** Ghidra does not
-   implement some Cell-specific vector ops. **Fix:** no clean fix — expect those functions to
-   decompile poorly; read the disassembly instead.
+5. **Cell PPU VMX/AltiVec vector instructions fail to decompile (`lvlx`, etc.).** **Cause:** Ghidra
+   does not implement some Cell-specific vector ops. **Fix:** no clean fix — expect those functions
+   to decompile poorly; read the disassembly instead.
 6. **Relocated references are unresolved.** **Cause:** the PS3 ELF relocation formats are not
    supported by these scripts. **Fix:** none here — accept unresolved pointers, or resolve the
    specific relocation manually.
@@ -103,7 +106,7 @@ These are public PS3 ABI tables; keep them next to the scripts rather than hand-
 
 ## Seen in
 
-- `~/Documents/Code/re/Ps3GhidraScripts/` — Ghidra extension by Clienthax: `AnalyzePs3Binary.java`,
+- `Ps3GhidraScripts` (unpublished local copy) — Ghidra extension by Clienthax: `AnalyzePs3Binary.java`,
   `DefinePS3Syscalls.java`, `AssignPs3R2FromOpd.java`, `FnidUtils.java`, `Ps3ElfUtils.java`,
   `Ps3DataStructureTypes.java`, `ElfSection.java`, `FindPs3JumptableTargets.py`, `data/`, and a built
   `dist/ghidra_12.0.4_DEV_20260517_Ps3GhidraScripts.zip`.

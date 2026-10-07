@@ -63,12 +63,12 @@ tags: ["savegame", "file-format", "xtea", "encryption", "xmb", "audio", "config"
 
 ### 1. Save/config encryption — `tdudec` (XTEA variant)
 
-The algorithm is **XTEA with 32 rounds**, but the round constant is the *negative*
-of the canonical value: `delta = 0x61C88647` subtracted per round on encrypt
-(decrypt adds it back and starts `sum = 0xC6EF3720`). The standard XTEA delta is
-`0x9E3779B9`; `0x61C88647 == -(0x9E3779B9)` mod 2^32, so this is XTEA run with
-the sign flipped. Data is processed as independent 8-byte blocks (`u32 y, z` in
-little-endian). There is no per-block chaining in type 0.
+The algorithm is **standard XTEA with 32 rounds** and the canonical delta
+`0x9E3779B9`. The `tdudec` code expresses the delta as `0x61C88647` added per
+round on encrypt; since `0x61C88647 == -(0x9E3779B9)` mod 2^32, adding it is the
+same as subtracting `0x9E3779B9` — i.e. standard XTEA. Data is processed as
+independent 8-byte blocks (`u32 y, z` in little-endian). There is no per-block
+chaining in type 0.
 
 `tdudec.c` holds a single 32-byte key buffer holding **two 16-byte keys
 concatenated**. The raw bytes are public in the source; they are deliberately not
@@ -210,9 +210,6 @@ VID/PID to per-device `.xmb` profiles.
   matches TDU1's `tdudec` key #1 and is used for `.btrq`/`.db` files, not the save.
 - TDU2 save editors that exist are for the **Xbox 360 STFS** container (money at
   `0x4362`, etc.); those offsets land on random bytes in the PC `DATA`.
-- `tdu2-keys/` holds nothing cryptographic — `keys.txt` and `TDU2_Serial.txt` are
-  license/serial codes (e.g. a retail serial), despite the directory name. Do not
-  confuse them with the XTEA key material.
 
 ## Build steps
 
@@ -293,10 +290,6 @@ python xmbf_convert.py patch  CarVSTConfig.xmb  CarVSTConfig.xml out.xmb
    `0x3F800000` leaks `?`), or matches WAV names as events. **Fix:** use the
    strict whitelist + "uppercase-first/lowercase-second" event rule and the
    82-byte stride scanner already in `xmbf_convert.py`; don't re-anchor on `?`.
-8. **Symptom:** `tdu2-keys/keys.txt` looks like it should hold crypto keys but
-   nothing decrypts. **Cause:** those are license serials. **Fix:** the XTEA keys
-   are in `tdudec.c`/`tdudec.rs`; the TDU2 save is not XTEA anyway.
-
 ## Assets
 
 No art/audio generated. Relevant reference material:

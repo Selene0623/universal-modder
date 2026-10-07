@@ -8,7 +8,7 @@ platform: linux
 engine: unknown
 route: native-hook
 tools: ["MinGW-w64 (i686-w64-mingw32-gcc)", "dgVoodoo2", "GE-Proton", "umu-run", "gamemoderun", "Wine DLL overrides"]
-anti_cheat: "None encountered for this offline compatibility work. The retail executable is protected; it was never modified or patched. Only a compatibility version.dll proxy and renderer files were added."
+anti_cheat: "None encountered for this offline compatibility work. The retail executable is protected; it is not modified on disk. Only a compatibility version.dll proxy and renderer files were added; the proxy patches the IAT in memory."
 status: working
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
@@ -21,14 +21,14 @@ tags: ["wine", "proton", "d3d9", "dgvoodoo2", "null-pointer", "veh", "iat-hook",
 ---
 # Running Test Drive Unlimited 2 on modern Linux
 
-> TDU2 (2011, Eden Games engine) crashes on start under modern Wine/Proton because it passes a NULL pointer into an init routine that old systems tolerated (NULL page mapped). A `version.dll` proxy fixes it with a `memset` IAT hook plus a Vectored Exception Handler that decodes and skips the faulting x86 instruction. Rendering is fixed by routing D3D9 through dgVoodoo2 (D3D9→D3D11), which avoids DXVK's Y-flip winding desync.
+> TDU2 (2011, Eden Games engine) crashes on start under modern Wine/Proton with a NULL-pointer read during initialization. The root cause is **unproven** — the crash is not a DRM or activation check, but why the same code faults here is not established. A `version.dll` proxy works around it with a `memset` IAT hook plus a Vectored Exception Handler that decodes and skips the faulting x86 instruction. Rendering is fixed by routing D3D9 through dgVoodoo2 (D3D9→D3D11), which avoids DXVK's Y-flip winding desync.
 
 ## Setup
 
 - 32-bit Windows install of TDU2 in a Wine/Proton prefix, launched via `umu-run` under GE-Proton (`WINEPREFIX=~/Games/test-drive-unlimited-2/`).
 - Launch wrapper uses `gamemoderun`, `WINEESYNC=1`/`WINEFSYNC=1`, `WINE_FULLSCREEN_FSR=1`, `DXVK_FRAME_RATE=60`, `dxvk.fullscreenMode=fake`.
 - Build host: Linux, MinGW-w64 cross toolchain (`i686-w64-mingw32-gcc`).
-- dgVoodoo2 (Dege's, now archived) placed alongside the game for D3D9→D3D11.
+- dgVoodoo2 (Dege's) placed alongside the game for D3D9→D3D11.
 
 ## Route and why
 
@@ -38,9 +38,9 @@ tags: ["wine", "proton", "d3d9", "dgvoodoo2", "null-pointer", "veh", "iat-hook",
 
 ## How the game works (what we had to learn)
 
-- TDU2 calls `memset(NULL, 0, 1944)` during initialization. On systems where the NULL page was mapped, the write silently corrupted low memory but did not fault, and the game continued.
+- TDU2 calls `memset(NULL, 0, 1944)` during initialization.
 - The caller does **not** use `memset`'s return value. It keeps the original NULL pointer in `EDI` and later reads `[edi+3]`. So redirecting the `memset` destination alone is not enough — the downstream read still faults.
-- On modern Linux with proper NULL-page protection the read faults immediately, which is the start-up crash.
+- On modern Wine/Proton the read faults, which is the start-up crash. Why the code takes a NULL path here is **unproven**; it is not a DRM or activation check. What is observed is the fault site, not its cause.
 
 ## Build steps
 
@@ -85,6 +85,8 @@ Rendering (dgVoodoo2, D3D9→D3D11):
 8. The shadow z-fighting root cause (shadow-map depth precision / missing GPU sync) is only *masked* by `SmoothedDepthSampling`, not fixed.
 
 ## Assets
+
+Unpublished local work (not part of this repository):
 
 - `src/version_proxy.c` — proxy: IAT patch, `my_memset`, `null_ptr_handler` VEH, HeapAlloc detour, version.dll export forwarding.
 - `src/version_proxy.def` — full `version.dll` export table.

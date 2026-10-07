@@ -7,7 +7,7 @@ game_version: "retail PC (TestDrive2.exe; bigfile_EU_1..5.big ~18 GB)"
 platform: windows
 engine: unknown
 route: data
-tools: ["grep", "dd", "parse_hkx.py"]
+tools: ["grep", "dd", "parse_hkx.py (unpublished local script)"]
 anti_cheat: "SecuROM; static read-only analysis only, no bypass or modification attempted"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
@@ -27,8 +27,8 @@ tags: [havok, hkx, physics, packfile, bnk, knab, file-format, reverse-engineerin
 
 ## Setup
 
-- Game: retail PC TDU2, installed at `~/Games/TDU2/` (bigfiles `bigfile_EU_1..5.big`, ~18 GB).
-  Game data was unpacked to `~/Documents/Modding/TDU2/Files/Euro/Bnk/` (~16 GB, 9665 `.bnk`).
+- Game: retail PC TDU2 (bigfiles `bigfile_EU_1..5.big`, ~18 GB), installed locally.
+  Game data was unpacked to ~9665 `.bnk` files (~16 GB) in a local tree.
 - No proprietary tooling is required for anything below — the packfile describes itself. A plain
   `grep`/`dd`/Python stack is enough.
 
@@ -75,7 +75,12 @@ Observed layout:
   **virtual** = 12-byte `(srcOffset, sectionIndex, dstOffset)`, one per object, binding it to its
   class name (verified: `__data__`+0 → `(0, 0, 228)` → `__classnames__`+228 = `hkpPhysicsSystem`);
   **local** = 8-byte `(src, dst)` pairs within the section, sentinel-ended by `0xFFFFFFFF`; and
-  **global** = 8-byte `(src, dst)` pairs for cross-section pointers, likewise sentinel-ended.
+  **global** = 12-byte `(srcOffset, dstSectionIndex, dstOffset)` triples for cross-section pointers,
+  likewise sentinel-ended. Count them by walking to the sentinel rather than by dividing the span:
+  the tables are 16-byte aligned (in `__data__`: local 5904, global 5968, virtual 6560, exports
+  7040), so span ÷ record size can be off by one. Only the local span (64 B = 8 pairs) and the
+  virtual span (480 B = 40 × 12, matching the 40 objects) divide exactly; the 592-byte global span
+  is not a multiple of 12 — the last triple is followed by a 4-byte `0xFFFFFFFF` and padding.
 
 A reader is therefore: parse the header → walk the section table → read `__classnames__` → build a
 class registry from `__types__` → walk the virtual fixups to bind each `__data__` object to its
@@ -103,7 +108,7 @@ dd if=car.bnk bs=1 skip=$((off+40)) count=16            # -> "Havok-5.5.0-r1"
 #    (For f430.bnk the packfile starts at 3696 and is 32112 bytes.)
 dd if=car.bnk of=car_pf.hkx bs=1 skip=$off count=<packfile-size>
 
-# 3. Parse with a reader you write from the spec above (see parse_hkx.py as a starting point)
+# 3. Parse with a reader you write from the spec above (see the unpublished local parse_hkx.py as a starting point)
 python3 parse_hkx.py car_pf.hkx
 ```
 

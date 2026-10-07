@@ -7,12 +7,12 @@ game_version: "retail PC (bigfile_EU_1..5.big + matching .map indexes; Eden engi
 platform: windows
 engine: unknown
 route: data
-tools: ["TDU2.Unpacker (TDU2.BIG.Tool)", "ModdingLibrary_2 (tdumt2/Bnk.cs, Xmb.cs)", "xmbf_convert.py", "bnk_packcdb.py"]
+tools: ["TDU2.Unpacker (TDU2.BIG.Tool)", "ModdingLibrary_2 (tdumt2/Bnk.cs, Xmb.cs)", "xmbf_convert.py", "bnk_packcdb.py", "bnk_extract.py", "vmf_extract.py"]
 anti_cheat: "SecuROM; read-only static format analysis, no bypass or modification attempted"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-date: 2026-10-05
+date: 2026-10-06
 links:
   - "https://github.com/djey47/tdu-cp/wiki/Tools-reference"
 tags: [big, bnk, knab, bndl, xmb, xmbf, file-format, archive, containers, reverse-engineering, tdu2]
@@ -117,8 +117,8 @@ Header payload (offsets within the 64-byte header, i.e. byte 8 in the file):
 - `[14:16]` SpecialFlag2 (u16)
 - `[16:20]` file_size (u32, whole file)
 - `[20:24]` packed_size (u32, sum of file payload sizes)
-- `[24:28]` BlockSize1 (u32) — 4 or 32 in scanned TDU2 banks
-- `[28:32]` BlockSize2 (u32) — 16 in scanned TDU2 banks
+- `[24:28]` BlockSize1 (u32) — 4 or 32 per `Bnk.cs`
+- `[28:32]` BlockSize2 (u32) — 16 per `Bnk.cs`
 - `[32:36]` packed_count (u32, number of files)
 - `[36:40]` year (u32)
 - `[40:44]` size_section_addr
@@ -162,6 +162,45 @@ original Eden pad string is documented in the source comment as
 (a TDU1-era DB encryption; key and CBC scheme in that file). Everything else in a `.bnk` is
 plain.
 
+### Byte-level check (2026-10-06, added after parsing retail banks)
+
+The section-based layout above was derived from tool source. Parsing the shipped banks directly
+confirms it and fixes one thing the source-based reading got wrong.
+
+Confirmed on retail `Airport.bnk` (3,219,456 B, year 2011): file size at 0x18, packed size at
+0x1C, `BlockSize1` 32 at 0x20, `BlockSize2` 16 at 0x24, `packed_count` 5 at 0x28, year 2011 at
+0x2C, sizes section at 0x30+8, type map at 0x34+8 (224 — present, not absent), tree at 0x38+8,
+order at 0x3C+8, `unknown2` 0 at 0x40, data at 0x44+8 = 0x1B0 (which is exactly where the first
+payload begins). Its five entries are three `.2db` (262224, 262224, 2097232 B), one `.2dm`
+(2704 B) and one `.vmf` (593059 B). A sizes-section entry is 20 bytes as observed:
+`offset u32, size u32, 4 B near-constant (d6 16 19 01 / d2 16 19 01), 4 B per-file value (looks
+like the resource hash — the `.vmf` entry reads `4f ab 5d df`), u32 0x10`.
+
+**The name blob is a forest, not one tree.** Read top-level nodes and keep going until exactly
+`packed_count` file leaves have been collected; do not call the recursive walk once. A
+single-call walk under-reads multi-root containers — 29 of 9,663 banks fail that way
+(`numFiles(4) != walked(3)` for `Avatar/CLOTHES/pnj/W_PN_B_Skirt_Host_Rpt.bnk`,
+`numFiles(510) != walked(9)` for `Islands/hawai/Level/Commonworld.bnk`,
+`numFiles(220) != walked(92)` for `Interior/Icaspok1__Fr.bnk`; the misses are whole sibling
+subtrees). Multi-root counts seen: 2, 6, 128.
+
+Leaf names are stems whose enclosing `.EXT` folder supplies the extension, and the full path is
+retained from the build — e.g.
+`D:\Eden-Prog\Games\TestDrive2\Resources\5Prepared\PC\EURO\FrontEnd\airport\.vmf\airport` and
+`V:\projects\testdrive2\resources\1rawdata\graphs\characters\clothes_pnj\...\maps\.2db\...`.
+Because the extension lives in the path, the resource mix of a whole tree can be counted:
+`.2db` 43874, `.pmi` 19984, `.wav` 15077, `.2dm` 12295, `.3dd` 10868, `.3dg` 10310, `.shk` 7481,
+`.pgr` 4000, `.psa` 3987, `.flg` 3984, `.anm` 3465, `.xmb` 3340, no-extension 3002, `.rd` 2572,
+`.pen` 1550, `.sce` 1455, `.cin` 1442, `.bfx` 1398, `.uva` 1381, `.lmp` 951, `.txt` 900,
+`.bin` 900, `.dhk` 500, `.bas` 494, `.fxe` 395, `.ini` 355, `.prt` 345, `.trk` 341, `.xsb` 230,
+`.vmf` 127. The `.vmf` total is the whole UI of the game — see the Flash UI note in this folder.
+
+One bank is deliberately not supported: `Physics/Tires.bnk` (2,698 B, a 2026 build year in a
+2011 tree) is hand-made. It writes folder lengths *without* the negation (`02 01 "D:"`,
+`06 06 ".bpjka"` = length 6, six children), fills its payloads with repeated `dead 40 06`, ends
+with an all-zero "no-file" sizes entry 0x18 before the order table, and carries the watermark
+`PACEJKA TIRE FLE`. Its six sizes records are still readable.
+
 ### `.xmb` / `XMBF`, two uses
 
 There are two distinct things under the `.xmb` name:
@@ -183,7 +222,7 @@ There are two distinct things under the `.xmb` name:
 
 ### The known `.bnk` repack bug
 
-`BNK Manager/AGENTS.md` documents that repack fails under Wine ("end of stream" in
+`BNK Manager/AGENTS.md` (unpublished local notes) documents that repack fails under Wine ("end of stream" in
 `_ReadPackedHierarchy()` when `Read()` runs after `SaveAs()`; all sections pass checksum but the
 tree parser reads more entries than the data holds). Reading `Bnk.cs` shows two concrete
 suspects, both on the write path:
@@ -206,12 +245,12 @@ reasoned from the code, not observed in-game — see Open questions.)
 # Needs bigfile_EU_N.big and bigfile_EU_N.map together.
 # TDU2.Unpacker is .NET 8; it XORs each payload with D7 A8 E2 D4 and writes by resolved path.
 dotnet TDU2.Unpacker/bin/Debug/net8.0/TDU2.Unpacker.dll \
-    ~/Games/TDU2/bigfile_EU_1.big  ~/Documents/Modding/TDU2/Unpacked
+    <install>/bigfile_EU_1.big  <unpacked-tree>
 # (Repeat per bigfile. Names resolve via Projects/FileNames.list; misses land in __Unknown.)
 
 # --- Layer 2: inspect/repack a .bnk -----------------------------------------
-# tdumt2 builds the MiniBnkManager GUI (BNK Manager/ is a Wine prefix for the prebuilt exe):
-WINEPREFIX="~/Documents/Code/game-tools/TDU/BNK Manager" wine MiniBnkManager.exe
+# tdumt2 builds the MiniBnkManager GUI (a Wine prefix for the prebuilt exe):
+WINEPREFIX=<wineprefix> wine MiniBnkManager.exe
 # Logs: Logs/ModdingLib.log (set DEBUG in Conf/log4net.xml for verbose tree parsing).
 
 # --- Independent KNAB packer (no .NET) --------------------------------------
@@ -242,8 +281,21 @@ What is verified from the sources:
   command; `Xmb.cs`'s in/out volume offsets are literal.
 
 Not verified here (no game data touched, nothing run): the repack bug is **not** reproduced —
-the two suspects are read out of `Bnk.cs`, not observed. No `.big`, `.bnk` or `.xmb` bytes were
-examined; every claim is from tool source. The tree-terminator hazard is reasoning only.
+the two suspects are read out of `Bnk.cs`, not observed. The field layout above and the
+tree-terminator hazard are tool-source-only at this point. (`.bnk` bytes are examined in the
+dated byte-level section below; the source-only statement applies to `.big`, `.map` and `.xmb`.)
+
+Added 2026-10-06, from parsing the retail banks directly (`.bnk` only; `.big`, `.map` and
+`.xmb` are still source-only):
+
+- `bnk_extract.py --scan` parses **9660/9660** banks in an extracted retail tree with every
+  `(offset, size)` inside the file, and
+  **3573/3573** in the TDU2.Unpacker output tree. Three files under `Interior/`, `Islands/`
+  are not KNAB containers.
+- The `.vmf` payload pulled out by path was checked against an independent editor screenshot:
+  header and tag list match exactly, and a sweep of all 127 UI resources walks 159,077
+  ActionScript blocks without a failure.
+- Still not verified: that any repacked `.bnk` loads in game. Nothing was written back.
 
 ## Gotchas
 
@@ -263,7 +315,7 @@ examined; every claim is from tool source. The tree-terminator hazard is reasoni
    `SaveAs()`, though every section's checksum passed. **Cause:** likely
    `FileMode.OpenOrCreate` not truncating (`Bnk.cs:1286`) so stale tail bytes are re-read, and/or
    the `children_count` → `byte` cast (`Bnk.cs:931`) truncating counts > 255. **Fix (per
-   `BNK Manager/AGENTS.md`):** try native .NET 4.8 under Wine
+   `BNK Manager/AGENTS.md` (unpublished local notes)):** try native .NET 4.8 under Wine
    (`winetricks dotnet48`), and/or change `Save()` to `FileMode.Create` and rebuild.
 6. **`DB.bnk` contents are encrypted.** **Symptom:** `.db` files from `DB.bnk` are unreadable.
    **Cause:** TDU1-era XTEA-CBC DB encryption (key/IV scheme in `bnk_packcdb.py`); decrypted
@@ -277,6 +329,17 @@ examined; every claim is from tool source. The tree-terminator hazard is reasoni
    the per-extension cache is not always reliable. **Fix:** preserve each file's original `type`
    from the source BNK (tdumt2 copies prior magic/type when the path matches) instead of
    re-deriving from the extension.
+9. **A name-blob walk stops short in ~29 of 9,663 banks.** **Symptom:** the tree yields fewer
+   leaves than `packed_count`, and the reader desynchronises (e.g. 510 expected, 9 walked for
+   `Islands/hawai/Level/Commonworld.bnk`). **Cause:** the blob is a *forest*; a single recursive
+   call consumes one top-level tree and leaves the sibling trees unread. **Fix:** loop
+   top-level `walk("")` calls until exactly `packed_count` leaves are collected (2026-10-06,
+   retail PC: fixed this in a custom parser, which then read 9660/9660 banks cleanly).
+10. **A handmade bank parses into nonsense names.** **Symptom:** folder names come out as
+   garbage lengths. **Cause:** `Physics/Tires.bnk` writes folder lengths *without* Eden's
+   negation, so a length `>= 0x80` is impossible to distinguish from a large file name.
+   **Fix:** recognise the file (build year 2026 in a 2011 tree, `PACEJKA TIRE FLE` watermark)
+   and skip it rather than special-casing the format.
 
 ## Assets
 
@@ -296,7 +359,11 @@ One session, source-reading only. No paid tooling, nothing executed against game
   extractor. Confirm before relying on them.
 - Header field `[24:28]`/`[28:32]`: `Bnk.cs` names them BlockSize1/BlockSize2 and says TDU2 is
   "4 or 32" and "always 16", while `bnk_packcdb.py` labels `[28:32]` as file_block_size
-  "16=TDU1, 20=TDU2". These two accounts disagree; which is authoritative is unresolved.
+  "16=TDU1, 20=TDU2". **Partly settled 2026-10-06:** the sizes-section entry stride is 20 for
+  TDU2 (a 20-byte stride parses all 9660 retail banks cleanly; `Airport.bnk` reads
+  `0x20 = 32`, `0x24 = 16`), so `[28:32]` is not the entry size — the two accounts are
+  reconcilable if `bnk_packcdb.py` conflated the header field with the stride. Why BlockSize1
+  differs per bank (32 here) is still open.
 - The repack bug is not reproduced here. Is `FileMode.Create` alone sufficient, or is the
   `children_count` truncation the real cause (or both)? A byte-diff of original vs repacked BNK,
   then an in-game load, is the real oracle.

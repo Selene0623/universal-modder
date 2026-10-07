@@ -20,11 +20,11 @@ links:
 > re-emit an older bank format. For Watch Dogs: Legion the WDL banks are **SoundBank
 > v132 (0x84)**, and only the **2019.2.x** authoring line writes that version; the
 > 2021.1 install writes a different one and is not interchangeable. This note records
-> the confirmed version mapping and the concrete open, buildable toolchain (a C++ port
-> of two abandoned Wwise tools plus a Go reference) that reads/replaces BNKs and WEMs.
+> the confirmed version mapping and the author's local, **unpublished** toolchain (a C++
+> port of two abandoned Wwise tools plus a Go reference) that reads/replaces BNKs and WEMs.
 > For the container/HIRC/`.wschema` internals, see the companion generic note below.
 
-Companion note (read first for the format itself): `knowledge/techniques/wwise-soundbank-hirc-and-wschema.md` — it covers the `BKHD`/`DIDX`/`DATA`/`HIRC` chunk layout, the `HIRC` object framing, the per-version `.wschema` schema, and WEM→OGG. This note only adds the version mapping and the toolchain.
+Companion note (read first for the format itself): `techniques/wwise-soundbank-hirc-and-wschema.md` — it covers the `BKHD`/`DIDX`/`DATA`/`HIRC` chunk layout, the `HIRC` object framing, the per-version `.wschema` schema, and WEM→OGG. This note only adds the version mapping and the toolchain.
 
 ## When to use it
 
@@ -54,8 +54,8 @@ is the gate the whole downstream parse keys off (see companion note). The
 
 ### 2. Toolchain: what to actually use
 
-The open toolchain is a **port-and-merge** of two abandoned tools into one C++ repo,
-with a Go tool kept as the authoritative spec:
+The toolchain is the author's local, **unpublished** **port-and-merge** of two abandoned
+tools into one C++ repo, with a Go tool kept as the authoritative spec:
 
 - **`game-tools/openwwise-toolkit-git/wwise-audio-tools/`** — the C++/CMake **merge
   target** and the place new code goes. Fork of `WolvenKit/wwise-audio-tools`. Already
@@ -63,9 +63,10 @@ with a Go tool kept as the authoritative spec:
   generated parsers, and the header-only `.wschema` HIRC loader
   (`include/wwtools/schema.hpp`). License MIT; `ww2ogg`/`revorb` are vendored and built
   from source.
-- **`.../wwiseutil/`** — Go fork of `hpxro7/wwiseutil`. **Reference source only** (no
-  `go.mod`; do not build). Its `DEFERRED.md` is the authoritative Go spec for the format,
-  algorithms, and structs.
+- **`.../wwiseutil/`** — Go fork of `hpxro7/wwiseutil`, part of the author's local,
+  **unpublished** work. **Reference source only** (no `go.mod`; do not build). Its
+  `DEFERRED.md` is the author's local, unpublished Go spec for the format, algorithms,
+  and structs.
 - **`.../wwise-unpacker-revamped/`** — a **binary bundle** (`bnkextr`/`quickbms`/`ww2ogg`/
   `revorb`/`vgmstream-cli`/`ffmpeg` + `.bat`/`.sh`). Not a source tree; do not port from
   it. Useful only as a reference for a `quickbms → bnkextr → ww2ogg → revorb → codec`
@@ -79,8 +80,9 @@ cmake -B wwise-audio-tools/build -S wwise-audio-tools -DCMAKE_POLICY_VERSION_MIN
 cmake --build wwise-audio-tools/build
 ```
 
-On CMake ≥ 4.3.3 the `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` flag is **required** (the
-bundled `libogg` still uses `cmake_minimum_required(< 3.5)`). System deps: `libogg-dev`,
+On **CMake 4.x** the `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` flag is **required**, because
+CMake 4.0 dropped compatibility with projects that declare `cmake_minimum_required(< 3.5)`
+(the bundled `libogg` still does). System deps: `libogg-dev`,
 `libvorbis-dev`, and Catch2 ≥ v3 for tests. Outputs: `build/bin/wwtools`,
 `build/lib/libwwtools.{a,so}`. CLI subcommands: `wem`, `bnk`, `cache` (Go CLI instead uses
 flag-style `-u/-r/-f/-o/-t/-v`).
@@ -143,8 +145,8 @@ tool; preferred future surface is Qt6 (LGPL-3.0, good Windows story) with a TUI
 - **Watch Dogs: Legion / WD3** — banks are SoundBank **v132 (0x84)**; round-tripped by
   Wwise authoring **2019.2.15.7667**, not by 2021.1.0.7575 (see companion note for the
   chunk layout and the retail `sound.dat` packaging).
-- **Open toolchain** — `openwwise-toolkit-git` (C++ `wwise-audio-tools` merge target +
-  Go `wwiseutil` reference + `wwise-unpacker-revamped` bundle); upstreams
+- **Local, unpublished toolchain** — `openwwise-toolkit-git` (C++ `wwise-audio-tools`
+  merge target + Go `wwiseutil` reference + `wwise-unpacker-revamped` bundle); upstreams
   `WolvenKit/wwise-audio-tools`, `hpxro7/wwiseutil`, and the Apache-2.0
   `audiokinetic/WwiseIncludes` headers.
 - **Local authoring installs** — `Wwise 2019.2.15.7667/` and `Wwise 2021.1.0.7575/`

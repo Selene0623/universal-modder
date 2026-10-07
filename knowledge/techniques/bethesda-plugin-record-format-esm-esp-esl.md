@@ -9,13 +9,14 @@ links:
   - "https://github.com/TES5Edit/TES5Edit"
   - "https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format"
   - "https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TES4"
-  - "https://en.uesp.net/wiki/Fallout_4_Mod_File_Format"
+  - "https://tes5edit.github.io/fopdoc/Fallout4/Records.html"
 ---
 
 # Bethesda ESM/ESP/ESL plugin record format: header, GRUP, record header, FormID slots, STRINGS
 
 > Bethesda game data (Morrowind through Starfield) lives in plugin files — `.esm` master, `.esp`
-> plugin, `.esl` light master — built from the same container: a 24-byte plugin header record, a tree
+> plugin, `.esl` light master — built from the same container: a version-dependent record header
+> (24 bytes from FO3 onward, 20 on Oblivion, 16 on Morrowind), a tree
 > of GRUP groups, and main records whose headers carry a FormID, flags and version. This note records
 > the concrete layout xEdit/TES5Edit implements: the record and group structures, the TES4 header
 > subrecords, the FormID full/light/medium slot algebra, the `XXXX` oversized-subrecord escape, and
@@ -40,7 +41,7 @@ A plugin is a flat stream of **main records** and **GRUP** group records. Groups
 contain records and further groups. There is no global table of contents; readers walk the stream
 and accumulate group context to reconstruct the tree.
 
-### Main record header (24 bytes on TES4/FO3/FNV/Skyrim/FO4/Starfield)
+### Main record header (24 bytes from FO3 onward; 20 on Oblivion, 16 on Morrowind)
 
 ```
 offset  size  field
@@ -54,9 +55,11 @@ offset  size  field
 24      ...   subrecord payload (dataSize bytes)
 ```
 
-Morrowind (TES3) is the variant: after FormID it stores a U32 TES3 VCS1 then a separate TES3 flags
-field instead of the FO-era VCS/version layout. xEdit models the header as a union switched on game
-version (see `TwbMainRecordStruct`, TES5Edit/Core/wbImplementation.pas:1072-1094).
+The header grew over time. **Morrowind (TES3)** records are 16 bytes — `signature(4) + dataSize(4) +
+unknown(4) + flags(4)` — and have **no FormID at all** (the record type is the identity). **Oblivion
+(TES4)** adds a FormID and a single VCS1, giving 20 bytes, but still has no form version. **FO3 and
+later** add the form version and VCS2 for 24 bytes. xEdit models the header as a union switched on
+game version (see `TwbMainRecordStruct`, TES5Edit/Core/wbImplementation.pas:1072-1094).
 
 Inside the payload, **subrecords** are `signature(4) + size(U16) + data(size)`, concatenated. A
 subrecord signature such as `XXXX` is not data — it is an escape (see below).
@@ -87,7 +90,7 @@ definition units):
 | Subrecord | Meaning |
 |---|---|
 | `HEDR` | Header: float version, U32 record count, U32 next object ID (`wbHEDR`, wbDefinitionsCommon.pas:6965-6970). Required. |
-| `MAST` | Master file name (one per master). FO4-era adds an 8-byte `DATA` after each. |
+| `MAST` | Master file name (one per master). An 8-byte `DATA` (master file size) follows each `MAST` since Oblivion. |
 | `CNAM` | Author (TES5/FO4); creator string in generated plugins. |
 | `SNAM` | Description/summary. |
 | `ONAM` | Overridden forms — record types this file overrides in its masters. |
@@ -133,7 +136,8 @@ mediumSlot = (formID >> 16) & 0xFF     when fullSlot == 0xFD (MediumFullSlot)
 
 So:
 
-- **Full module** (`.esm`/`.esp`): FormID = `<fileIndex:8><objectID:24>`, file index `0x00`-`0xFC`.
+- **Full module** (`.esm`/`.esp`): FormID = `<fileIndex:8><objectID:24>`, file index `0x00`-`0xFD`
+  (`0x00`-`0xFC` on Starfield, where `0xFD` is the medium slot).
 - **Light module** (`.esl`, and any ESP tagged ESL): FormID = `0xFE<lightSlot:12><objectID:12>`.
   The object ID gets only the **low 12 bits** — `0x800`-`0xFFF` is the range Bethesda normally
   allocates for new records, but any 12-bit value is addressable.
@@ -183,17 +187,21 @@ Subrecord size is a U16, so a payload over 64 KiB cannot be expressed directly. 
 `XXXX` subrecord (wbImplementation.pas:15991, :16136, :16458):
 
 ```
-'XXXX'  size=4  <realSize:U32>   then the real subrecord's 4-byte signature, then the payload
+'XXXX'  size=4  <realSize:U32>
+then the following subrecord's normal header (signature + size), with its size field = 0,
+then the realSize-byte payload
 ```
 
-A reader that does not special-case `XXXX` reads the real signature as a size and desyncs.
+A reader that does not special-case `XXXX` sees a zero-size subrecord and desyncs; the following
+subrecord's normal header still has to be read (with its size ignored) before the payload.
 
 ## Gotchas
 
 1. **Record tree comes out wrong / desyncs after a big subrecord.** **Symptom:** every record after
-   one large one parses as garbage. **Cause:** `XXXX` override not handled; the real subrecord's
-   signature was consumed as a U16 size. **Fix:** detect `XXXX`, read the U32 real size, and read
-   the true 4-byte signature that follows.
+   one large one parses as garbage. **Cause:** `XXXX` override not handled; the following subrecord
+   was read as zero-length and its payload was not consumed. **Fix:** detect `XXXX`, read the U32
+   real size, then read the following subrecord's normal header (its size field is 0) and consume
+   that many bytes.
 2. **Object IDs "too large for light module".** **Symptom:** xEdit refuses to save a flagged ESL.
    **Cause:** object ID has bits above bit 11; `formID & $00FFF000 != 0`. **Fix:** renumber the
    records' object IDs into the 12-bit range (Bethesda's 0x800-0xFFF convention) before flagging
@@ -215,7 +223,7 @@ A reader that does not special-case `XXXX` reads the real signature as a size an
 ## Seen in
 
 - xEdit / TES5Edit `Core/` — `wbImplementation.pas`, `wbInterface.pas`, `wbDefinitions*.pas`,
-  `wbLocalization.pas`, `wbLoadOrder.pas` (`~/Documents/Code/game-tools/Bethesda/Creation Engine/TES5Edit/`).
+  `wbLocalization.pas`, `wbLoadOrder.pas`.
 - Game modes exposed by the same codebase: `TES4Edit`, `TES5Edit`, `SSEEdit`, `FO3Edit`, `FNVEdit`,
   `FO4Edit`, `FO76Edit`, `SF16Edit`, plus Enderal and VR variants (TES5Edit/README.md:109-123).
 - FO4 CC-Packer's synthetic `TES4` placeholder (see the companion note on ESL/archive pairing; the

@@ -138,10 +138,10 @@ Only the MaxScript handles these; the Blender port reads standalone `.meb`/`.imb
 
 ## Verification
 
-- The mesh reader is validated against real extracted `.meb` files by loading them in Blender and
-  checking geometry, UV layers, normals and material assignments. A concrete oracle in the notes: the
-  material path scanner finds all 13 paths in
-  `dod_srt10_kit00_interior_cpit.meb` (Dodge Viper cockpit) at the recorded byte offsets.
+- The add-on repo's notes state the mesh reader is validated against real extracted `.meb` files by
+  loading them in Blender and checking geometry, UV layers, normals and material assignments; this was
+  **not** re-run here. A concrete oracle in those notes: the material path scanner finds all 13 paths
+  in `dod_srt10_kit00_interior_cpit.meb` (Dodge Viper cockpit) at the recorded byte offsets.
 - **Not verified**: any *write* path (no round-trip repack), container `.bml`/`.sgb`/`.sgx` parsing in
   Blender, and skeleton/bone-weight import (bone shorts and weights are skipped, not applied). The
   `.vhf` transform app was not verified against a rendered reference here.
@@ -199,6 +199,6 @@ rather than a fresh modding session.
 - Is there a verified *write* path (repack) at all, or is the toolchain read-only? The BFF side has a
   Windows compressor (`xbcompress.exe` under Wine) worth exploring.
 - `.imb` vs `.meb` — assumed same layout; not separately verified here.
-- Confirm whether the `nfs/` forum-topic scrape (`game-tools/EA Games/nfs/`) contains any format docs
-  beyond sample assets (survey: it is only topic folders with `.zip`/`.rar` payloads, no text notes —
-  not useful for format research).
+- Confirm whether an unpublished local `nfs/` forum-topic scrape contains any format docs beyond sample
+  assets (survey: it is only topic folders with `.zip`/`.rar` payloads, no text notes — not useful for
+  format research).

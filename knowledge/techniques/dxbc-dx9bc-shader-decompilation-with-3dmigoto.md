@@ -6,6 +6,7 @@ date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
+  - https://github.com/etnlgd/HLSLDecompiler
   - https://github.com/bo3b/3Dmigoto
   - https://renderdoc.org/
 ---
@@ -31,7 +32,7 @@ links:
 ## How
 
 Paths below are relative to the tool checkout at
-`~/Documents/Code/game-tools/HLSLDecompiler/`.
+https://github.com/etnlgd/HLSLDecompiler.
 
 1. Build (Windows only, MSBuild / Visual Studio):
    - Platform toolset `v142` (VS 2019), Windows SDK 10.0; platforms Win32 and x64
@@ -40,8 +41,8 @@ Paths below are relative to the tool checkout at
      `msbuild StereovisionHacks.sln /p:Configuration=Release /p:Platform=x64`.
    - One project, e.g.
      `msbuild HLSLDecompiler\cmd_Decompiler\cmd_Decompiler.vcxproj /p:Configuration=Release /p:Platform=Win32`.
-   - External dependency `crc32c-hw-1.0.5` is **not vendored** — it must be present
-     on the build machine.
+   - External dependency `crc32c-hw-1.0.5`: not present in this checkout, but 3Dmigoto
+     vendors `crc32c-hw` (https://github.com/bo3b/3Dmigoto).
 2. Run the CLI `cmd_Decompiler.exe`. Flags (from `cmd_Decompiler.cpp`):
 
    | Flag | Action |
@@ -87,9 +88,9 @@ Code layout (functions described, not reproduced):
 ## Gotchas
 
 1. **Build fails: `crc32c-hw` missing.** Symptom: unresolved external / include
-   not found for crc32c. Cause: `crc32c-hw-1.0.5` is an external dependency not
-   committed to the repo. Fix: obtain and place it where the projects expect it
-   before building.
+   not found for crc32c. Cause: not present in this checkout. Fix: take
+   `crc32c-hw` from 3Dmigoto (https://github.com/bo3b/3Dmigoto), which vendors it,
+   and place it where the projects expect it before building.
 2. **Nothing builds off Windows.** Symptom: missing MSBuild/`.sln` toolchain on
    Linux. Cause: `.vcxproj`/MSBuild, toolset `v142`, Windows SDK — not
    cross-platform. Fix: build on Windows or in a Windows VM/CI with VS 2019.
@@ -112,8 +113,8 @@ Code layout (functions described, not reproduced):
 
 ## Seen in
 
-- `~/Documents/Code/game-tools/HLSLDecompiler/` — the 3Dmigoto shader-decompiler
-  subtree. Read-only grounding for this note: `AGENTS.md`, `README.md`,
+- https://github.com/etnlgd/HLSLDecompiler — the 3Dmigoto shader-decompiler
+  subtree. Read-only grounding for this note: `README.md`,
   `hlsl_decompiler_wrapper.bat`, `HLSLDecompiler/cmd_Decompiler/cmd_Decompiler.cpp`,
   `HLSLDecompiler/DecompileHLSL.cpp`, `BinaryDecompiler/decode.cpp`.
 
@@ -121,8 +122,6 @@ Code layout (functions described, not reproduced):
 
 - Does the DX9 path ever get implemented upstream, or is DX9BC permanently a
   token-detection stub here?
-- Is `crc32c-hw-1.0.5` obtainable from a canonical URL, or is it build-machine
-  folklore? (Not verified in this checkout.)
 - Exact SM5/SHEX edge cases the engine fails to decompile cleanly — not
   benchmarked here; no tests exist in the repo to establish coverage.
 - Not verified: I did not build the tool, run `cmd_Decompiler.exe`, or decompile a

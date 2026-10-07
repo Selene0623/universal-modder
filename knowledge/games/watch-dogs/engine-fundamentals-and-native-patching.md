@@ -8,7 +8,7 @@ platform: windows
 engine: unknown
 route: native-hook
 tools: ["Ghidra", "TinyCC 0.9.27 (win64)", "build.ps1", "validate_release.py", "Python (offline harnesses)", "NexusTools host/loader", "ETW/DXGI presentation capture"]
-anti_cheat: "No anti-cheat interaction is documented in this knowledge base. Watch Dogs 1 is single-player; the mod is a native patch loaded through the NexusTools host on the user's own copy. Nothing here describes defeating protection."
+anti_cheat: "No anti-cheat interaction is documented in this knowledge base. Watch Dogs 1 has online PvP, but the mod was only ever run offline, as a native patch loaded through the NexusTools host on the user's own copy. Nothing here describes defeating protection."
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
@@ -47,6 +47,8 @@ tags: ["disrupt", "shadow-engine", "native-patching", "build-identity", "rva", "
   different RVAs in different executables. The mod therefore models each supported
   build as an immutable **RuntimeProfile**, not a version branch inside feature code.
 - Supported profiles: Global/04DF, Shev/A4EE, VMPless, Complete Edition, Asia/Miru.
+  The "VMPless" build is a shipped build distributed without VMProtect packing (an
+  unpacked *signed* image in the research), not an unpacked or cracked dump.
   Core modules never branch on the profile number; capacity, residency, admission,
   result routing and cleanup share one policy.
 - Fail-closed rule: profile selection must be unique and coherent, and every mutation

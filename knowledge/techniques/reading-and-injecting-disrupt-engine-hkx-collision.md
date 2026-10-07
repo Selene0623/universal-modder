@@ -1,20 +1,19 @@
 ---
 kind: technique
-title: "Disrupt-engine HKX collision: old packfile vs TAG0, and how blender-io-disrupt reads and injects it"
+title: "Disrupt-engine HKX collision: old packfile vs TAG0, and how a community Blender add-on reads and injects it"
 tags: [havok, hkx, disrupt, watch-dogs, tag0, packfile, collision, blender, injection]
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-links:
-  - "https://github.com/Open-Source-Modding/blender-io-disrupt"
+links: []
 ---
 
-# Disrupt-engine HKX collision: old packfile vs TAG0, and how blender-io-disrupt reads and injects it
+# Disrupt-engine HKX collision: old packfile vs TAG0, and how a community Blender add-on reads and injects it
 
 > Ubisoft's Disrupt engine (Watch Dogs 1/2, Legion) ships its collision as Havok `.hkx` in **two
 > different shapes**: a 64-bit **classic packfile** (WD1) and a **TAG0 tagfile wrapped in a Dunia
 > header** (WD2/WDL retail). The companion note covers the classic packfile byte layout; this note is
-> about the *reader/injector implementation* in `blender-io-disrupt/modules/Havok/` — what it parses
+> about the *reader/injector implementation* in a community Blender add-on's `modules/Havok/` — what it parses
 > and, importantly, what it does **not** write.
 
 ## When to use it
@@ -48,9 +47,8 @@ rebuilt:
   section base, giving each object offset its class name.
 - **local fixups** (`abs + local` up to `abs + globalFixups`, 8-byte `(from, to)`), for
   intra-section pointers.
-- **global fixups** (`abs + globalFixups` up to `abs + virtual`), read here as 12-byte
-  `(from, section, to)` — note this differs from the 8-byte pairs some other readers assume, so
-  treat the width as version-specific and verify against a known file.
+- **global fixups** (`abs + globalFixups` up to `abs + virtual`) are always 12-byte
+  `(from, section, to)`; only the local fixups are 8-byte `(from, to)` pairs.
 
 Reads are absolute: `fileOffset = __data__.abs + objOffset + fieldOffset`, so the parser keeps the
 raw bytes and a `base` and never copies the graph out.
@@ -108,10 +106,10 @@ requires reproducing the serializer's fixup/metadata layout (the same wall the T
 2. **The old packfile parser is 64-bit only.** **Symptom:** `Expected 64-bit packfile, got 32-bit`.
    **Cause:** the pointer-size byte at header+16 is checked. **Fix:** for a 32-bit file (e.g. TDU2
    5.5.0) write your own pass; the structure is otherwise identical.
-3. **Global-fixup record width is not constant across versions.** **Symptom:** the local table parses
-   but the global table runs off the end. **Cause:** this code reads globals as 12-byte
-   `(from, section, to)` while other readers use 8-byte `(from, to)` pairs. **Fix:** bound the walk by
-   the next table's start and sanity-check the last entry, as the code does
+3. **Global-fixup table runs off the end when read as 8-byte pairs.** **Symptom:** the local
+   table parses but the global table overruns. **Cause:** global fixups are always 12-byte
+   `(from, section, to)`; only local fixups are 8-byte `(from, to)` pairs. **Fix:** read globals as
+   12-byte triples, bound the walk by the next table's start and sanity-check the last entry
    (`p + 12 <= abs + virtual`).
 4. **TAG0 can sit behind a vendor header.** **Symptom:** `TAG0` is not at offset 0. **Cause:** the
    Dunia wrapper. **Fix:** search for the magic in the first 64 bytes and re-enter 4 bytes earlier,
@@ -121,5 +119,5 @@ requires reproducing the serializer's fixup/metadata layout (the same wall the T
 
 - Watch Dogs 1 collision `.hkx` (old packfile, 64-bit, full rebuild + injection)
 - Watch Dogs 2 / Legion retail collision `.hkx` (TAG0 in a Dunia wrapper; displacement injection)
-- `blender-io-disrupt` `modules/Havok/hkx_format.py`, `tag0_compressed_mesh.py`,
-  `decompress_compressed_mesh.py`, `import_hkx*.py` (MIT, v3.1.2)
+- A community Blender add-on (v3.1.2, MIT) — `modules/Havok/hkx_format.py`, `tag0_compressed_mesh.py`,
+  `decompress_compressed_mesh.py`, `import_hkx*.py`

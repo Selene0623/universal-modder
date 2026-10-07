@@ -7,13 +7,14 @@ game_version: "retail PC (Python 2 tooling written against 2013-era BF4 data)"
 platform: linux
 engine: frostbite
 route: data
-tools: ["bf4dumper (community Python 2 tool, from a forum attachment)", "fb3decoder", "python2.7", "Zench ealayer3.exe (for EALayer3 audio) — Windows/Wine"]
+tools: ["Frankelstner's Frostbite-Scripts (community Python 2 tooling)", "bf4dumper (community Python 2 tool, from a forum attachment)", "fb3decoder", "python2.7", "Zench ealayer3.exe (for EALayer3 audio) — Windows/Wine"]
 anti_cheat: "FairFight + PunkBuster — offline extraction of shipped data only; nothing is injected into a running game"
-status: working
+status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 date: 2026-10-05
-links: []   # tooling sourced from a forum attachment; no repository link found
+links:
+  - "https://github.com/NicknineTheEagle/Frostbite-Scripts"
 tags: [frostbite, battlefield, bf4, ebx, toc, superbundle, cas, cat, lz77, delta-patch, audio, xas, ealayer3, speex, python2]
 ---
 
@@ -21,15 +22,17 @@ tags: [frostbite, battlefield, bf4, ebx, toc, superbundle, cas, cat, lz77, delta
 
 > Notes taken while reading a community Python 2 dumper for Battlefield 4 / Frostbite 3 game data.
 > Frostbite splits a build into a text-ish `.toc` tree, binary `.sb` super-bundles, and content-addressed
-> `cas_XX.cas` blobs catalogued by `.cat`; individual objects serialise as `.ebx` binary XML keyed by an
-> FNV-1 string hash. The tooling is **working** for extraction and text conversion, but it is Python 2 and
-> was written against one game build, so treat every offset as version-sensitive.
+> `cas_XX.cas` blobs catalogued by `.cat`; individual objects serialise as `.ebx` binary XML keyed by a
+> DJB2 string hash. The tooling is **in-progress** for extraction and text conversion (the dumper was
+> read, not run); it is Python 2 and was written against one game build, so treat every offset as
+> version-sensitive.
 
 ## Setup
 
 - The dumper arrived as a forum attachment (`mirrors_edge/topic_14259_bf4dumper/.../bf4dumper.rar`) but the
   code is 100% Battlefield 4 / Frostbite 3 (it hardcodes a `bf4Directory` and BF4 `resTypes`), *not* Mirror's
-  Edge. Trust the code over the folder name.
+  Edge. Trust the code over the folder name. Frankelstner's Frostbite-Scripts
+  (https://github.com/NicknineTheEagle/Frostbite-Scripts) are the reference tooling for this family.
 - It is **Python 2** (`print` statement era, `cPickle` used in `ebxtotext.py`). Run it with `python2.7`; on a
   modern box that means a Python 2 interpreter or a container, not the system `python3`.
 - Audio needs Windows helpers: `xas.dll` / `xas_decode.exe` (XAS1/EA ADPCM) and `easpeex.dll` (Speex) ship
@@ -86,7 +89,7 @@ the archive formats are self-describing enough to parse statically, and because 
 - Header (36 B, unpack `"3I6H3I"`): `absStringOffset, lenStringToEOF, numGUID, numInstanceRepeater,
   numGUIDRepeater, unknown, numComplex, numField, lenName, lenString, numArrayRepeater, lenPayload`.
 - Then: `fileGUID` (16 B), padding to 16, `externalGUIDs` (`numGUID` × (16+16)), keyword names (`lenName`),
-  and a keyword dictionary built with a **32-bit FNV-1** hash (offset basis `5381`, prime `33`).
+  and a keyword dictionary built with a **32-bit DJB2** hash (offset basis `5381`, multiplier `33`).
 - Descriptor tables: `fieldDescriptors` = `"IHHii"` (16 B: `hashName, type, ref, offset, secondaryOffset`);
   `complexDescriptors` = `"IIBBHHH"` (16 B); `instanceRepeaters` = `"2H"`; `arrayRepeaters` = `"3I"`.
 - Payload starts at `absStringOffset + lenString`; the array section starts at
@@ -130,7 +133,7 @@ the archive formats are self-describing enough to parse statically, and because 
 - The header magic and counts were checked against sample bundles and are self-consistent (BF4 bundle magic
   `0x9D798ED5` vs BF3 `0x970d1c13`).
 - Level of proof is **format reading**, not a full round-trip: this subagent read the parser sources and
-  reasoned about them; it did **not** run the Python 2 dumper against a real install, so the "working" status
+  reasoned about them; it did **not** run the Python 2 dumper against a real install, so the "in-progress" status
   reflects the tool's provenance and internal consistency, not a re-run in this session. Re-run and confirm
   before relying on it.
 

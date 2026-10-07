@@ -17,9 +17,7 @@ links:
   - "https://project-paradise2.de/"
   - "https://turboduck.net/forums/topic/28390-test-drive-unlimited-2-modding-wiki/"
   - "https://github.com/djey47/tdumt2"
-  - "https://media.defcon.org/DEF%20CON%2030/DEF%20CON%2030%20presentations/Tristan%20Miller%20-%20Reversing%20the%20Original%20Xbox%20Live%2020Protocols.pdf"
-  - "https://archive.org/details/tdu-2-beta-16.09.2010"
-tags: [tdu2, project-paradise, multiplayer, p2p, nat, upnp, port-forwarding, amd, nvidia, drivers, revival-server, savegame-migration, xbox-live]
+tags: [tdu2, project-paradise, multiplayer, p2p, nat, upnp, port-forwarding, amd, nvidia, drivers, revival-server, savegame-migration]
 ---
 
 # Playing Test Drive Unlimited 2 online with Project Paradise 2
@@ -39,8 +37,8 @@ tags: [tdu2, project-paradise, multiplayer, p2p, nat, upnp, port-forwarding, amd
   offline→online migration; last updated 2025-11-09).
 - If the game crashes on start on a modern OS, that is a separate compatibility problem — see
   `running-tdu2-on-modern-linux.md` for the NULL-pointer fix and the D3D9→D3D11 route.
-- **Scope note:** the community troubleshooting guide also documents SecuROM/activation-bypass steps;
-  those are deliberately **excluded** here (ownership/DRM bypass is out of scope for this KB).
+- **Ownership:** PP2 requires an owned, activated copy (DVD or Steam), per project-paradise2.de/install.
+  DRM and activation workarounds are out of scope for this KB.
 
 ## Route and why
 
@@ -68,10 +66,8 @@ regression, and which is a launcher/wrapper problem. Those get misattributed con
   Vehicle Dirt, Vehicle Damage, Online Mode. *Service* logs in with your in-game account and can upload
   the savegame to PP2 cloud and/or keep local backups (recommended 3–4 savepoints). *Information*
   shows hardware and copies a system report to the clipboard for support.
-- **The original networking is Xbox-Live-era.** TDU2 shipped on Xbox 360 and PC and used the original
-  Xbox Live stack; a public DEF CON 30 talk by Tristan Miller, *Reversing the Original Xbox Live
-  Protocols*, is the best open reference for that protocol family (link in front matter). It is the
-  starting point if you ever want to understand the 360 packet flow.
+- **The original networking is Atari-era.** TDU2 shipped on Xbox 360 and PC; the PC version's online
+  play ran on Atari's own servers. It never used the original Xbox Live service (closed April 2010).
 
 ## Build steps
 

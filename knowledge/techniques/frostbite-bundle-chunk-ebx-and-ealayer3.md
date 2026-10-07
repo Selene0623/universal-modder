@@ -6,24 +6,25 @@ date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
-  - "web/open-source-modding.github.io/docs/mirrors-edge/mirrors-edge-formats.md"
-  - "web/open-source-modding.github.io/.opencode/docs/xentax-mirrors-edge-raw.md"
+  - "https://github.com/NicknineTheEagle/Frostbite-Scripts"
+  - "https://github.com/vgmstream/vgmstream"
 tags: ["frostbite", "bundle", "chunk", "ebx", "ealayer3", "mirrors-edge", "battlefield", "star-wars-battlefront", "nfs", "audio", "asset-pipeline", "file-format"]
 ---
 
 # Frostbite bundle/chunk/EBX asset pipeline and the EALayer3 audio codec
 
 > Frostbite games (Mirror's Edge Catalyst, Battlefield 4, Star Wars Battlefront,
-> NFS 2016+) all share one asset model: `.bundles` hold resources, `.chunk` files
-> are raw blobs with meaningless names, and the real identity of every resource
-> lives in **EBX** metadata keyed by hash/GUID. Because the same dumper and
-> decoder scripts work across titles with small edits, this is a reusable
+> NFS 2016+) all share one asset model: bundles of resources live inside the
+> `.toc`/`.sb` superbundles (there are no standalone `.bundles` files), `.chunk`
+> files are raw blobs with meaningless names, and the real identity of every
+> resource lives in **EBX** metadata keyed by hash/GUID. Because the same dumper
+> and decoder scripts work across titles with small edits, this is a reusable
 > pipeline rather than a per-game trick. Audio uses EA's **EALayer3** codec, a
 > proprietary MPEG-layer-3 variant.
 
 ## When to use it
-- You are extracting assets or audio from any Frostbite title and see `.bundles`
-  / `.chunk` / `.ebx` files.
+- You are extracting assets or audio from any Frostbite title and see `.toc`/`.sb`
+  superbundles / `.chunk` / `.ebx` files.
 - You need to turn nameless chunks back into named resources.
 - You are decoding EALayer3 audio from an EA game (Sims 3 Xbox 360 music is also
   EALayer3, per the Sims 3 dump).
@@ -31,7 +32,8 @@ tags: ["frostbite", "bundle", "chunk", "ebx", "ealayer3", "mirrors-edge", "battl
 ## How
 
 ### The bundle/chunk/EBX model
-- `.bundles` — container files holding game resources.
+- Bundles live **inside** the `.toc`/`.sb` superbundles — there are no standalone
+  `.bundles` files.
 - `.chunk` — raw resource blobs. Filenames are not meaningful; resource names do
   not live in chunk names.
 - **EBX** — object/type metadata database. Each sound/mesh/etc. is described by
@@ -50,6 +52,8 @@ tags: ["frostbite", "bundle", "chunk", "ebx", "ealayer3", "mirrors-edge", "battl
 
 ### EALayer3
 EA-proprietary MPEG-layer-3 variant used across Frostbite and some Sims titles.
+Battlefield 4 also ships XAS1 (EA ADPCM), Speex and raw PCM audio alongside
+EALayer3.
 Prefer **daemon1's ealayer3** build: Zench's original mis-splits multi-sound
 chunks (a 5-sound chunk produced 15 files with 10 duplicates).
 
@@ -97,6 +101,6 @@ chunks (a 5-sound chunk produced 15 files with 10 duplicates).
 - Mirror's Edge (2008, UE3) does **not** use this pipeline: textures were ripped
   via Ninja Ripper / Texmod only.
 
-For the concrete Battlefield 4 byte layout (magics, `3I6H3I` EBX header, FNV-1
+For the concrete Battlefield 4 byte layout (magics, `3I6H3I` EBX header, DJB2
 keyword hashing, field-type map, chunk audio tags), see
 `games/battlefield-4/frostbite-3-archive-and-ebx-formats.md`.

@@ -9,7 +9,6 @@ links:
   - "https://gitlab.winehq.org/wine/wine"
   - "https://github.com/TES5Edit/TES5Edit"
   - "https://github.com/j00ru/windows-syscalls"
-  - "https://github.com/TES5Edit/BSArch"
 ---
 
 # Running xEdit (and other Delphi/Windows modding tools) on Linux: Wine/Proton patches
@@ -70,7 +69,7 @@ Proton prefix runtime:
   The patch implements it (`HMONITOR`, `const RECT *`) in `sysparams.c`, changes the spec line to
   `@ stdcall -syscall NtUserSetMonitorWorkArea(long ptr)` and the syscall entry's arg-size to `16`,
   and adds `test_SetMonitorWorkArea()` to `dlls/user32/tests/monitor.c`. Syscall numbers/ordering are
-  cross-checked against the public per-Windows-build table in `re/windows-syscalls/` (j00ru).
+  cross-checked against the public per-Windows-build tables from the `windows-syscalls` project (j00ru).
 
 ### Step 2 — build and run the module tests
 
@@ -134,13 +133,12 @@ keep the delta. CI uses `winetest.exe` (not `make test`) plus an X virtual frame
 
 ## Seen in
 
-- Wine development tree with local patches: `~/Documents/Code/forks/config/wine/` (`AGENTS.md`,
-  `pagefault_xedit.txt`, `riched20-tomCharFormat.patch`, `ntusersetmonitorworkarea.patch`,
-  `ntusersetmonitorworkarea-11.0.patch`).
-- xEdit source and build: `~/Documents/Code/misc/TES5Edit-linux/` (xEdit 4.0.0, Delphi 12 CE,
-  `BethWorkBench.groupproj`, `LiteDebug` config without DevExpress) and
-  `~/Documents/Code/game-tools/Bethesda/Creation Engine/TES5Edit/`.
-- Syscall table reference: `re/windows-syscalls/` (j00ru, nt + win32k, per Windows build).
+- A Wine development tree with local patches (unpublished): `pagefault_xedit.txt`,
+  `riched20-tomCharFormat.patch`, `ntusersetmonitorworkarea.patch`,
+  `ntusersetmonitorworkarea-11.0.patch`.
+- xEdit source and build (local, unpublished): xEdit 4.0.0, Delphi 12 CE,
+  `BethWorkBench.groupproj`, `LiteDebug` config without DevExpress.
+- Syscall table reference: the public `windows-syscalls` tables (j00ru, nt + win32k, per Windows build).
 
 ## Open questions
 

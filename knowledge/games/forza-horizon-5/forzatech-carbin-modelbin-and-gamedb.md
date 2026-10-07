@@ -8,23 +8,24 @@ platform: windows
 engine: unknown
 route: data
 tools: ["Blender 4.2 (carbin_importer.py, modelbin_importer.py, vfont_importer.py)", "ImHex v1.30.1 (patterns/)", "Node.js 18 (carbin_converter.mjs, string_extractor.mjs)", "ca2_extractor.py (python zlib)", "ForzaTech-crypto-tool (CryptoTool.exe, boost 1.82.0)", "3DSimED 3.2c"]
-anti_cheat: "None described. Extraction reads the user's own game rip offline; the crypto tool ships without keys. Single-player data path only. Nothing here defeats protection."
+anti_cheat: "FH5 is online with anti-cheat. This note only reads an offline copy of the user's own game rip; nothing is injected into a running game and no protection is defeated."
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 date: 2026-10-05
-links: ["https://github.com/Doliman100/ForzaTech-extraction-tools", "https://github.com/Doliman100/ForzaTech-encryption-tool", "https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256", "https://github.com/Nenkai/010GameTemplates/blob/main/Forza/TFIT.bt"]
+links: ["https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256", "https://github.com/Nenkai/010GameTemplates/blob/main/Forza/TFIT.bt"]
 tags: ["forzatech", "carbin", "modelbin", "vfont", "gamedb", "tfit", "arxan", "transformatit", "archive", "blender", "imhex"]
 ---
 
 # ForzaTech car assets: .carbin/.modelbin/.vfont, .ca2 archives and the GameDB.slt crypto
 
 > This note records the *file-format and crypto* knowledge behind extracting cars from
-> ForzaTech titles (FH2–FH5, FM5–FM2023). Two public tools are the sources: a Blender/Node/ImHex
-> extraction toolkit and a separate TFIT crypto tool. It describes how a car rip is laid out, how
-> the three asset containers are structured, how `GameDB.slt` is decrypted, and where support stops.
-> Nothing here was executed against game data — it is a documentation pass over read sources, and
-> the material path is explicitly partial.
+> ForzaTech titles (FH2–FH5, FM5–FM2023). Two public tools are the sources: Doliman100's
+> Blender/Node/ImHex extraction toolkit (`ForzaTech-extraction-tools`) and a separate TFIT crypto tool
+> (`ForzaTech-encryption-tool`) — credited in plain text, not linked here. It describes how a car rip
+> is laid out, how the three asset containers are structured, how `GameDB.slt` is decrypted, and where
+> support stops. Nothing here was executed against game data — it is a documentation pass over read
+> sources, and the material path is explicitly partial.
 
 ## Setup
 
@@ -47,7 +48,7 @@ tags: ["forzatech", "carbin", "modelbin", "vfont", "gamedb", "tfit", "arxan", "t
 - Considered but not taken: native patching to fish assets out of memory. The tools show the data
   path is sufficient for meshes, LODs, wheels and (partially) materials.
 - Two-stage pipeline is deliberate:
-  1. **Crypto tool** decrypts `gamedbRC.slt` (and optionally `.zip`/saves/photos/routes).
+  1. **Crypto tool** decrypts `gamedbRC.slt`.
   2. **Extraction toolkit** reads the rip for geometry; the decrypted GameDB supplies the numeric
      car metadata (wheel size, track, wheelbase) that the files themselves don't carry.
 - `.carbin` conversion exists because modern `3DSimED` can't read FH5/FM2023 files: a small
@@ -143,10 +144,8 @@ buf = buf[-offset:]
   the decrypted block (MAC itself encrypted). FH headers add a leading `u32 data_size` and a
   trailing `u32 padding_size`; FM headers only add `u32 data_size`.
 - The tool auto-detects game and key by trying candidate keys and checking the MAC, so the caller
-  doesn't pass a game unless encrypting. Key types: `SFS` (`media\sfsdata`), `GameDB`,
-  `File`/`ConfigFile` (`.zip`/`.xml`/`.ini`), `Profile`, `Reward`, `Photo`, `Dynamic` (custom
-  routes), plus `Telemetry`/`CMS`. It can also **re-encrypt** user content (saves, photos, event-lab
-  routes).
+  doesn't pass a game unless encrypting. Key types include `SFS` (`media\sfsdata`), `GameDB`,
+  `File`/`ConfigFile` (`.zip`/`.xml`/`.ini`) and others. Only the GameDB decrypt path is used here.
 - **Obfuscation algorithm** (`obfuscation.h`): a stateful pass keyed by a `uint32 seed` and a
   256-byte CRC32 mapping table. For each aligned offset it computes
   `step = seed + (seed+1) * (offset/4)`, then for each dword sets `hash = CustomCRC32(step)` and
@@ -222,8 +221,7 @@ Types include `WheelBlurScenario`, `CarShadowDepthLightScenario`, `SimpleCarLigh
    archive into `Materials`.
 4. **Symptom.** `CryptoTool` reports "None of the keys matched." **Cause:** all candidate keys
    failed MAC verification — wrong game/key, a newer title, or corrupt input. **Fix:** confirm the
-   title is within coverage (FH5 ≤ v1.614.70.0); pass `-g`/`-k` for encryption; note the repo
-   ships **without key files** (they live on the archived XeNTaX thread).
+   title is within coverage (FH5 ≤ v1.614.70.0); note the tool ships **without key files**.
 5. **Symptom.** `.carbin` won't open in 3DSimED. **Cause:** FH5/FM2023 dialects (model type 18/21)
    and the modern `.materialbin` are unsupported by 3DSimED 3.2c. **Fix:** run
    `carbin_converter.mjs` (rewrites root type to `05`, switches model type, drops 5 trailing bytes
@@ -234,10 +232,10 @@ Types include `WheelBlurScenario`, `CarShadowDepthLightScenario`, `SimpleCarLigh
 
 ## Assets
 
-- No game files, binaries, keys or dumps are included here. The crypto repo deliberately **omits
-  key files**; the repo links to the archived XeNTaX thread for those.
-- Tool source: `ForzaTech-extraction-tools` and `ForzaTech-encryption-tool` (public GitHub).
-- A decrypted `gamedbRC.slt` is linked from the README via a Mega folder (third-party host).
+- No game files, binaries, keys or dumps are included here. The crypto tool deliberately **omits**
+  key files.
+- Tool sources: Doliman100's `ForzaTech-extraction-tools` and `ForzaTech-encryption-tool` (public
+  GitHub; credited in plain text, not linked).
 
 ## Cost and time
 

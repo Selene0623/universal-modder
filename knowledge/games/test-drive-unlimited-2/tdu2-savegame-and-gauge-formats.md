@@ -59,12 +59,12 @@ savegame/
 | `0x0A` | varies | Profile name, ASCII, null-padded to `0x100` bytes |
 | `0x10A` | 1 | Terminator `0xFF` |
 
-Verified by hexdump: the observed file is 267 bytes and holds `Selene0623` at `0x0A`, `0xFF` at `0x10A`. Renaming a profile requires both the directory name on disk and this 256-byte slot to change.
+Verified by hexdump: the observed file is 267 bytes and holds a profile name at `0x0A`, `0xFF` at `0x10A`. Renaming a profile requires both the directory name on disk and this 256-byte slot to change.
 
 ### PLAYERSAVE/DATA (PC)
 
 - **Not encrypted.** `strings -n 4` finds ~2200 short printable runs but no player name in ASCII/UTF-16LE/UTF-16BE, and there is no STFS magic (`CON`/`LIVE`/`PIRS`) or XMBF magic. Bytes look noisy but are a structured binary format, not ciphertext. XTEA decrypt with the key found in the executable produces garbage.
-- **Field offsets are not yet documented for PC.** Sizes vary with progress: `Selene0623` 149713 B, `Yuriy` 184433 B (difference 34720 = `0x87A0`, which appears once in the executable — possibly a related constant).
+- **Field offsets are not yet documented for PC.** Sizes vary with progress: profile A 149713 B, profile B 184433 B (difference 34720 = `0x87A0`, which appears once in the executable — possibly a related constant).
 - The executable has an XTEA decrypt/encrypt pair (file offsets `0x55EA60`/`0x55EAD0`, VA `0x95EA60`/`0x95EAD0`, ImageBase `0x400000`; initial sum `0xC6EF3720`, delta `0x61C88647`) with 40 decrypt and 9 encrypt callers. The 16-byte key at VA `0x00F763AC` matches TDU1's `tdudec` key #1, so it is used for non-save files (`.btrq`/`.db`), **not** the PC save. The raw key bytes are intentionally omitted here.
 - Source-file debug strings in the executable point at Eden Games internals (`DB_Base.cpp`, `GSFile.cpp`, `GSConfig.cpp`), which is where the PC struct/serializer would need to be decompiled.
 
@@ -80,15 +80,15 @@ Applied to the PC `DATA`, those offsets land on random bytes (`u32` values in th
 
 ### CRC / integrity
 
-The executable contains many CRC code strings (`CRC_A_PROFILE_NAME`, `CRC_R_PROFILE_NAME`, `CRC_A_PROFILE_READ_ACHIEVEMENTS`, `CRC_E_SAVEGAME_SERVER`, `CRC_R_SAVEGAME_CASINO_*`, etc.), so the game likely validates save integrity on load. A community plugin (`tdu_andraste_playersave_validation_skip`) exists as a fallback if edited saves fail validation.
+The executable contains many CRC code strings (`CRC_A_PROFILE_NAME`, `CRC_R_PROFILE_NAME`, `CRC_A_PROFILE_READ_ACHIEVEMENTS`, `CRC_E_SAVEGAME_SERVER`, `CRC_R_SAVEGAME_CASINO_*`, etc.), so the game likely validates save integrity on load. A community plugin (`tdu_andraste_playersave_validation_skip`) is a TDU1 1.66a plugin; no TDU2 equivalent is known.
 
-### Migration workflow (Yuriy → Selene0623, rename to "Selene")
+### Migration workflow (profile B → profile A, rename)
 
 1. Back up the whole savegame directory (work on copies; cross-profile mixing can corrupt saves).
 2. Copy progress-bearing directories that the target profile lacks: `LICENCES/`, `STICKERS/`, `PHOTOS/`.
 3. Rename the profile directory and update the `ProfileList.dat` slot at `0x0A`.
 4. Check that no internal `DATA` reference points at the old profile string.
-5. Handle CRC/integrity validation (step 2 above is the fallback).
+5. Handle CRC/integrity validation (the `tdu_andraste_playersave_validation_skip` plugin above is TDU1-only, so there is no known TDU2 equivalent).
 
 ### Gauge bank (`HudGaugeBank`)
 
@@ -163,6 +163,8 @@ make gauge_hook        # -> gauge_hook.dll (32-bit, no CRT)
 6. The gauge hook's `CreateFileA` intercept point may be wrong; the loader may need hooking at `thunk_FUN_00c9c700` (or the bank table at `thunk_FUN_00c9c800`) instead.
 
 ## Assets
+
+Unpublished local work (not part of this repository; the `gauge_hook` DLL is only a draft):
 
 - `savegame/AGENTS.md` — full savegame notes and open items.
 - `savegame/ProfileList.dat` — 267-byte registry (observed).
