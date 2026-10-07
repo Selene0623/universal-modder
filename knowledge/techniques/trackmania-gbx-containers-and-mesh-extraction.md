@@ -11,8 +11,9 @@ humans: ["Selene0623"]
 
 > TrackMania and ManiaPlanet ship their content in `GBX` containers and encrypted `NadeoPak`
 > archives. This note records what the container looks like, which parts of the ecosystem are
-> open and which are not, and the two known routes for turning level parts and car meshes into
-> OBJ. Nothing here was re-verified in-game: the facts are distilled from the XeNTaX-era
+> open and which are not, and the routes for turning level parts and car meshes into OBJ.
+> The first thing to try is GBX.NET; the two Noesis/dxripper routes are XeNTaX-era routes.
+> Nothing here was re-verified in-game: the facts are distilled from the XeNTaX-era
 > community threads and the tm-wiki PAK page, so treat the numbers as a starting point to check
 > against your own files.
 
@@ -39,24 +40,38 @@ The double extension is meaningful, not decoration:
 | Extension | Contents |
 | --- | --- |
 | `.Map.Gbx` | map |
+| `.Challenge.Gbx` | map in pre-ManiaPlanet games (TrackMania Original/Sunrise era) |
 | `.Replay.Gbx` | replay |
-| `.Pack.Gbx` | title or content pack (this is the Pak format) |
+| `.Pack.Gbx` | title or content pack (this is the Pak format; it does not carry the `GBX` magic, see below) |
 
 ### NadeoPak archives
 
-TrackMania Turbo (Maniaplanet4, 2016) ships `NadeoPak r18` containers. The header is readable;
-the payload is encrypted with a key, reported in the 2016 threads as Blowfish. At the time, the
-community wiki documented the layout while the only forum tool could read headers and show no
-content, and car audio stayed locked inside the same container. Plan on the Pak being closed
-unless you bring your own analysis, and do not build a workflow that depends on someone passing
-a key around.
+`.Pack.Gbx` is a `NadeoPak` archive, not a `GBX` object graph: those files start with the ASCII
+magic `NadeoPak`, so check the first bytes before trying a GBX parser on one. TrackMania Turbo
+(2016, ManiaPlanet engine) ships `NadeoPak r18` containers. The header is readable; the payload
+is encrypted with a key, reported in the 2016 threads as Blowfish. At the time, the community
+wiki documented the layout while the only forum tool could read headers and show no content, and
+car audio stayed locked inside the same container. Plan on the Pak being closed unless you bring
+your own analysis, and do not build a workflow that depends on someone passing a key around.
 
-### Route 1: dxripper for whole-level geometry
+For content already installed in your own copy, the current in-game route is Openplanet's
+developer-mode pack explorer (`Fids::Extract`), which enumerates and extracts the game's own
+packs offline — no key passing and no reverse engineering needed for your own install.
+
+### Route 1: GBX.NET for `Mesh.Gbx` and `CPlugSolid2Model`
+
+GBX.NET (BigBang1112; MIT, though its LZO package is GPL-3) is a maintained .NET library that
+reads and writes `Mesh.Gbx` and `CPlugSolid2Model` across TrackMania Forever, ManiaPlanet and
+TrackMania 2020. Try it first: it covers the GBX object graph and the mesh models directly, and
+the Blendermania Blender add-on is built on it. The two XeNTaX-era routes below are kept
+for the cases where they still help.
+
+### Route 2: dxripper for whole-level geometry (XeNTaX-era route)
 
 dxripper captures a TrackMania 2 level as a single mesh. You get geometry, but not per-part
 files with their original names, so it is a viewer/rip path rather than an asset pipeline.
 
-### Route 2: Noesis plugin for GBX meshes
+### Route 3: Noesis plugin for GBX meshes (XeNTaX-era route)
 
 A Noesis `.gbx` plugin by Tuliopilloto (posted on the vg-resource forums) imports GBX models and
 exports OBJ. It was tested against a single sample file, which matches its failure profile:
@@ -101,29 +116,28 @@ for the texture set.
    form; check the first bytes and the file's origin before blaming the plugin.
 2. **`uv size` error on a car.** Decompressed GBX. The plugin's decompressed-path support is
    partial; try the undecompressed original first, or only the parts that parse.
-3. **All vertices at one point after import.** Missing bone transformation. The vertex data is
-   stored in bone space, so a raw import collapses; apply the skeleton/bone transforms or import
-   through a tool that does.
+3. **All vertices at one point after import.** Missing bone transformation. A reported cause from
+   the 2022 thread, not re-verified here: the vertex data is stored in bone space, so a raw import
+   collapses; apply the skeleton/bone transforms or import through a tool that does.
 4. **Import dies on `MainbodyHigh.Solid.Decompressed.Gbx`.** Known failure of the patched script,
    which was shipped without a sample file, so nobody could debug it further.
 5. **Mesh imports, no texture.** Expected: textures are separate assets, not embedded.
 6. **Pak archive yields headers only.** The container is encrypted; a header reader is not an
-   extractor. Do not plan around a public Pak unpacker.
+   extractor. As of the 2016 threads there was no public Pak unpacker; for your own install, use
+   Openplanet's developer-mode pack explorer (`Fids::Extract`) instead of parsing the container.
 
 ## What this does not prove
 
 - None of these paths were re-run here and none were confirmed in-game; the mesh layout numbers
   come from a script patched against a single sample.
 - The Blowfish identification is a 2016 forum report about `r18`, not a confirmed cipher spec.
-- No working public extractor existed for ManiaPlanet Paks as of the last community reports, but
-  absence of a published tool is not proof that none exists.
+- The 2016 threads reported no working public extractor for ManiaPlanet Paks, but absence of a
+  published tool is not proof that none exists; Openplanet's developer mode extracts your own
+  copy's packs without one.
 - Importing a mesh says nothing about whether the game will accept a modified one; that needs its
   own round-trip test.
 
 ## Seen in
 
-Distilled from the TrackMania format pages of a community reference site for Nadeo game formats,
-themselves extracted from XeNTaX-era threads (2013-2023), the vg-resource Noesis plugin thread,
-and the tm-wiki PAK page. Related notes: the TrackMania 2 content-location note in this knowledge
-base covers where custom packs live, and the TMF model export note covers writing models back
-into the game with Blender.
+Distilled from the XeNTaX thread t=24378 (shakotay2 and fajNYgosciu1234, 2022–23), the 2016
+TrackMania Turbo pak thread, Tuliopilloto's vg-resource thread, and the tm-wiki PAK page.
