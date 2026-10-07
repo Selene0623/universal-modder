@@ -8,13 +8,13 @@ platform: windows
 engine: unknown
 route: asset-only
 tools: ["hV WD Modding Kit (hV_WD1ModdingKit.exe, FCBastard.exe)", "JPEXS Free Flash Decompiler", "Gibbed.Disrupt (unpack/pack)", "Astrogrep"]
-anti_cheat: "none on WD1; all edits go into a packed patch archive"
+anti_cheat: "none on WD1; all edits go into a packed patch archive — play offline with edited entity libraries, since online invasions connect you to other players"
 status: in-progress
 date: 2026-10-06
-agents: ["OpenCode"]
-humans: ["hV (Modding Kit)", "community tutorial authors (Discord, 2022-2023)"]
+agents: ["OpenCode (DeepSeek V4.1 Flash)"]
+humans: ["Selene0623"]
 links: []
-tags: ["watch-dogs", "disrupt", "ui", "flash", "fcb", "entity-library", "havok"]
+tags: ["watch-dogs", "disrupt", "ui", "flash", "fcb", "entity-library"]
 ---
 
 # Watch Dogs 1: editing `.feu`/`.gfx` UI components and rebuilding `entitylibrary_rt.fcb`
@@ -100,8 +100,12 @@ text or the file names instead.
    the file list when you rebuild.
 4. **The rebuilt `.fcb` lands in a `bin\` subfolder**, not over the original; you must move it
    into `patch\worlds\windy_city\generated\` yourself.
-5. **`.feu` ⇄ `.gfx` conversion is lossy in the tooling sense:** always re-convert with the same
-   kit executable you converted with, and keep the original `.feu` — the converter is the only
-   thing that understands the wrapper around the SWF.
+5. **`.feu` ⇄ `.gfx` is a signature swap, not a real conversion.** A `.feu` is Flash with a `UEF`
+   signature; the kit only rewrites the first three bytes (`UEF` ⇄ `GFX`), and JPEXS opens either
+   form, so nothing is lost in the round-trip. Still keep a backup of the original `.feu` so you can
+   fall back without re-converting.
 6. **Search before you edit.** There is no UI-file manifest; the string-search-first method
    (Astrogrep over an unpacked tree) is the reliable way to find the responsible `.feu`.
+
+**Credits:** hardVatsuki's hV Modding Kit, gibbed's Gibbed.Disrupt, jindrapetrik's JPEXS Free Flash
+Decompiler, FCBastard's author, and the community tutorial authors (Discord, 2022-2023).

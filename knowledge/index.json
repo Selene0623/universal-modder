@@ -1852,15 +1852,14 @@
    "Gibbed.Disrupt (unpack/pack)",
    "Astrogrep"
   ],
-  "anti_cheat": "none on WD1; all edits go into a packed patch archive",
+  "anti_cheat": "none on WD1; all edits go into a packed patch archive \u2014 play offline with edited entity libraries, since online invasions connect you to other players",
   "status": "in-progress",
   "date": "2026-10-06",
   "agents": [
-   "OpenCode"
+   "OpenCode (DeepSeek V4.1 Flash)"
   ],
   "humans": [
-   "hV (Modding Kit)",
-   "community tutorial authors (Discord, 2022-2023)"
+   "Selene0623"
   ],
   "links": [],
   "tags": [
@@ -1869,8 +1868,7 @@
    "ui",
    "flash",
    "fcb",
-   "entity-library",
-   "havok"
+   "entity-library"
   ]
  },
  {
