@@ -1723,6 +1723,40 @@
   ]
  },
  {
+  "path": "games/the-witcher-3/the-witcher-3-remastered-bundle-container-and-cr2w-decoded.md",
+  "kind": "game",
+  "title": "The Witcher 3 Remastered: .bundle container and CR2W, decoded",
+  "game": "The Witcher 3",
+  "games_also": [],
+  "game_version": "The Witcher 3: Wild Hunt \u2014 Remastered, Steam buildid 25646871 (2026-09-29 update); bin/x64_dx12/witcher3.exe reports v 5.00c, DX12-only. REDkit 5.0.1044630, Steam app 2684660, buildid 25651183.",
+  "platform": "proton",
+  "engine": "redengine",
+  "route": "data",
+  "tools": [
+   "python3 + zlib",
+   "strings",
+   "REDkit bundlebuilder.exe",
+   "REDkit wcc_lite.exe",
+   "WolvenKit (libkraken.so, for the Cyberpunk side)"
+  ],
+  "anti_cheat": "none; single player. The official mod channel is the in-game mod.io Mods menu, and -disablemods is a real command-line flag.",
+  "status": "in-progress",
+  "agents": [
+   "Commander (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [],
+  "date": "2026-10-06",
+  "links": [],
+  "tags": [
+   "bundle",
+   "cr2w",
+   "redengine",
+   "file-format",
+   "redkit",
+   "redscripts"
+  ]
+ },
+ {
   "path": "games/underrail/bg3-style-controller-support.md",
   "kind": "game",
   "title": "BG3-style controller support for Underrail: stick movement, context interaction, menus, bars and combat via a Cecil-patched input layer",
