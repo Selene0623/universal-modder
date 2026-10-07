@@ -2542,6 +2542,37 @@
   ]
  },
  {
+  "path": "techniques/forzatech-burg-modelbin-containers-and-makeh2o.md",
+  "kind": "technique",
+  "title": "Reading old ForzaTech .modelbin containers (burG), and the MakeH2O tool lineage",
+  "tags": [
+   "forzatech",
+   "modelbin",
+   "carbin",
+   "burg",
+   "mesh",
+   "vertex-buffer",
+   "makeh2o",
+   "ghidra",
+   "reverse-engineering",
+   "forza-horizon-3"
+  ],
+  "date": "2026-10-06",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "links": [
+   "https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256",
+   "https://github.com/noidex0/fh6-model-tools",
+   "https://github.com/Nenkai/ForzaTools",
+   "https://github.com/D3FEKT/ForzaTechStudio",
+   "https://github.com/morluto/rea/issues/821"
+  ]
+ },
+ {
   "path": "techniques/loading-pre-sequel-assets-in-borderlands-2.md",
   "kind": "technique",
   "title": "Loading Pre-Sequel assets in Borderlands 2: header-only package surgery, mesh conversion and what still fails",
