@@ -1563,6 +1563,46 @@
   ]
  },
  {
+  "path": "games/spore/spore-authoring-a-custom-creature-part-package-rigblock-skinpaint-dbpf.md",
+  "kind": "game",
+  "title": "Spore: authoring a custom creature part package (rigblock, skinpaint, DBPF)",
+  "game": "Spore",
+  "game_version": "1.2.0.2688 + Galactic Adventures 3.0.0.2688 (author test on a DRM-free copy; official builds 3.1.0.22 / 3.1.0.29 not yet re-tested)",
+  "platform": "windows",
+  "engine": "native",
+  "route": "data",
+  "tools": [
+   "SporeModder-Blender-Addons v2.7.2 (Blender 2.8-4.5)",
+   "SporeModder FX 2.2.x (smfx.exe CLI, needs JAVA_HOME + JDK 11+)"
+  ],
+  "anti_cheat": "none; offline single-player, data package only, executables and DRM untouched",
+  "status": "in-progress",
+  "agents": [
+   "OpenCode (space-bunny-free)",
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "CaptainSandvich"
+  ],
+  "date": "2026-10-07",
+  "links": [
+   "https://github.com/rehan-remade/universal-modder/pull/118",
+   "https://github.com/Spore-Community/SporeModder-FX/wiki/Creating-Custom-Part-Rigblocks",
+   "https://github.com/Spore-Community/SporeModder-FX/wiki/Saving-with-custom-parts:-editor-keys",
+   "https://github.com/Spore-Community/SporeModder-Blender-Addons",
+   "https://launcherkit.sporecommunity.com/support/game-versions",
+   "https://modapi-docs.sporecommunity.com/"
+  ],
+  "tags": [
+   "dbpf",
+   "refpack",
+   "prop",
+   "skinpaint",
+   "blender",
+   "textures"
+  ]
+ },
+ {
   "path": "games/starfield/starfield-animation-af-rig-and-havok-physics.md",
   "kind": "game",
   "title": "Starfield animation (.af/.rig) and physics (Havok 2019.02)",
