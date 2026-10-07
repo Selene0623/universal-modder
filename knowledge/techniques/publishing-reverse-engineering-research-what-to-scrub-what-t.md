@@ -121,8 +121,8 @@ What to drop, genericise and keep:
 9. **Symptom:** a reader follows your note and reproduces a bug you already fixed. **Cause:** the note links the
    upstream project, but the fix lives on a fork or branch (the packer change, the format fix, the CI repair).
    **Fix:** say what the fix does, and name the branch and the commits that carry it; link the fork only if the
-   account behind it is one you would point a stranger at — if it also hosts things you would rather not
-   advertise (leaked material, expired keys), name the branch and hashes and link the upstream project instead,
+   account behind it is one you would point a stranger at — if it also hosts leaked material or keys, name
+   the branch and hashes and link the upstream project instead,
    so the note stays honest about lineage without sending readers through the rest of the account.
 10. **Symptom:** the keys are gone from every file, yet someone finds one. **Cause:** the scrub only touched the
     working tree — the blob is still reachable in history (`git log -S<literal> --all`, `git log --all -- <path>`)
@@ -132,9 +132,9 @@ What to drop, genericise and keep:
 11. **Symptom:** the branches are clean and the key is still fetchable. **Cause:** a rewrite and force-push cover
     the branch refs only. Two copies survive on the host: pull-request refs (`refs/pull/N/head`, which nobody can
     force-push) and any other branch you did not rewrite. **Fix:** enumerate every ref before calling it done
-    (`git ls-remote origin`, then scan each one), rewrite the ones you own, and for pull-request refs either file
-    a host support request to purge the objects or write down that the values stay public there, since the ref
-    itself cannot be corrected. Expired keys are still keys: an expiry date lowers the stakes, it does not make
+    (`git ls-remote origin`, then scan each one), rewrite the ones you own, and for pull-request refs file a host
+    support request to purge the objects (GitHub Support can purge pull-request refs and cached views), since the
+    ref itself cannot be corrected. Expired keys are still keys: an expiry date lowers the stakes, it does not make
     the literal safe to leave addressable.
 
 ## Seen in
