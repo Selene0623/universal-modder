@@ -47,8 +47,8 @@ tags: ["disrupt", "shadow-engine", "native-patching", "build-identity", "rva", "
   different RVAs in different executables. The mod therefore models each supported
   build as an immutable **RuntimeProfile**, not a version branch inside feature code.
 - Supported profiles: Global/04DF, Shev/A4EE, VMPless, Complete Edition, Asia/Miru.
-  The "VMPless" build is a shipped build distributed without VMProtect packing (an
-  unpacked *signed* image in the research), not an unpacked or cracked dump.
+  The "VMPless" build is a shipped build distributed without VMProtect packing (a
+  raw, signed PE without VMProtect), not an unpacked or cracked dump.
   Core modules never branch on the profile number; capacity, residency, admission,
   result routing and cleanup share one policy.
 - Fail-closed rule: profile selection must be unique and coherent, and every mutation

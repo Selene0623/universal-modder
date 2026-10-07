@@ -196,8 +196,8 @@ rather than a fresh modding session.
   MaxScript.
 - Port `.sgb`/`.sgx` track containers incl. instances.
 - Import skeleton/bone weights (`580` indices + `310` weights) — currently skipped.
-- Is there a verified *write* path (repack) at all, or is the toolchain read-only? The BFF side has a
-  Windows compressor (`xbcompress.exe` under Wine) worth exploring.
+- Is there a verified *write* path (repack) at all, or is the toolchain read-only? The BFF side has an
+  LZX/XMemCompress-compatible compressor worth exploring.
 - `.imb` vs `.meb` — assumed same layout; not separately verified here.
 - Confirm whether an unpublished local `nfs/` forum-topic scrape contains any format docs beyond sample
   assets (survey: it is only topic folders with `.zip`/`.rar` payloads, no text notes — not useful for

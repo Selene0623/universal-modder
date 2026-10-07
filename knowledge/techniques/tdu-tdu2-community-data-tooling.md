@@ -8,9 +8,7 @@ humans: ["Selene0623"]
 links: []
 ---
 
-> Credits: Knyazev's TDU2 tools (tdu2.knyazev-tools.ru) — the site hosts a launcher players use to run
-> the game without SecuROM; the link is omitted here because DRM workarounds are out of scope.
-> `tdumodshop.forumactif.net` (tools forum) — the domain no longer exists.
+> Credits: Knyazev's TDU2 tools.
 
 # TDU/TDU2 community data tooling: filename hashing, .bnk inspection, 2DB textures, terrain heightmap editor
 
@@ -51,7 +49,7 @@ links: []
 - `TDU2-BNK-Finder/`, `TDU2-BNK-File-Locator/`, `TDU2-BNK-Guts-Viewer/`, `TDU2-Bin-Renamer/`
 - `TDUMT2_Texture_Tools/` (`Texture_Converter.exe`, `Texture_Viewer.exe`, `ReadME.txt`, `Changelog.txt`)
 - `hmeditor/` (`main.exe`, `readme.txt`, `settings.ini`, `gfx/`)
-- Duplicate/superseded siblings: `TDU2.BIG.Tool/`, `TDU2-BIG-Unpacker/`, `TDU2-Mesh-Import/`, `TDU-Mesh-Extractor/`, `blender-io-tdu-series/`, `Gamelauncher/`.
+- Duplicate/superseded siblings: `TDU2.BIG.Tool/`, `TDU2-BIG-Unpacker/`, `TDU2-Mesh-Import/`, `TDU-Mesh-Extractor/`, `blender-io-tdu-series/`.
 
 ## Open questions
 

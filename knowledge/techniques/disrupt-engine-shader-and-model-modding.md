@@ -16,11 +16,10 @@ links: []
 - **Shader compiler**: the `.fx` sources compile with the Windows SDK x64 `fxc.exe` (on `PATH`); on Linux use DXC (e.g. `~/.local/bin/dxc`). The shader source tree comes from unpacking the reader's own `shaders.dat`/`shaders.fat` with Gibbed.Disrupt, not from a bundled third-party package.
 - **Model tooling**: `DisruptEditor` (C++/SDL2/OpenGL, MIT; Linux port builds with CMake + system SDL2/OpenGL), a community Blender add-on, `glm2obj` (C++ GLM→OBJ), `material_bin.py` (TAM material reader/writer).
 - **Archive tooling**: `Gibbed.Disrupt` (.dat/.fat unpack/pack, .NET 8.0) to get at `shadersobj.fat` and asset archives.
-- **Privilege note**: the public KB must not reproduce proprietary iMMERSE shader code; only general RTGI concepts are documented.
 
 ## Route and why
 
-- **Shader modding** is the highest-leverage route on WD1 because the shipped source tree is complete and community tools can recompile the whole database. WD1 ships the source; WDL does not (you get compiled objects only). The `PreparePlatformData64.exe` pipeline seen in the research comes from a **leaked 2020 dev build** — it is **not present in retail**, so it is not the official route and should not be relied on.
+- **Shader modding** is the highest-leverage route on WD1 because the shipped source tree is complete. WD1 ships the source; WDL does not (you get compiled objects only). The `PreparePlatformData64.exe` pipeline seen in the research comes from a **leaked 2020 dev build** — it is **not present in retail**, so it is not the official route and should not be relied on.
 - **Model modding** splits into two levels: (1) pure-XML reassembly — repoint `graphickit_models` / `graphickit_parts` / `items.lib` IDs to existing models or parts, no mesh authoring; (2) actual mesh work — parse/export XBG via `DisruptEditor`/`glm2obj`, edit in Blender, convert back.
 - **Ray tracing / RTGI** is a research route, not a shipped mod. WD1/WD2 are DX11-only (no hardware RT); WDL has a native D3D12 RT path. Engine-level passes are provably injectable in WD1 via ASI/DLL-proxy hooks (Shadow Engine), but no RTGI integration has been verified in-game from these notes.
 
@@ -47,7 +46,7 @@ links: []
 
 **Recompile a shader family (WD1):**
 1. Unpack `shaders.dat`/`shaders.fat` from your own install with Gibbed.Disrupt; the extracted tree is `engine/shaders/`. Put the Windows SDK x64 `fxc.exe` dir on `PATH` (Windows), or use DXC (e.g. `~/.local/bin/dxc`) on Linux.
-2. Compile **all** shaders once first — the engine needs consistent input/output signatures across the database. Then compile a family (e.g. `Mesh_DriverGeneric`, or `.fx` for everything). The database has 178 families and roughly 128k permutations.
+2. Compile **all** shaders once first — the engine needs consistent input/output signatures across the database. Then compile a family (e.g. `Mesh_DriverGeneric`, or `.fx` for everything). The database has 178 families and roughly 128k permutations; that permutation list itself **cannot be regenerated from retail alone** (it comes from the engine's `ComputeShaderID`, which is not resolvable from the shipped binaries — see "Shader identity and compilation").
 3. Each compiled output gets the shipped `.header` stub prepended (`engine/shaders/obj/hXX/<name>.<type>.header`); output goes to `COMPILED/engine/shaders/obj/hXX/`.
 4. To load from disk: unpack `Watch_Dogs\data_win64\shadersobj.fat` with Gibbed.Disrupt, rename `shadersobj.fat`/`.dat` to `.bak`, and move the unpacked `engine/` folder to `Watch_Dogs\data_win64\`.
 

@@ -10,17 +10,19 @@ links: ["https://github.com/GreffMASTER/blender_export_tmf", "https://github.com
 
 # Exporting models to TrackMania Forever (TMF) with the Blender .3ds exporter
 
-> TrackMania Forever (the original 2008 TrackMania era) ingests models as plain Autodesk
-> `.3ds` files, not ManiaPlanet's `.Gbx` container. A fork of the classic Blender 3DS
-> exporter — GreffMASTER's `blender_export_tmf` — adds TMF-specific chunks on top of the
-> standard format: vertex normals, vertex colors, multiple UV layers, and a lifted
-> 12-character name limit. Those chunks are what break a file for ordinary 3DS consumers —
-> and exactly what TMF wants. This note covers the install/export path; a round-trip inside a
-> real TMF client was **not** verified here (see Open questions).
+> TrackMania Forever (the original 2008 TrackMania era) is not ManiaPlanet: it does not read
+> ManiaPlanet's `.Gbx` container. The model route documented here is Autodesk `.3ds`: a fork of
+> the classic Blender 3DS exporter — GreffMASTER's `blender_export_tmf` — adds TMF-specific
+> chunks on top of the standard format (vertex normals, vertex colors, multiple UV layers, and a
+> lifted 12-character name limit), targeting the `3ds2gbxml` converter that feeds TMF. Those
+> chunks are what break a file for ordinary 3DS consumers. Whether the result loads straight
+> into a running TMF client is **not** verified here — the fork targets `3ds2gbxml`, not a direct
+> `.3ds` import (see Open questions).
 
 ## When to use it
 
-- You are authoring a **TrackMania Forever** model and need to hand it to the game as `.3ds`.
+- You are authoring a model for the **TrackMania Forever** `3ds2gbxml` pipeline and need to emit
+  the `.3ds` that converter consumes.
 - You want to know what the four non-standard export options actually change in the binary,
   so you can decide whether to keep a file portable or TMF-optimized.
 - You are reading a legacy TMF asset and want to recognize the custom chunk IDs.
