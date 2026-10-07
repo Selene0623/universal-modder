@@ -142,12 +142,12 @@ Observed layout (TDU2, `fileVersion 5`, 32-bit LE):
     `0xFFFFFFFF` sentinel.
   - **global fixups** — 12-byte `(srcOffset, dstSectionIndex, dstOffset)` triples, also
     sentinel-ended, for pointers that cross sections.
-  Count them by walking to the sentinel, not by dividing the span: the tables are 16-byte aligned
-  (measured on TDU2 `f430`'s `__data__`: local 5904, global 5968, virtual 6560, exports 7040), so
-  span ÷ record size can be off by one. In that section the local span is exactly 64 bytes (8
-  pairs) and the virtual span exactly 480 (40 × 12, matching the 40 objects), but the 592-byte
-  global span is not a multiple of 12 — the last triple is followed by a 4-byte `0xFFFFFFFF` and
-  padding.
+  Stop at the sentinel or at the table end, not by dividing the span: the tables are 16-byte
+  aligned (measured on TDU2 `f430`'s `__data__`: local 5904, global 5968, virtual 6560, exports
+  7040), so span ÷ record size can be off by one. In that section the local span is exactly 64
+  bytes (8 pairs); the virtual span is exactly 480 (40 × 12, matching the 40 objects) and has
+  **no sentinel** at all; and the 592-byte global span is 49 triples plus a 4-byte `0xFFFFFFFF`
+  sentinel (592 = 49×12 + 4), with no padding after it.
 
 A minimal reader therefore: parse the header → walk the section table → read `__classnames__` →
 decode `__types__` into a class registry → decode `__data__` against that registry, applying the

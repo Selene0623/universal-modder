@@ -76,11 +76,11 @@ Observed layout:
   class name (verified: `__data__`+0 → `(0, 0, 228)` → `__classnames__`+228 = `hkpPhysicsSystem`);
   **local** = 8-byte `(src, dst)` pairs within the section, sentinel-ended by `0xFFFFFFFF`; and
   **global** = 12-byte `(srcOffset, dstSectionIndex, dstOffset)` triples for cross-section pointers,
-  likewise sentinel-ended. Count them by walking to the sentinel rather than by dividing the span:
-  the tables are 16-byte aligned (in `__data__`: local 5904, global 5968, virtual 6560, exports
-  7040), so span ÷ record size can be off by one. Only the local span (64 B = 8 pairs) and the
-  virtual span (480 B = 40 × 12, matching the 40 objects) divide exactly; the 592-byte global span
-  is not a multiple of 12 — the last triple is followed by a 4-byte `0xFFFFFFFF` and padding.
+  likewise sentinel-ended. Stop at the sentinel or at the table end rather than by dividing the
+  span: the tables are 16-byte aligned (in `__data__`: local 5904, global 5968, virtual 6560,
+  exports 7040), so span ÷ record size can be off by one. The local span is 64 B = 8 pairs; the
+  virtual span is 480 B = 40 × 12 (matching the 40 objects) and has **no sentinel**; the 592-byte
+  global span is 49 triples plus a 4-byte `0xFFFFFFFF` sentinel (592 = 49×12 + 4), with no padding.
 
 A reader is therefore: parse the header → walk the section table → read `__classnames__` → build a
 class registry from `__types__` → walk the virtual fixups to bind each `__data__` object to its

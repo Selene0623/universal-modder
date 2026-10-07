@@ -81,9 +81,10 @@ Header field offsets:
 | `0x20` | SFX bank offset |
 | `0x24` | SFX bank size |
 
-Observed dwords in `CAR_66_M3GTR.abk`: `0x10` → `0x000240D1` (147 665), `0x14` → `0x00002680`
-(9 856), `0x20` → `0x00021679` (136 825, the `.bnk` size). The field labels above follow ABKTool's
-struct; the sample's dword-to-field mapping was not re-validated byte-for-byte.
+Observed dwords in `CAR_66_M3GTR.abk`: `0x14` → `0x000240D1` (147,665, total size) and `0x20`
+→ `0x00002680` (9,856, SFX bank offset). The `.bnk`'s own length is 136,825 (`0x00021679`,
+read from the `.bnk` header at `0x08`). The field labels follow ABKTool's struct; the sample's
+remaining dword-to-field mapping was not re-validated byte-for-byte.
 
 ### `.bnk` sample bank
 
@@ -129,8 +130,8 @@ sounds. The eight `CAR_66_M3GTR` WAVs are engine-sound variations.
 
 ## Verification
 
-- Magic bytes and the observed `0x10`/`0x14`/`0x20` dwords (`0x000240D1`, `0x2680`, `0x00021679`) were read
-  directly from the sample files with `xxd`, so those **are** confirmed; their field labels follow ABKTool's
+- Magic bytes and the observed `0x14`/`0x20` dwords (`0x000240D1`, `0x00002680`) were read directly
+  from the sample files with `xxd`, so those **are** confirmed; their field labels follow ABKTool's
   struct.
 - The field *order* comes from the tool's own `printf` strings and PDB field names, which is strong but not
   byte-proven.

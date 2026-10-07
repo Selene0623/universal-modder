@@ -7,7 +7,7 @@ game_version: "retail PC (Eden engine; .vmf version 6)"
 platform: windows
 engine: unknown
 route: data
-tools: ["vmf_extract.py", "bnk_extract.py"]
+tools: ["vmf_extract.py (local, unpublished)", "bnk_extract.py (local, unpublished)"]
 anti_cheat: "SecuROM; read-only format analysis on extracted assets, no bypass attempted"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
@@ -89,8 +89,7 @@ A real example — the ConstantPool that opens the 239-byte block:
 88 4B 00        ConstantPool, payload length 0x4B (count field + 73 string bytes)
 09 00           count = 9
 title_bar\0opened\0close_prompt\0gotoAndPlay\0money\0help\0close\0_root\0SetHelp\0
-9B 10 00 "ClosePrompt\0" 00 00 00      DefineFunction
-8D 00                                  WaitForFrame2
+9B 10 00 "ClosePrompt\0" 00 00 8D 00   DefineFunction2: name + numParams (u16 0) + codeSize (u16 0x8D)
 96 02 00 08 00  1C                     Push const[0]; GetVariable
 96 04 00 08 04 08 05  4F              Push two constants; SetMember
 96 05 00 07 01 00 00 00                Push a number
@@ -108,8 +107,7 @@ TDU1 parser reads TDU2 `.vmf` as garbage, and TDU1's `vmf_to_swf.py` finds only 
 false-positive blocks.
 
 The practical consequence: `.vmf` is the one part of TDU2 that community tooling does not
-cover — which matches the engine's own hard limit. Per the Project Paradise 2 lead developer,
-audio, physics and input are all moddable, and UI (the Flash ActionScript) is the wall.
+cover.
 
 ## Build steps
 
