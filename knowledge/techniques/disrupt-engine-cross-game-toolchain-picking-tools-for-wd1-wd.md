@@ -31,7 +31,7 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
 - **Pack:** `Gibbed.Disrupt.Packing.dll [OPTIONS]+ <output.fat> <input_dir>+` is the tool that actually
   works. Its upstream is [gibbed/Gibbed.Disrupt](https://github.com/gibbed/Gibbed.Disrupt), but the fixes
   below are **not upstream yet** — they live on a downstream fork, and readers should apply them to
-  upstream (or use that fork's `main`). The fork stays under the **same zlib license as upstream, with
+  upstream. The fork stays under the **same zlib license as upstream, with
   each set of changes attributed to its respective author**. Major changes, by commit:
   - **Archive formats:** the old BigFileV5 decoder split into BigFileV11 (WD2) + BigFileV13 (WDL), plus
     a working V13 **packer** (`80d5320`); X360 FAT2 entry decode on branch `x360-fat2-unpack-fix`
@@ -56,7 +56,9 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
   Options that
   matter: `-c/--compress` (WDL scheme 3 = LZ4LW), `--pv` (pack version), `--cv` (compression version),
   `--nhv` (name hash version). It also **writes the `.nfo` next to the `.fat` itself** — do not hand-roll
-  one. DisruptManager (rootCBR) is the older WDL packer; it packs only into `patch*` archives and skips
+  one. `--cv`, `--nhv`, LZ4LW `-c`, `--jobs`, the `dotnet` entry point and the `.nfo` writing are the fork's:
+  upstream ships per-game `Gibbed.WatchDogs*.Pack.exe` packers with `-c` (LZO1x), `--pv` and `--pt`, and writes
+  no `.nfo`. DisruptManager (rootCBR) is the older WDL packer; it packs only into `patch*` archives and skips
   `installpackage/`, so prefer Gibbed.
 - **Binary objects:** `Gibbed.Disrupt.ConvertBinaryObject.exe` — use the **WD2 build**, it is the one
   that handles WDL's binary objects.
@@ -134,7 +136,7 @@ porting XBG meshes or XBT textures across titles, or deciding where a mod file s
     assembly 'XCompression, Version=1.0.0.0'` from `EntryDecompression.DecompressXMemCompress`. **Cause:**
     the archive's entries are XMemCompress-compressed and the `XCompression` dependency is missing/stale in
     the build you are running (an uncompressed mod archive never hits this, so it can hide for a while).
-    **Fix:** rebuild the fork (the dependency is part of the solution), do not fall back to a global tool
+    **Fix:** rebuild Gibbed.Disrupt from source (the dependency is part of the solution), do not fall back to a global tool
     install.
 11. **Symptom:** a repacked archive is accepted but the game renders nothing / boots into a black screen.
     **Cause:** the container format is fine — pack/unpack was verified byte-for-byte; the *content* was
