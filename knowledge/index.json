@@ -597,6 +597,45 @@
   ]
  },
  {
+  "path": "games/detroit-become-human/segs-data-container-mesh-animation-and-cloth-in-blender.md",
+  "kind": "game",
+  "title": "Detroit: Become Human: SEGS/DATA_CONTAINER editing (mesh, animation, cloth) in Blender",
+  "game": "Detroit: Become Human",
+  "games_also": [],
+  "game_version": "Detroit: Become Human PC (Epic/Steam) \u2014 BigFile_PC.idx from the retail install",
+  "platform": "windows",
+  "engine": "native",
+  "route": "data",
+  "tools": [
+   "Blender 4.0+",
+   "Detroit: Become Human DATA_CONTAINER / SEGS add-on (TheLeonX)"
+  ],
+  "anti_cheat": "none; single-player, data packages only, executables and DRM untouched",
+  "status": "in-progress",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "TheLeonX",
+   "@Selene0623"
+  ],
+  "date": "2026-10-07",
+  "links": [],
+  "tags": [
+   "quantic-dream",
+   "segs",
+   "data-container",
+   "meshdata",
+   "havok",
+   "cloth",
+   "animdata",
+   "filetext",
+   "blender",
+   "bigfile",
+   "native-container"
+  ]
+ },
+ {
   "path": "games/dragon-s-dogma-2/blink-strike-teleports-behind-the-target-reframework-lua-ski.md",
   "kind": "game",
   "title": "Blink Strike teleports behind the target (REFramework Lua skill rework)",
