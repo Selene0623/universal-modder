@@ -5,7 +5,7 @@ tags: [disrupt, ubisoft, watch-dogs, shaders, dx11, d3d12, raytracing, models, x
 date: 2026-10-05
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-links: []
+links: ["https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler", "https://github.com/mlleemiles/Watch-Dogs-1-Shader-Compiler"]
 ---
 # Disrupt engine shader and model modding (Watch Dogs 1/2/Legion)
 > Disrupt is Ubisoft's Dunia 2 (Far Cry 3) fork that powers Watch Dogs 1, Watch Dogs 2 and Watch Dogs: Legion. It renders with deferred lighting plus a forward transparent pass: geometry fills a G-buffer, a multi-pass deferred lighting job evaluates direct lights, and light probes supply indirect ambient. Shaders are custom HLSL-like `.fx` files compiled to DXBC with a per-file `.header` stub the engine needs to load them; models are XBG meshes referenced through `graphickit_*` / `items` XML and material descriptors. This note covers both routes and separates what has been verified from what is inferred.
@@ -13,7 +13,7 @@ links: []
 ## Setup
 
 - **Shader source (WD1)**: the game ships full HLSL source in `shaders.dat`/`shaders.fat` (62 MB, 595 entries, magic `0F F5 12 EE`); the extracted tree is `shaders_unpack/engine/shaders/` (775 files, ~107 includes + 234 `.fx`/`.meta.xml`/`parameters`).
-- **Shader compiler**: community `Disrupt-Shader-Compiler` (Windows `CompileShaders.py` with `fxc.exe` on `PATH`; Linux port `compile_shaders_linux.py` needs DXC, e.g. `~/.local/bin/dxc`).
+- **Shader compiler**: [`Disrupt-Shader-Compiler`](https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler) drives `fxc.exe` over the shipped `.fx` tree (Windows `CompileShaders.py`; Linux port `compile_shaders_linux.py` calls DXC). The repo holds the scripts, the generated 10 MB compile command list, and a public-domain LICENSE; it does not ship the game's sources, so unpack your own `shaders.dat`. The upstream mirror [`mlleemiles/Watch-Dogs-1-Shader-Compiler`](https://github.com/mlleemiles/Watch-Dogs-1-Shader-Compiler) does host those `.fx` files. They are game content: read them, don't copy them into the KB.
 - **Model tooling**: `DisruptEditor` (C++/SDL2/OpenGL, MIT; Linux port builds with CMake + system SDL2/OpenGL), `blender-io-disrupt` Blender addon, `glm2obj` (C++ GLM→OBJ), `material_bin.py` (TAM material reader/writer).
 - **Archive tooling**: `Gibbed.Disrupt` (.dat/.fat unpack/pack, .NET 8.0) to get at `shadersobj.fat` and asset archives.
 - **Privilege note**: the public KB must not reproduce proprietary iMMERSE shader code; only general RTGI concepts are documented.
@@ -58,9 +58,20 @@ links: []
 
 **WDL shader archive (official tool):** `PreparePlatformData64.exe -platform=win64 -shadersobj=all` (wipes `obj/`, ~6 h) or `-shadersobj=bigfileonly` (repack only). Compiled shaders live in `data_win64/engine/shaders/obj/` (+ `obj_editor/`). DX11 shaders compile; the DX12 path is unclear.
 
+## Material authoring (PBR)
+
+Vanilla WD1 has no metalness input. Everything below marked *(mod)* assumes a reworked shader and material set — *The Fall of Windy City II*, or any shader mod that copies its standard (added metalness input plus the bottom paraboloid hemisphere); the *(vanilla)* lines hold without one.
+
+- *(vanilla)* Channel names do not match what they store. For `DriverGeneric` the packed mask is Red = glossiness, Green = color mask, Blue = reflectance, Alpha = specular occlusion. Red is dead when `MaskRedChannelMode = 0`, so only the first `SpecularPower`/`Wet` value is read. The same packed layout appears in other families under different names — read the `.fx` before trusting a channel label.
+- *(vanilla)* To fake a metal, set the diffuse to black and put the reflectance in the metal colour slot: steel `-0.67`, aluminium `-0.92`, silver `-0.97`. That yields greyish metals only, and rough or brushed metal reflects dimly. Use `ReflectionType = 0` (static reflection): vanilla has no bottom paraboloid hemisphere, so a downward-facing reflection renders black.
+- *(mod)* Such a set adds the metalness input and the bottom paraboloid hemisphere, which is what `ReflectionType = 1` needs for downward-facing surfaces to reflect.
+- *(both)* Values: roughness, IOR and base colour come from a physically-based table ([physicallybased.info](https://physicallybased.info/), read as Unity / sRGB Linear / Photometric). Desmos sheets convert [IOR to reflectance](https://www.desmos.com/calculator/fv8zvjqweb) and map [`SpecularPower` and glossiness](https://www.desmos.com/calculator/4nmbcmwogb) ranges.
+
 ## Verification
 
+- **Verified (route)**: WD1 shader mods ship, and they ship at scale. *The Fall of Windy City II* (Nexus mod 552, Parallellines) is a wholesale renderer rework on this same route: recompiled shaders for ACES 2.0 tone mapping and HDR LUTs, an entirely custom bloom shader plus dithering, contact-hardening (PCSS) shadows, screen-space shadows, XeGTAO with visibility bitmasks in place of HBAO+, cubic light-probe filtering, dual paraboloid reflections in water and metals, PBR metalness, and per-character SSS masks. It credits Miru (mlleemiles) for the shader-editing tools. The `.fx` sources are not read at runtime, but they are exactly what the recompiler consumes, and the compiled result loads once its ID is registered in `FastInitData_editor.bin`.
 - **Verified**: G-buffer target semantics and pipeline order (shader source); `.header`+DXBC object layout (300-file retail sample); `.dep` checksum = FNV-1 64 of raw CRLF bytes (`fnv164(DepthShadow.inc.fx) = 0xb8d6781ddfedf051`); FNV-1 64 base hash; `FastInitData_editor.bin` (nbCF v3) is required — 143 family base-IDs plus per-family membership (~444k u64s), and a modded shader ID must be registered there or the engine won't load it; XBG parser behavior and TAM material v5/v7 endianness; model part reassembly in XML (community-reported working for cars, partial for outfits).
+- **Verified (source reconstruction)**: scene spline/loft batches come back from the engine's own types — `CSceneSplineLoftBatch` (vertex count plus a `std::vector<SRangeDesc>` of index ranges), `SPassDrawCallRanges` (per-range shadow/normal/reflection array indices), and `SPrimitiveData` with a 2048-bit draw-call mask (`SBitMask<2048,0>`). Legion holds a `CSceneLoftShaderProvider` scoped pointer instead, so that field is WD1/WD2-specific — check the build before reusing a header.
 - **Inferred / not verified**: RTGI integration in WD1/WD2 (the RTGI document is an architecture analysis and proposal, not an in-game result); WDL DX12 shader recompile path; the exact retail build toolchain for WD1 shaders.
 - **Refuted / closed**: reproducing the leak's bare-entry shader style. Neither fxc nor DXC compiles it (E5004 / X3502 "missing semantics"), and every available d3dcompiler (MS 43/46/47, wine/vkd3d) rejects bare input-struct members. The shipped `.pso` encodes the exact ISGN/OSGN semantics (e.g. bbox PS: ISGN=SV_Position, OSGN=SV_Target) — derive semantics from those, don't guess.
 

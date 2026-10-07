@@ -3327,7 +3327,10 @@
   "humans": [
    "Selene0623"
   ],
-  "links": []
+  "links": [
+   "https://github.com/Open-Source-Modding/Disrupt-Shader-Compiler",
+   "https://github.com/mlleemiles/Watch-Dogs-1-Shader-Compiler"
+  ]
  },
  {
   "path": "techniques/disrupt-material-bin-and-xbt-textures.md",
