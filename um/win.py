@@ -1,6 +1,6 @@
 """Windows games from an agent (native Windows, or WSL where most coding agents live).
 
-    um win setup                                  # copy the PowerShell tools + fetch an ffmpeg with gfxcapture
+    um win setup                                  # copy the PowerShell tools + fetch an ffmpeg with gfxcapture (SHA-256 checked)
     um win ps [name]                              # processes with windows: pid, name, title
     um win kill <pid>                             # by exact PID only (never by pattern)
     um win launch --steam 105600 [-- args]        # or: um win launch "C:\\Games\\Foo\\foo.exe" -- -windowed
@@ -36,6 +36,7 @@ from um.common import die, is_windows, is_wsl, ps_exe, to_posix, to_win
 HERE = Path(__file__).resolve().parent
 TOOLS = HERE / "ps1"          # shipped inside the package so `uv tool install` gets them too
 FFMPEG_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+FFMPEG_SUMS = FFMPEG_URL.rsplit("/", 1)[0] + "/checksums.sha256"
 
 
 def _check_platform():
@@ -91,6 +92,39 @@ def ffmpeg_win(required=True) -> str | None:
     return None
 
 
+def ffmpeg_sha256() -> str:
+    """The SHA-256 the ffmpeg zip must have: $UM_FFMPEG_SHA256 (a pin you checked yourself), else the build's own
+    checksums.sha256. The "latest" build is replaced daily and old ones are deleted, so a hash kept in this file
+    would break every setup within days. The published sum catches corrupt, truncated or swapped downloads; it
+    can't catch a compromised release, which is what the pin is for."""
+    pin = os.environ.get("UM_FFMPEG_SHA256", "").strip().lower()
+    if pin:
+        return pin
+    name = FFMPEG_URL.rsplit("/", 1)[1]
+    with urllib.request.urlopen(FFMPEG_SUMS, timeout=60) as r:
+        for line in r.read().decode("utf-8", "replace").splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[1].lstrip("*") == name:
+                return parts[0].lower()
+    die(f"{name} isn't listed in {FFMPEG_SUMS}; set UM_FFMPEG_SHA256, or point UM_FFMPEG_WIN at an ffmpeg you trust")
+
+
+def download_ffmpeg(z: Path):
+    """Download the ffmpeg zip to z and check its SHA-256 before anything is extracted."""
+    want = ffmpeg_sha256()
+    print("downloading", FFMPEG_URL)
+    urllib.request.urlretrieve(FFMPEG_URL, z)
+    h = hashlib.sha256()
+    with open(z, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    if h.hexdigest() != want:
+        z.unlink()
+        die(f"ffmpeg download failed its checksum (got {h.hexdigest()}, expected {want}); deleted it. The daily build may "
+            "have been replaced mid-download: run `um win setup` again. If it keeps failing, don't use this build.")
+    print("sha256 ok", want)
+
+
 def setup(args=None):
     _check_platform()
     d = local_appdata()
@@ -98,8 +132,7 @@ def setup(args=None):
         print("tool", tool_path(t))
     if not ffmpeg_win(required=False) or (args and args.force):
         z = d / "ffmpeg.zip"
-        print("downloading", FFMPEG_URL)
-        urllib.request.urlretrieve(FFMPEG_URL, z)
+        download_ffmpeg(z)
         with zipfile.ZipFile(z) as zf:
             root = zf.namelist()[0].split("/")[0]
             zf.extractall(d)
@@ -281,6 +314,8 @@ class Recorder:
         if mw:
             vf.append(f"scale='min(iw,{mw})':-2")
         vf.append("crop=trunc(iw/2)*2:trunc(ih/2)*2")
+        # RGB -> YUV with the BT.709 matrix, and say so: an untagged file gets BT.601 here but is read as BT.709 by browsers
+        vf.append("scale=out_color_matrix=bt709:out_range=tv,format=yuv420p")
         codec = {"h264_nvenc": ["-c:v", "h264_nvenc", "-preset", "p4", "-cq", str(self.cq)],
                  "h264_amf": ["-c:v", "h264_amf", "-quality", "quality", "-qp_i", str(self.cq), "-qp_p", str(self.cq)],
                  "h264_qsv": ["-c:v", "h264_qsv", "-global_quality", str(self.cq)]}.get(enc, ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18"])
@@ -299,7 +334,7 @@ class Recorder:
         self.t_video = time.time()
         self.log = Path(to_posix(self.base + ".ffmpeg.log"))
         self.video = subprocess.Popen([ff, "-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", _source(self.exe, self.hwnd, self.title, crop=self.crop),
-                                       "-vf", ",".join(vf), *codec, "-pix_fmt", "yuv420p", "-flush_packets", "1", self.base + ".mkv"],
+                                       "-vf", ",".join(vf), *codec, "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_range", "tv", "-flush_packets", "1", self.base + ".mkv"],
                                       stdin=subprocess.PIPE, stderr=open(self.log, "w"))
         self.t_audio = t_audio
         return self

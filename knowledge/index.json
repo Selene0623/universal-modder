@@ -90,6 +90,45 @@
   ]
  },
  {
+  "path": "games/assassin-s-creed-iv-black-flag/coop-ghost-avatar.md",
+  "kind": "game",
+  "title": "A visible, driven second character in AC4 single-player (co-op ghost avatar)",
+  "game": "Assassin's Creed IV Black Flag",
+  "games_also": [],
+  "game_version": "AC4BFSP.exe (Steam), x86, MD5 2058342866688F780C8B34526A65BC35",
+  "platform": "windows",
+  "engine": "native",
+  "route": "native-hook",
+  "tools": [
+   "AC.PatchFix ASI plugin framework (ported to x86)",
+   "Ghidra 12.1.4",
+   "Cheat Engine 7.5",
+   "Ultimate ASI Loader (x86)",
+   "custom PowerShell WOW64 debugger scripts"
+  ],
+  "anti_cheat": "none in single-player; the co-op link is the plugin's own peer-to-peer UDP, not Ubisoft's servers or online services; AC4BFMP.exe only studied statically, never run or injected",
+  "status": "working",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [],
+  "date": "2026-10-06",
+  "links": [
+   "https://github.com/playday3008/PatchFix",
+   "https://github.com/ThirteenAG/Ultimate-ASI-Loader"
+  ],
+  "tags": [
+   "anvilnext",
+   "coop",
+   "avatar",
+   "transform",
+   "wow64-debugging",
+   "hardware-breakpoints",
+   "puppet",
+   "ghost"
+  ]
+ },
+ {
   "path": "games/assassin-s-creed-iv-black-flag/reading-the-player-s-world-transform-and-body-position-in-ac.md",
   "kind": "game",
   "title": "Reading the player's world transform and body position in AC4 Black Flag (native x86 ASI)",
@@ -673,6 +712,66 @@
   ]
  },
  {
+  "path": "games/fpv-logic/fpv-logic-drones-flight-model-rc-radio-and-3d-models-in-minecraft.md",
+  "kind": "game",
+  "title": "FPV LOGIC drones (flight model, RC radio and 3D models) ported into Minecraft 26.3 (Fabric)",
+  "game": "FPV LOGIC",
+  "games_also": [
+   "Minecraft Java Edition"
+  ],
+  "game_version": "FPV LOGIC (Steam 2398030), UE 5.3.2 (++UE5+Release-5.3, CL 29314046), 18 legacy paks v11, Oodle; Minecraft Java 26.3 + Fabric Loader 0.19.5 + Fabric API 0.162.0+26.3",
+  "platform": "windows",
+  "engine": "unreal",
+  "route": "reimplementation",
+  "tools": [
+   "own Python pak v11 reader (Oodle via ctypes)",
+   "own cooked-UE5.3 uasset/FField/unversioned-property reader",
+   "own Kismet bytecode disassembler",
+   "own GVAS SaveGame reader",
+   "own cooked StaticMesh / Texture2D (DXT1/DXT5) / MaterialInstanceConstant readers",
+   "own meshoptimizer-style edge-collapse simplifier (pure Python)",
+   "Fabric Loom 1.18 (JDK 26 as Gradle JVM)",
+   "um scan / um publish check"
+  ],
+  "anti_cheat": "none; FPV LOGIC is only read from disk (paks + SaveGames), never launched or hooked",
+  "status": "working",
+  "agents": [
+   "Claude Code (Opus 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-06",
+  "links": [],
+  "tags": [
+   "content-port",
+   "mashup",
+   "unreal",
+   "blueprint",
+   "kismet",
+   "gvas",
+   "unversioned-properties",
+   "oodle",
+   "simple-construction-script",
+   "static-mesh",
+   "texture2d",
+   "dxt",
+   "material-instance",
+   "lod",
+   "mesh-simplification",
+   "fabric",
+   "sdl3",
+   "joystick",
+   "rc-transmitter",
+   "camera-mixin",
+   "spectator",
+   "mannequin",
+   "post-effect",
+   "custom-geometry",
+   "performance-mods",
+   "distant-horizons",
+   "chunky"
+  ]
+ },
+ {
   "path": "games/gta-v/minecraft-passthrough.md",
   "kind": "game",
   "title": "Minecraft inside GTA V (passthrough mod)",
@@ -717,6 +816,43 @@
    "reprojection",
    "camera-sync",
    "director"
+  ]
+ },
+ {
+  "path": "games/half-life/half-life-1-weapons-and-monsters-in-minecraft.md",
+  "kind": "game",
+  "title": "Half-Life 1's weapons and monsters as a Minecraft Fabric mod, from a GoldSrc model converter",
+  "game": "Half-Life",
+  "games_also": [
+   "Minecraft Java Edition"
+  ],
+  "game_version": "Half-Life 1 (Steam, GoldSrc, Studio model version 10), Minecraft Java 1.21.1 with Fabric Loader 0.19.5, Fabric API 0.116.17+1.21.1",
+  "platform": "windows",
+  "engine": "unknown",
+  "route": "loader-api",
+  "tools": [
+   "Fabric (Loom 1.11-SNAPSHOT, Gradle 8.14.3, JDK 23)",
+   "Python 3.12",
+   "ffmpeg (wav to ogg)"
+  ],
+  "anti_cheat": "none involved: single-player Minecraft; Half-Life is never launched or modified, only its files are read",
+  "status": "working",
+  "agents": [
+   "Claude Code (Sonnet 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "half-life",
+   "goldsrc",
+   "minecraft",
+   "fabric",
+   "weapons",
+   "hitscan",
+   "projectiles",
+   "mobs",
+   "content-port"
   ]
  },
  {
@@ -836,6 +972,43 @@
    "fabric",
    "shields",
    "vehicles"
+  ]
+ },
+ {
+  "path": "games/left-4-dead/left-4-dead-infected-and-tank-in-minecraft.md",
+  "kind": "game",
+  "title": "Left 4 Dead's common infected (19 looks) and Tank as animated Minecraft mobs",
+  "game": "Left 4 Dead",
+  "games_also": [
+   "Minecraft Java Edition"
+  ],
+  "game_version": "Left 4 Dead 1 (Steam app 500, MDL version 49 models), Minecraft Java 1.21.1 with Fabric Loader 0.19.5, Fabric API 0.116.17+1.21.1",
+  "platform": "windows",
+  "engine": "source",
+  "route": "loader-api",
+  "tools": [
+   "Fabric (Loom 1.11-SNAPSHOT, Gradle 8.14.3, JDK 23)",
+   "Python 3.12",
+   "ffmpeg (wav to ogg)"
+  ],
+  "anti_cheat": "none involved: single-player Minecraft; Left 4 Dead is never launched, hooked or patched, its files are only read from disk",
+  "status": "working",
+  "agents": [
+   "Claude Code (Sonnet 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "left4dead",
+   "minecraft",
+   "fabric",
+   "content-port",
+   "source-engine",
+   "skeletal-animation",
+   "mobs",
+   "tank",
+   "boss"
   ]
  },
  {
@@ -1003,6 +1176,39 @@
    "gametest",
    "rcon",
    "headless-verification"
+  ]
+ },
+ {
+  "path": "games/minecraft/ruby-rush-220-talent-forge-1-20-1-mod-gui-vein-miner-bytecod.md",
+  "kind": "game",
+  "title": "Ruby Rush: 220-talent Forge 1.20.1 mod - GUI, vein miner, bytecode-derived icon UVs",
+  "game": "Minecraft",
+  "games_also": [],
+  "game_version": "1.20.1 (Forge 47.4.10)",
+  "platform": "windows",
+  "engine": "java",
+  "route": "loader-api",
+  "tools": [
+   "javap",
+   "gradle",
+   "pillow",
+   "python"
+  ],
+  "anti_cheat": "none",
+  "status": "working",
+  "agents": [
+   "OpenCode (mimo-v2.6-flash-free)"
+  ],
+  "humans": [],
+  "date": "2026-10-06",
+  "links": [],
+  "tags": [
+   "forge",
+   "gui",
+   "talents",
+   "vein-mining",
+   "icons",
+   "bytecode"
   ]
  },
  {
@@ -1214,6 +1420,58 @@
   ]
  },
  {
+  "path": "games/risk-of-rain-2/arkham-knight-batman-survivor.md",
+  "kind": "game",
+  "title": "Arkham Knight Batman as a Risk of Rain 2 survivor: UE3 model and animations ported with umodel, Blender and a Unity AssetBundle",
+  "game": "Risk of Rain 2",
+  "games_also": [
+   "Batman: Arkham Knight"
+  ],
+  "game_version": "RoR2 1.4.1#912 (Unity 2021.3.33f1, Mono), Steam build 21587608; Batman: Arkham Knight Steam build 13250859 (UE3 863/32995); Windows 11",
+  "platform": "windows",
+  "engine": "unity-mono",
+  "route": "loader-api",
+  "tools": [
+   "BepInExPack 5.4.2122 (Doorstop 4)",
+   "RoR2BepInExPack 1.43.0",
+   "R2API Core 5.3.0 + split modules (Prefab 1.1.1, Language 1.1.0, Sound 1.0.3, RecalculateStats 1.6.6, ContentManagement 1.0.11, Networking 1.0.4, DamageType 1.1.7, Orb 1.0.1)",
+   "HenryTutorial @ 42797355 (AC update)",
+   ".NET SDK 5.0.104 (dotnet build, netstandard2.1, C# 7.3)",
+   "RiskOfRain2.GameLibs 1.4.1-r.0",
+   "ilspycmd 11.1.0.9782",
+   "UE Viewer (umodel) build 1590, 64-bit, 2023-07-07",
+   "Blender 5.2.2 LTS portable + io_scene_psk_psa 9.1.3",
+   "Unity 2021.3.33f1 (Personal, batchmode)",
+   "Thunderstore Mod Manager 1.25 (Overwolf)"
+  ],
+  "anti_cheat": "none (RoR2 co-op PvE has no anti-cheat; Arkham Knight was only read offline, never launched or modified)",
+  "status": "working",
+  "agents": [
+   "Claude Code (Opus 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-05",
+  "links": [
+   "games/risk-of-rain-2/helldiver-survivor.md"
+  ],
+  "tags": [
+   "survivor",
+   "port",
+   "ue3",
+   "umodel",
+   "psk",
+   "psa",
+   "blender",
+   "unity-assetbundle",
+   "animation-retarget",
+   "cape",
+   "root-motion",
+   "henry-template",
+   "loader-hooks",
+   "melee"
+  ]
+ },
+ {
   "path": "games/risk-of-rain-2/helldiver-survivor.md",
   "kind": "game",
   "title": "Helldiver survivor: custom skills, stratagems, Helldivers 2 models on the Commando rig, config, lab bridge and benchmark",
@@ -1305,6 +1563,45 @@
   ]
  },
  {
+  "path": "games/starfield/starfield-animation-af-rig-and-havok-physics.md",
+  "kind": "game",
+  "title": "Starfield animation (.af/.rig) and physics (Havok 2019.02)",
+  "game": "Starfield",
+  "games_also": [],
+  "game_version": "Bethesda Game Studios, 2023, Creation Engine 2 (PC)",
+  "platform": "windows",
+  "engine": "creation",
+  "route": "asset-only",
+  "tools": [
+   "CALUMI.Animation (Calaverah, LGPLv3)",
+   "sf_animation_io Blender addon (Deveris256)",
+   "StarfieldMeshConverter",
+   "Blender 4.3"
+  ],
+  "anti_cheat": "none relevant to asset conversion (offline files)",
+  "status": "in-progress",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "date": "2026-10-05",
+  "links": [
+   "https://github.com/Calaverah/CALUMI.Animation"
+  ],
+  "tags": [
+   "starfield",
+   "creation-engine",
+   "animation",
+   "af",
+   "rig",
+   "havok",
+   "physics",
+   "blender"
+  ]
+ },
+ {
   "path": "games/terraria/eye-of-cthulhu-rl-agent.md",
   "kind": "game",
   "title": "An RL agent that beats the Eye of Cthulhu: decompiled boss AI to a simulator, then back into the real game",
@@ -1382,6 +1679,47 @@
    "explosions",
    "camera",
    "showcase-video"
+  ]
+ },
+ {
+  "path": "games/test-drive-unlimited-2/tdu2-model-and-texture-formats.md",
+  "kind": "game",
+  "title": "TDU2 model and texture formats: .3DG/.3DD geometry, .2DM materials, .2DB textures",
+  "game": "Test Drive Unlimited 2",
+  "games_also": [],
+  "game_version": "retail (any; formats are version-independent between TDU1 and TDU2 for .2DM/.2DB)",
+  "platform": "windows",
+  "engine": "unknown",
+  "route": "data",
+  "tools": [
+   "custom Python parsers (blender-io-tdu-series)",
+   "Blender 4.0 LTS addon",
+   "3ds Max MaxScript importers (vagos21)",
+   "Krom bnk extractor"
+  ],
+  "anti_cheat": "none",
+  "status": "in-progress",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "tdu2",
+   "3dg",
+   "3dd",
+   "2dm",
+   "2db",
+   "mesh",
+   "texture",
+   "dxt",
+   "half-float",
+   "triangle-strip",
+   "little-endian",
+   "maxscript"
   ]
  },
  {
@@ -1496,6 +1834,49 @@
    "dds",
    "procedural-art",
    "crash-debugging"
+  ]
+ },
+ {
+  "path": "games/watch-dogs/shader-pack-compilation-and-delivery.md",
+  "kind": "game",
+  "title": "Watch Dogs 1: compiling and delivering the shader pack (shadersobj)",
+  "game": "Watch Dogs",
+  "games_also": [],
+  "game_version": "Watch Dogs 1 retail (Steam/uPlay) + NexusTools 1.1.12/1.1.13",
+  "platform": "windows",
+  "engine": "unknown",
+  "route": "passthrough",
+  "tools": [
+   "Gibbed.Disrupt",
+   "NexusTools",
+   "fxc (d3dcompiler_43/46/47)",
+   "dxc"
+  ],
+  "anti_cheat": "none on WD1; delivering files through NexusTools is first-class, no bypass involved",
+  "status": "working",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "@Selene0623"
+  ],
+  "date": "2026-10-06",
+  "links": [
+   "https://github.com/gibbed/Gibbed.Disrupt"
+  ],
+  "tags": [
+   "shaders",
+   "dxbc",
+   "fxc",
+   "dxc",
+   "hlsl",
+   "shadersobj",
+   "nexus-tools",
+   "signatures",
+   "semantics",
+   "black-screen",
+   "disrupt",
+   "dunia"
   ]
  },
  {
@@ -1974,6 +2355,114 @@
   ]
  },
  {
+  "path": "techniques/disrupt-engine-cross-game-toolchain-picking-tools-for-wd1-wd.md",
+  "kind": "technique",
+  "title": "Disrupt engine cross-game toolchain: picking tools for WD1, WD2 and Legion",
+  "status": "working",
+  "agents": [
+   "OpenCode (MiMo-V2.6-Flash)",
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "@Selene0623"
+  ],
+  "date": "2026-10-06",
+  "links": [],
+  "tags": [
+   "disrupt",
+   "dunia",
+   "watch-dogs",
+   "far-cry",
+   "archives",
+   "reverse-engineering",
+   "toolchain",
+   "ubisoft"
+  ]
+ },
+ {
+  "path": "techniques/disrupt-material-bin-and-xbt-textures.md",
+  "kind": "technique",
+  "title": "Disrupt material (.material.bin) and texture (.xbt) formats",
+  "game": "Watch Dogs",
+  "games_also": [
+   "Watch Dogs 2",
+   "Watch Dogs: Legion"
+  ],
+  "game_version": "WD1 v7 / 2013 beta v5 / Legion v15",
+  "platform": "windows",
+  "engine": "Disrupt (Dunia 2 fork)",
+  "route": "asset-only",
+  "tools": [
+   "WatchDogsMaterialEditor",
+   "XbgLab",
+   "Gibbed.Disrupt",
+   "Blender"
+  ],
+  "anti_cheat": "unknown",
+  "status": "working",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "disrupt",
+   "watch-dogs",
+   "material",
+   "shader",
+   "texture",
+   "xbt",
+   "dds",
+   "crc32",
+   "hashing"
+  ]
+ },
+ {
+  "path": "techniques/disrupt-xbg-glm-mesh-format.md",
+  "kind": "technique",
+  "title": "Disrupt XBG/GLM mesh format (Watch Dogs 1/2/Legion)",
+  "game": "Watch Dogs 2",
+  "games_also": [
+   "Watch Dogs",
+   "Watch Dogs: Legion"
+  ],
+  "game_version": "WD2 (mesh header version 70.137 = 0x00460089)",
+  "platform": "windows",
+  "engine": "Disrupt (Dunia 2 fork)",
+  "route": "asset-only",
+  "tools": [
+   "XbgLab",
+   "GlmCompilerToXBG",
+   "io_scene_WD2",
+   "Blender",
+   "Ghidra"
+  ],
+  "anti_cheat": "unknown",
+  "status": "working",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "disrupt",
+   "watch-dogs",
+   "mesh",
+   "xbg",
+   "glm",
+   "geometry",
+   "vertex-format",
+   "hashing",
+   "dunia2"
+  ]
+ },
+ {
   "path": "techniques/driving-real-games-safely.md",
   "kind": "technique",
   "title": "Driving real games safely: input, focus and the human at the keyboard",
@@ -1996,6 +2485,61 @@
    "@rehan_shei"
   ],
   "links": []
+ },
+ {
+  "path": "techniques/editor-free-bannerlord-assets.md",
+  "kind": "technique",
+  "title": "Editor-free assets for Mount & Blade II: Bannerlord: writing .tpac packages, skeletons and animation clips offline",
+  "status": "in-progress",
+  "game": "Mount & Blade II: Bannerlord",
+  "games_also": [
+   "Borderlands 2"
+  ],
+  "game_version": "v1.4.8.119303 (Steam, Windows); client TaleWorlds.Native.dll 14,185,944 bytes, PE timestamp 0x6a732505",
+  "platform": "windows",
+  "engine": "unknown",
+  "route": "data",
+  "tools": [
+   "Python 3.10 + numpy (own LZ4 and xxHash64)",
+   "Ghidra 12.1.4 headless + JDK 21",
+   "Blender 4.2 headless",
+   "ilspycmd",
+   "dotnet 8 SDK",
+   "python minidump package",
+   "dbghelp MiniDumpWriteDump"
+  ],
+  "agents": [
+   "Claude Code (Opus 5.5)",
+   "Claude Code subagents (Sonnet 5.5)"
+  ],
+  "humans": [
+   "@theartur2000"
+  ],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "bannerlord",
+   "tpac",
+   "rdc",
+   "runtimedatacache",
+   "packing",
+   "load-time",
+   "hang",
+   "ik",
+   "skeleton",
+   "ragdoll",
+   "animation",
+   "clip",
+   "action-set",
+   "project-mbproj",
+   "bone-limit",
+   "hit-capsule",
+   "minidump",
+   "asset-pipeline",
+   "total-conversion",
+   "custom-race",
+   "quadruped"
+  ]
  },
  {
   "path": "techniques/loading-pre-sequel-assets-in-borderlands-2.md",
@@ -2026,6 +2570,34 @@
   ]
  },
  {
+  "path": "techniques/madness-chameleon-binary-containers-bml-sgb.md",
+  "kind": "technique",
+  "title": "Madness/Chameleon binary containers: .bml (binary XML) and .sgb/.sgx (track scenes)",
+  "tags": [
+   "madness-engine",
+   "chameleon",
+   "nfs-shift",
+   "project-cars",
+   "bml",
+   "sgb",
+   "sgx",
+   "binary-xml",
+   "reflection",
+   "scene-graph",
+   "3ds-max"
+  ],
+  "date": "2026-10-05",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "links": [
+   "https://www.tapatalk.com/groups/kottons_chop_shop/ti-scp-ti-sms-model-importer-t3217.html"
+  ]
+ },
+ {
   "path": "techniques/oracles-how-agents-know-a-mod-works.md",
   "kind": "technique",
   "title": "Oracles: how an agent knows a mod actually works",
@@ -2047,6 +2619,58 @@
    "@rehan_shei"
   ],
   "links": []
+ },
+ {
+  "path": "techniques/publishing-reverse-engineering-research-what-to-scrub-what-t.md",
+  "kind": "technique",
+  "title": "Publishing reverse-engineering research: what to scrub, what to keep, and how to know you are clean",
+  "status": "working",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "@Selene0623"
+  ],
+  "date": "2026-10-06",
+  "links": [
+   "https://github.com/rehan-remade/universal-modder/pull/65"
+  ],
+  "tags": [
+   "publishing",
+   "sanitization",
+   "secrets",
+   "license-keys",
+   "local-paths",
+   "documentation",
+   "attribution",
+   "docusaurus",
+   "grep"
+  ]
+ },
+ {
+  "path": "techniques/reading-source-engine-models-and-animations.md",
+  "kind": "technique",
+  "title": "Reading Source engine (MDL v49) models, textures and animations in plain Python, no SDK",
+  "status": "working",
+  "agents": [
+   "Claude Code (Sonnet 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-05",
+  "links": [],
+  "tags": [
+   "source-engine",
+   "mdl",
+   "vvd",
+   "vtx",
+   "vtf",
+   "vpk",
+   "ani",
+   "skeletal-animation",
+   "skinning",
+   "left4dead",
+   "model-conversion"
+  ]
  },
  {
   "path": "techniques/reading-ue3-gearbox-games-offline.md",
@@ -2092,6 +2716,32 @@
   ],
   "humans": [
    "@rehan_shei"
+  ],
+  "links": []
+ },
+ {
+  "path": "techniques/synthetic-pdb-reconstruction-for-stripped-dlls.md",
+  "kind": "technique",
+  "title": "Synthetic PDB reconstruction for stripped Disrupt DLLs",
+  "tags": [
+   "disrupt",
+   "ubisoft",
+   "watch-dogs",
+   "pdb",
+   "symbols",
+   "reverse-engineering",
+   "rtti",
+   "vftables",
+   "llvm-pdbutil",
+   "ghidra",
+   "ida"
+  ],
+  "date": "2026-10-05",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
   ],
   "links": []
  }

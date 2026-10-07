@@ -1,6 +1,6 @@
 ---
 name: game-research-websearch
-description: Research a game, engine or modding technique on the open web with archive-aware, rate-limit-safe searches — Wayback Machine/archive.today for dead forums (XeNTaX, Zenhax, old threads), GitHub code/repo search, Nexus/Steam Workshop/Thunderstore APIs, Reddit JSON, YouTube transcripts, plus screenshots of live pages as evidence. Use when starting work on a game ("how did people mod X before?"), when a documented tool/link is dead, when forum threads are login-gated (semi-auto handoff to the human), and before writing a field note so claims carry source URLs.
+description: Research a game, engine or modding technique on the open web with archive-aware, rate-limit-safe searches — Wayback Machine/archive.today for dead forums (XeNTaX, Zenhax, old threads), GitHub code/repo search, Nexus/Steam Workshop/Thunderstore APIs, Reddit JSON, YouTube transcripts, plus archive snapshots as evidence. Use when starting work on a game ("how did people mod X before?"), when a documented tool/link is dead, when forum threads are login-gated (semi-auto handoff to the human), and before writing a field note so claims carry source URLs.
 ---
 
 # Game research: web search that survives dead forums
@@ -36,7 +36,8 @@ Search engines are the index, not the source — every conclusion gets a real UR
 - Restrict site or time: `site:nexusmods.com <game> mods`, `after:2023-01-01`.
 - Name the engine, not just the game: Dunia, Disrupt, Creation Engine, REDEngine — engine-agnostic
   answers hide in other games' threads.
-- Run dead-tool queries as `"tool name" OR "tool name" github` — forks outlive original hosts.
+- Run dead-tool queries as `"<tool name>" github OR gitlab OR codeberg`: forks often outlive the original
+  host, but if the original was taken down (DMCA or legal notice), stop there.
 - Never rely on one phrasing; refine when a query returns junk.
 
 ## Internet Archive suite
@@ -113,8 +114,9 @@ Protocol — the agent never handles credentials:
   - **Game windows**: use `um win shot --exe <game.exe> out.png` (windowed, GPU-safe), never a
     full-desktop grab that would sweep in the human's other windows.
   - **Other screens**: the platform's snipping tool (Windows: `Win+Shift+S` / `ms-screenclip`;
-    GNOME: `gnome-screenshot`; KDE: `spectacle -b -o <file>.png` — `-b` is required or nothing is
-    written; headless: skip and ask the human).
+    GNOME: `gnome-screenshot -w` (window) or `-a` (area); KDE: `spectacle -b -a -o <file>.png` (active
+    window) or `-b -r` (region), and `-b` is required or nothing is written; never the whole desktop;
+    headless: skip and ask the human).
   - The invariant is the same everywhere: capture → read the image back → cite it.
 - One screenshot says what a paragraph cannot — but it is evidence for *you*, not for the KB:
   keep note media under `media/` and **1.5 MB** or `um kb check` fails.
