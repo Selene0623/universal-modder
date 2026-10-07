@@ -180,6 +180,44 @@ def test_slay_the_spire_2_is_not_sts1(tmp_path):
     assert route == scan.KNOWN["slay the spire 2"][0] and "ModTheSpire" not in route
 
 
+def test_online_only_matches_whole_names():
+    # a substring test told agents to stop on single-player games: Rusty Lake ("rust"), Battlefield 1942, MW2 (2009)
+    for offline in ["Rusty Lake Paradise", "Rusted Warfare", "Battlefield 1942", "Call of Duty: Modern Warfare 2 (2009)",
+                    "Deadlock: Planetary Conquest", "The Final Station", "Trusty Rusty"]:
+        assert scan.online_only(offline) is None, offline
+    for online in ["Rust", "Counter-Strike 2", "Call of Duty®", "Tom Clancy's Rainbow Six® Siege", "PUBG: BATTLEGROUNDS",
+                   "Overwatch® 2", "Deadlock", "NARAKA: BLADEPOINT"]:
+        assert scan.online_only(online), online
+
+
+def test_scan_warns_only_for_online_games(tmp_path):
+    for name, warned in [("Rust", True), ("Rusty Lake Paradise", False)]:
+        d = tmp_path / name
+        d.mkdir()
+        for i in range(6):
+            (d / f"f{i}.txt").write_text("x")
+        assert any("online competitive" in w for w in scan.scan(str(d))["warnings"]) == warned, name
+
+
+def test_ffmpeg_download_is_checksummed(tmp_path, monkeypatch):
+    import hashlib, io
+    from um import win
+    payload = b"PK fake ffmpeg zip"
+    good = hashlib.sha256(payload).hexdigest()
+    sums = f"{'0' * 64}  ffmpeg-other.zip\n{good}  ffmpeg-master-latest-win64-gpl.zip\n".encode()
+    monkeypatch.delenv("UM_FFMPEG_SHA256", raising=False)
+    monkeypatch.setattr(win.urllib.request, "urlopen", lambda url, timeout=None: io.BytesIO(sums))
+    assert win.ffmpeg_sha256() == good
+    monkeypatch.setattr(win.urllib.request, "urlretrieve", lambda url, dst: Path(dst).write_bytes(payload))
+    z = tmp_path / "ffmpeg.zip"
+    win.download_ffmpeg(z)
+    assert z.read_bytes() == payload
+    monkeypatch.setenv("UM_FFMPEG_SHA256", "ab" * 32)        # a pin wins over the published sum
+    with pytest.raises(SystemExit):
+        win.download_ffmpeg(z)
+    assert not z.exists()                                      # a bad download is deleted, never extracted
+
+
 # --------------------------------------------------------------------------- sprite
 
 def sprite_on_white(w=64, h=48):
@@ -405,6 +443,17 @@ def test_kb_new_check_search(tmp_path):
     assert kb.search(root, ["boon"], route="native-hook") == []
 
 
+def test_kb_search_matches_word_starts(tmp_path):
+    root = tmp_path / "knowledge" / "games" / "x"
+    root.mkdir(parents=True)
+    for name, title in [("a.md", "Trust and frustum culling"), ("b.md", "A Rust server plugin"), ("c.md", "Rusty Lake puzzles"),
+                        ("d.md", "Patching plugin.esp")]:
+        (root / name).write_text(f"---\nkind: game\ntitle: {title}\ngame: X\n---\n# {title}\n", encoding="utf-8")
+    found = {r["title"] for r in kb.search(tmp_path / "knowledge", ["rust"])}
+    assert found == {"A Rust server plugin", "Rusty Lake puzzles"}
+    assert [r["title"] for r in kb.search(tmp_path / "knowledge", [".esp"])] == ["Patching plugin.esp"]   # punctuation-led terms match anywhere
+
+
 def test_kb_check_rejects_secrets_and_dumps(tmp_path):
     note = tmp_path / "n.md"
     code = "\n".join(f"int x{i} = {i};" for i in range(160))
@@ -454,6 +503,95 @@ def test_ps_exe_falls_back_to_full_path(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- backup
+
+@pytest.fixture
+def backup_same_second(tmp_path, monkeypatch):
+    monkeypatch.setattr(backup, "data_dir", lambda: tmp_path / "data")
+    monkeypatch.setattr(backup.time, "strftime", lambda *args: "20261006-120000")
+
+
+def test_backup_same_second_keeps_every_snapshot(tmp_path, backup_same_second):
+    src = tmp_path / "src"
+    paths = []
+    for i in range(12):
+        make(src, {"save.dat": f"version {i}"})
+        paths.append(backup.create(str(src), name="t", note=f"take {i}"))
+
+    assert len(set(paths)) == 12
+    assert paths[0].name == "20261006-120000.zip"  # keep the existing filename format when available
+    assert backup.snapshots("t") == paths         # latest selection still works after ten collisions
+    for i, path in enumerate(paths):
+        with backup.zipfile.ZipFile(path) as z:
+            assert z.read("save.dat") == f"version {i}".encode()
+        assert backup._manifest(path)["note"] == f"take {i}"
+    assert backup.diff("t")["changed"] == []
+    make(src, {"save.dat": "modified"})
+    backup.restore("t", yes=True)
+    assert (src / "save.dat").read_text() == "version 11"
+
+
+@pytest.mark.parametrize("removed", [0, 1])
+def test_backup_after_deleted_snapshot_is_still_latest(tmp_path, backup_same_second, removed):
+    src = tmp_path / "src"
+    make(src, {"save.dat": "old"})
+    paths = [backup.create(str(src), name="t") for _ in range(3)]
+    paths[removed].unlink()
+    make(src, {"save.dat": "new"})
+    newest = backup.create(str(src), name="t")
+
+    assert newest > paths[-1]
+    assert backup.snapshots("t")[-1] == newest
+    assert backup.diff("t")["changed"] == []
+
+
+def test_backup_concurrent_creates_keep_every_snapshot(tmp_path, backup_same_second):
+    from concurrent.futures import ThreadPoolExecutor
+
+    src = tmp_path / "src"
+    make(src, {"save.dat": "world"})
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        paths = list(pool.map(lambda i: backup.create(str(src), name="t", note=str(i)), range(8)))
+
+    assert len(set(paths)) == 8
+    assert backup.snapshots("t") == sorted(paths)
+    for i, path in enumerate(paths):
+        with backup.zipfile.ZipFile(path) as z:
+            assert z.read("save.dat") == b"world"
+        assert backup._manifest(path)["note"] == str(i)
+
+
+@pytest.mark.parametrize("error", [OSError, KeyboardInterrupt])
+def test_backup_failed_create_keeps_previous_snapshot(tmp_path, backup_same_second, monkeypatch, error):
+    src = tmp_path / "src"
+    make(src, {"save.dat": "pristine"})
+    first = backup.create(str(src), name="t")
+    original = first.read_bytes()
+
+    def fail_write(*args, **kwargs):
+        raise error("interrupted backup")
+
+    monkeypatch.setattr(backup.zipfile.ZipFile, "write", fail_write)
+    with pytest.raises(error, match="interrupted backup"):
+        backup.create(str(src), name="t")
+    assert backup.snapshots("t") == [first]
+    assert first.read_bytes() == original
+
+
+def test_backup_repeated_restores_keep_undo_snapshots(tmp_path, backup_same_second):
+    src = tmp_path / "src"
+    make(src, {"save.dat": "pristine"})
+    backup.create(str(src), name="t")
+    for state in ("first take", "second take"):
+        make(src, {"save.dat": state})
+        backup.restore("t", yes=True)
+        assert (src / "save.dat").read_text() == "pristine"
+
+    undo = backup.snapshots("t-pre-restore")
+    assert len(undo) == 2
+    for path, state in zip(undo, ("first take", "second take")):
+        with backup.zipfile.ZipFile(path) as z:
+            assert z.read("save.dat") == state.encode()
+
 
 def test_backup_handles_pre_1980_timestamps(tmp_path, monkeypatch):
     import os
