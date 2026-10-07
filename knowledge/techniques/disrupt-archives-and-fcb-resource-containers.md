@@ -3,7 +3,7 @@ kind: technique
 title: Disrupt archives and FCB/Nomad resource containers (Watch Dogs 1/2/Legion)
 game: "Watch Dogs: Legion"
 games_also: ["Watch Dogs", "Watch Dogs 2"]
-game_version: "WD1 (BigFileV3-era) / WD2 (V11) / Legion (V13)"
+game_version: "WD1 (BigFileV3) / WD2 / Legion"
 platform: windows
 engine: unknown
 route: data
@@ -40,8 +40,8 @@ tags: [disrupt, watch-dogs, archive, fat, bigfile, fcb, nomad, entity-library, l
 An archive is a small index file (`.fat`) plus a big data file (`.dat`). Version
 is in the signature:
 
-- `BigFileV13` — Legion, signature `FAT5` (`0x46415435`).
-- `BigFileV11` — WD2 (split from the earlier V5 line).
+- `BigFileV13` — Legion, signature `FAT5` (`0x46415435`). *(community fork; upstream `Gibbed.Disrupt` exposes `BigFileV3`/`V5` only.)*
+- `BigFileV11` — WD2 (split from the earlier V5 line). *(community fork.)*
 - `BigFileV3` — WD1-era line; its name hash is a truncated FNV-1a64.
 
 Legion's `windy_city.fat` holds ~149,013 entries and `installpackage.fat`
@@ -58,19 +58,18 @@ Repacking Legion means writing the header's version fields to match the retail f
 
 ### Compression schemes
 
-From the decompressor and the `CompressionScheme*` classes:
+From the decompressor (upstream `Gibbed.Disrupt` exposes compression schemes V0, V4, V5,
+V6, V8 and V9; a community fork adds `CompressionSchemeV2`/`CompressionSchemeV9B` and the
+`EntryDecompression.cs` path):
 
-- Platform "Orbis" is scheme id 6 with `CompressionSchemeV9B` (compression version 9,
-  name-hash version 21 — a 2013 PS4 beta variant).
 - Scheme 0, size 0 = stored (raw).
 - Scheme 0, size > 0 = LZMA, with one leading flag byte before a standard LZMA
   header.
-- LZ4LW (an in-place LZ4 variant) is scheme id **3** under compression versions 8
-  and 9, and scheme id **2** under version 6 (WD2 PC).
-- The id is not global across format generations: the older FAT3-era table
-  (`CompressionSchemeV2`, WD1) uses **6 = LZ4LW** and **3 = XMemCompress**, and
-  `CompressionSchemeV9B` maps **4 = LZ4LW** — always check which table the
-  archive's compression version selects.
+- WD1 PC uses compression version 5, whose ids are **1 = LZO1x**, **2 = Zlib**,
+  **3 = XMemCompress** — there is no LZ4LW under version 5.
+- LZ4LW (an in-place LZ4 variant) is only in the fork's later tables (id **3** under
+  compression versions 8/9, id **2** under version 6, id **4** under the fork's
+  `V9B`), so always check which table the archive's compression version selects.
 
 LZ4LW block layout: `[header varint tailCount][LZ4 block][raw tail]`. The
 decoder emits the match **offset before** the match-length extension, which is
@@ -155,9 +154,8 @@ Gibbed tools.
 
 ## Seen in
 
-- `Gibbed.Disrupt` — `BigFileV13`/`V11`/`V3`, `EntryDecompression.cs`,
-  `ConvertBinaryObject`, `BinaryObjectInfo`, plus the compression-version scheme
-  classes.
+- `Gibbed.Disrupt` (upstream) — `BigFileV3`/`V5`, `ConvertBinaryObject`, `BinaryObjectInfo`, plus compression schemes V0/V4/V5/V6/V8/V9.
+- A community fork of `Gibbed.Disrupt` — adds `BigFileV13`/`V11`, `EntryDecompression.cs`, and the `CompressionSchemeV2`/`CompressionSchemeV9B` tables.
 - `DisruptEd` / `FCBastard` — Nomad serializers (`CombinedMoveFile`, `FCXMap`,
   `EntityLibrary`, `Oasis`, generic/RML/XML) and the `encryptedsfbc` branch.
 - `fcb_tool.py` (Disrupt project root) — minimal FCB reader/writer with a
