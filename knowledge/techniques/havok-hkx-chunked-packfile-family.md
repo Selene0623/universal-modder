@@ -2,7 +2,7 @@
 kind: technique
 title: "Havok HKX: the chunked packfile family across game generations (and when you need the SDK)"
 tags: [havok, hkx, packfile, chunked, watch-dogs, starfield, fallout4, skyrim, tdu2, serialization, hkCompatFormats]
-date: 2026-10-05
+date: 2026-10-06
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
 links:
@@ -155,6 +155,28 @@ virtual fixups to bind each object to its class. That is enough to read TDU2's v
 (a `hkpPhysicsSystem` with 4 rigid bodies, 4 limited-hinge wheel constraints, and a chassis
 `hkpListShape` of 13 box/convex child shapes) with no Havok SDK at all.
 
+### Writing one back: the writer's whole contract is the header's `layoutRules`
+
+The writer's job looks large and is actually small. The four rule bytes at header offset 16 —
+`bytesInPointer`, `littleEndian`, `reusePadding`, `emptyBaseClassOptimization` — must be written to
+match the target, and the fixup tables are *regenerated from the object graph*, not copied. Havok's
+own `AssetCC` demo converter takes the four as one argument (`--rules4101`) and rejects anything
+other than `[48][01][01][01]` ("Rules must be of the form [48][01][01][01] e.g. 4101"; first digit 4
+or 8, the rest 0 or 1). Getting it wrong for the target is the classic self-inflicted wound: writing
+the console rules on a PC packfile produces a file with the right size and the right (palindromic)
+magic in which every multi-byte field is byte-swapped.
+
+Verified end to end on TDU2 `5.5.0-r1` (XML → binary with `04 01 00 01` → binary → XML): same
+32112-byte size as the source, reads back to the same object graph, and the re-extracted XML matches
+the original except for `-0.000000` → `0.000000` (negative zero). 357 of 32112 bytes differ, all of
+them either those signed zeros or 4-byte slots inside the rigid-body/motion structs that never appear
+in the XML — members the format marks as non-serialised (cached motion-state / swept-transform data a
+loader recomputes), which the writer leaves at their defaults.
+
+The useful loop that follows: extract from the container → XML → edit a shape transform or a wheel
+hinge axis → binary with the source's own rule bytes → back into the container. Off-game round trip
+only; the in-game load is still the oracle.
+
 ## Gotchas
 
 1. **`SDKV` is the ground truth.** **Symptom:** docs disagree about a game's Havok version.
@@ -196,11 +218,13 @@ virtual fixups to bind each object to its class. That is enough to read TDU2's v
    only bundle class definitions for 2010.2.0-r1 / 2014.x. **Fix:** don't reach for the licensed-era
    SDK; parse the file directly. A 5.x packfile is self-describing — read the `__types__` reflection
    into a class registry, then decode `__data__` against it, so you never hard-code a version.
-9. **A byte-exact repack can still be unreadable.** **Symptom:** you write back a binary with correct
-   magic and identical size, but the game/reader rejects it. **Cause:** a *writer* must reproduce the
-   serializer's metadata and virtual-fixup layout, not just the object bytes — the object graph alone
-   is not enough. **Fix:** treat parse as verified and repack as unproven until it loads; the real
-   oracle is swapping the repacked file into the `.bnk` and launching the game.
+9. **A byte-exact repack can still be unreadable — and the usual cause is endianness.** **Symptom:**
+   you write the binary back, the size and the magic match, but the reader crashes. **Cause:** the
+   rule bytes at header offset 16 were written for the wrong target (console rules flip every `uint32`
+   in the file), and the magic `57 E0 E0 57 10 C0 C0 10` is byte-swap-invariant — so a "the magic is
+   right" check proves nothing. **Fix:** copy the source header's four rule bytes back unchanged
+   (`04 01 00 01` for a 32-bit LE PC packfile), then verify by *reading your own output* and diffing
+   the result, not by eye.
 
 **Reading a classic packfile's version by hand:**
 

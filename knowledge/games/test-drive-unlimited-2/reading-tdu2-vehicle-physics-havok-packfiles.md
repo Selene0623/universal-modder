@@ -12,7 +12,7 @@ anti_cheat: "SecuROM; static read-only analysis only, no bypass or modification 
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-date: 2026-10-05
+date: 2026-10-06
 links:
   - "https://github.com/blueskythlikesclouds/HavokAnimationExporter"
 tags: [havok, hkx, physics, packfile, bnk, knab, file-format, reverse-engineering, tdu2]
@@ -121,9 +121,10 @@ landing on a valid class name (`__data__`+0 → `hkpPhysicsSystem`, the root). T
 census-confirmed across 285 `Vehicules/` `.bnk` (all `Havok-5.5.0-r1`, none other).
 
 Not verified: a reader built solely from this spec (the object-field decode was cross-checked during
-research against a converter's output, not reconstructed independently); and any write/repack — the
-fixup/metadata layout a writer must reproduce is characterised but untested. The real end-to-end
-oracle is loading a modified asset in-game — not done.
+research against a converter's output, not reconstructed independently). The **write** path is now
+verified off-game: XML → binary → XML round-trips at the same 32112 bytes and yields the same object
+graph, differing only in negative-zero formatting. Still unverified: that the retail game loads the
+repack — swapping it back into the `.bnk` remains the end-to-end oracle, and it has not been done.
 
 ## Gotchas
 
@@ -144,7 +145,14 @@ oracle is loading a modified asset in-game — not done.
 5. **Do not reach for the era's SDK.** **Symptom:** you find a converter that reads the file and
    start scripting around it. **Cause:** those Havok Content Tools builds are licensed/leaked and
    not redistributable. **Fix:** treat parsing as format work; the packfile is self-describing, so a
-   standalone reader is both possible and the publishable result.
+   standalone reader is both possible and the publishable result. The one piece the spec does not
+   give you for free is a *writer*, whose whole contract is the header's four `layoutRules` bytes
+   (see `techniques/havok-hkx-chunked-packfile-family.md`).
+6. **A "byte-exact" repack that is unreadable is usually big-endian.** **Symptom:** you write the
+   binary back, the size and the magic match, and the reader crashes. **Cause:** the rule bytes at
+   header offset 16 were written for the wrong target — the console rules flip every `uint32` in the
+   file, and the magic is byte-swap-invariant so "the magic is right" proves nothing. **Fix:** copy
+   the source header's `04 01 00 01` back verbatim, then read your own output and diff the XML.
 
 ## Assets
 
