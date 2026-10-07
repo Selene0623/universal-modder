@@ -53,7 +53,7 @@ jmp  return                   ; E9 <rel32>   -> base+0x892615
 
 ## Seen in
 
-- An unpublished local `tdu2-runtime-patch` crate — `src/lib.rs`, `src/proxy.rs`, `src/patch_utils.rs`, `src/runtime_patches.rs`, `src/config.rs`, `src/features/fov.rs`, `src/features/camera.rs`, `src/overlay/`, `version.def`, `build.rs`, `README.md`. MIT; author hkAlice; version 0.7.0.
+- `hkAlice's tdu2-runtime-patch v0.7.0 (MIT)` — `src/lib.rs`, `src/proxy.rs`, `src/patch_utils.rs`, `src/runtime_patches.rs`, `src/config.rs`, `src/features/fov.rs`, `src/features/camera.rs`, `src/overlay/`, `version.def`, `build.rs`, `README.md`.
 - Related KB context: the `version.dll` proxy pattern is the same mechanism the workspace uses for other titles (`opentdu2/` NULL-ptr fix, WDL save porting), but this one patches by `base + offset` at runtime rather than hooking an IAT entry.
 - Existing KB notes that already cover TDU2 file formats (`.BIG`/`.map`, `.2DB`, KNAB) — this note only concerns in-memory behaviour.
 

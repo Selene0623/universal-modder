@@ -7,7 +7,7 @@ game_version: "retail PC (bigfile_EU_1..5.big + matching .map indexes; Eden engi
 platform: windows
 engine: unknown
 route: data
-tools: ["TDU2.Unpacker (TDU2.BIG.Tool)", "ModdingLibrary_2 (tdumt2/Bnk.cs, Xmb.cs)", "xmbf_convert.py", "bnk_packcdb.py", "bnk_extract.py", "vmf_extract.py"]
+tools: ["TDU2.Unpacker (TDU2.BIG.Tool)", "ModdingLibrary_2 (tdumt2/Bnk.cs, Xmb.cs)", "xmbf_convert.py (local, unpublished)", "bnk_packcdb.py (local, unpublished)", "bnk_extract.py (local, unpublished)", "vmf_extract.py (local, unpublished)"]
 anti_cheat: "SecuROM; read-only static format analysis, no bypass or modification attempted"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
@@ -33,13 +33,14 @@ tags: [big, bnk, knab, bndl, xmb, xmbf, file-format, archive, containers, revers
 
 - Game: retail PC TDU2. Bigfiles are `bigfile_EU_1..5.big` (~18 GB total) each with a sibling
   `.map` index (`bigfile_EU_1.map`, …). Tools in the repo expect the pair side by side.
-- Sources read for this note (no proprietary tools run, nothing executed against game data):
-  - `game-tools/TDU/TDU2.BIG.Tool/` — C# `TDU2.Unpacker`, .NET 8, reads `.big` + `.map`.
-  - `game-tools/TDU/TDU2-BIG-Unpacker/` — older binary build (`TDU2BIGUnpacker.exe` + `TDU2Lib.dll`)
+- Sources read for this note (no proprietary tools run; retail `.bnk` data is read directly in the
+  byte-level section below):
+  - `TDU2.BIG.Tool` (community tool) — C# `TDU2.Unpacker`, .NET 8, reads `.big` + `.map`.
+  - `TDU2-BIG-Unpacker` — older binary build (`TDU2BIGUnpacker.exe` + `TDU2Lib.dll`)
     with the same `FileNames.list` hash→path project file.
-  - `game-tools/TDU/tdumt2/` — `ModdingLibrary_2`; `Bnk.cs` is the reference `.bnk` (KNAB) parser
+  - `tdumt2` / `ModdingLibrary_2` (community tool) — `Bnk.cs` is the reference `.bnk` (KNAB) parser
     and rewriter, `Xmb.cs` a small `.xmb` audio-volume database editor.
-  - `game-tools/TDU/carvst editor/` — Python `xmbf_convert.py` (XMBF format reference) and
+  - `carvst editor` (local, unpublished) — Python `xmbf_convert.py` (XMBF format reference) and
     `tomake sound/bnk_packcdb.py` (an independent KNAB pack/unpack + TDU DB XTEA impl).
   - Small binary utilities `TDU2-Bin-Renamer`, `TDU2-BNK-File-Locator`, `TDU2-BNK-Finder`,
     `TDU2-BNK-Guts-Viewer`, `TDU2-HashGen`, `TDU2-Music-Extractor` (no source/readme shipped —
@@ -280,7 +281,8 @@ What is verified from the sources:
 - `.xmb` / `XMBF`: `xmbf_convert.py` states its round-trip is byte-perfect and ships a `verify`
   command; `Xmb.cs`'s in/out volume offsets are literal.
 
-Not verified here (no game data touched, nothing run): the repack bug is **not** reproduced —
+Not verified here (`.big`, `.map` and `.xmb` are source-only, and nothing was repacked or run in
+game): the repack bug is **not** reproduced —
 the two suspects are read out of `Bnk.cs`, not observed. The field layout above and the
 tree-terminator hazard are tool-source-only at this point. (`.bnk` bytes are examined in the
 dated byte-level section below; the source-only statement applies to `.big`, `.map` and `.xmb`.)
@@ -288,7 +290,7 @@ dated byte-level section below; the source-only statement applies to `.big`, `.m
 Added 2026-10-06, from parsing the retail banks directly (`.bnk` only; `.big`, `.map` and
 `.xmb` are still source-only):
 
-- `bnk_extract.py --scan` parses **9660/9660** banks in an extracted retail tree with every
+- The local, unpublished `bnk_extract.py --scan` parses **9660/9660** banks in an extracted retail tree with every
   `(offset, size)` inside the file, and
   **3573/3573** in the TDU2.Unpacker output tree. Three files under `Interior/`, `Islands/`
   are not KNAB containers.
@@ -347,7 +349,8 @@ None — container/format research, not art or audio authoring.
 
 ## Cost and time
 
-One session, source-reading only. No paid tooling, nothing executed against game data.
+One session. No paid tooling. The `.big`/`.map`/`.xmb` reading is tool-source-only; the `.bnk`
+byte-level section reads retail game data directly with local parsers (nothing written back).
 
 ## Open questions
 

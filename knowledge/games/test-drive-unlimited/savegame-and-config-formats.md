@@ -7,7 +7,7 @@ game_version: "TDU1 PC 1.66a (hash addresses referenced); TDU2 PC release"
 platform: windows
 engine: unknown
 route: data
-tools: ["tdudec (Luigi Auriemma)", "tdu_savegame_account_editor (Rust/iced)", "xmbf_convert.py", "XmbfEditor.java", "Ghidra"]
+tools: ["tdudec (Luigi Auriemma)", "tdu_savegame_account_editor (Rust/iced)", "xmbf_convert.py (local, unpublished)", "XmbfEditor.java (local, unpublished)", "Ghidra"]
 anti_cheat: "None relevant. All work is on files the player owns; analysis is read-only and edits are made on copies. No online-service spoofing."
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
@@ -43,8 +43,8 @@ tags: ["savegame", "file-format", "xtea", "encryption", "xmb", "audio", "config"
 - The Rust editor (`tdu_savegame_account_editor`) is a separate cargo project
   (`TDU_savegame_account_editor/`); build with `cargo build --release`. It ports
   the XTEA core to `src/tdudec.rs` and the hashing to `src/util.rs`.
-- The XMBF tools (`carvst editor/`) need only Python 3 stdlib, or JDK 8+ for the
-  Swing GUI.
+- The XMBF tools (workspace-local `carvst editor/`, unpublished) need only Python 3
+  stdlib, or JDK 8+ for the Swing GUI.
 - All analysis was read-only; save/config edits are done on copies.
 
 ## Route and why
@@ -228,8 +228,8 @@ gcc tdudec.c -o tdudec
 ./tdudec e Physics.txt Physics.cpr 1
 ./tdudec e Quality_Settings.txt Quality_Settings.cpr 1
 
-# 4. XMBF audio config round-trip
-cd "game-tools/TDU/carvst editor"
+# 4. XMBF audio config round-trip (local, unpublished carvst editor/ tools)
+cd "<local carvst editor dir>"
 python xmbf_convert.py verify CarVSTConfig.xmb   # byte-perfect check
 python xmbf_convert.py to-xml CarVSTConfig.xmb
 python xmbf_convert.py patch  CarVSTConfig.xmb  CarVSTConfig.xml out.xmb
@@ -300,8 +300,8 @@ No art/audio generated. Relevant reference material:
   port (`SAVE_KEY`, `OTHERS_KEY` u32 arrays) and `src/util.rs` — CRC-32 hash,
   `commondt`/`playersave`/`ProfileList` read-write, plus
   `offsets_and_formats.md`.
-- `carvst editor/xmbf_convert.py` (1125 lines) — XMBF ↔ XML converter with a full
-  format reference in its docstring; `XmbfEditor.java` GUI;
+- Workspace-local, unpublished `xmbf_convert.py` (1125 lines) — XMBF ↔ XML converter
+  with a full format reference in its docstring; `XmbfEditor.java` GUI;
   `XMBF_Format_Reference.docx`.
 - Sample files: `VSTs/CarVSTConfig{1,3,5}.xmb`, `TDU-CarVST-Config/CarVSTConfig.xmb`.
 - `tdudec/savegame/` — sample TDU2 save files (ciphertext/text pairs) for testing.
