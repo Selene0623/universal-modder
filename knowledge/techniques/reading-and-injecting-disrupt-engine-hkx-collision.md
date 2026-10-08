@@ -95,8 +95,8 @@ new path:
 - WDL: collision is import-only in this addon.
 
 So the byte-layout knowledge here gets you a reader and a patcher; producing a brand-new HKX still
-requires reproducing the serializer's fixup/metadata layout (the wall the TDU2 note hits with an
-unpublished local writer — no public HKX writer exists).
+requires reproducing the serializer's fixup/metadata layout (the TDU2 note round-trips one 32-bit 5.5.0
+packfile with an unpublished local writer, off-game only).
 
 ## Gotchas
 

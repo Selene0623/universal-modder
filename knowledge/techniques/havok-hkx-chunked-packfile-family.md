@@ -155,9 +155,9 @@ virtual fixups to bind each object to its class. That is enough to read TDU2's v
 (a `hkpPhysicsSystem` with 4 rigid bodies, 4 limited-hinge wheel constraints, and a chassis
 `hkpListShape` of 13 box/convex child shapes) with no Havok SDK at all.
 
-### Writing one back: the writer's whole contract is the header's `layoutRules`
+### Writing one back: match the header's `layoutRules` to the target
 
-The writer's job looks large and is actually small. The four rule bytes at header offset 16 —
+At minimum, the four rule bytes at header offset 16 —
 `bytesInPointer`, `littleEndian`, `reusePadding`, `emptyBaseClassOptimization` — must be written to
 match the target, and the fixup tables are *regenerated from the object graph*, not copied. Havok's
 own `AssetCC` demo converter takes the four as one argument (`--rules4101`) and rejects anything
@@ -168,8 +168,7 @@ magic in which every multi-byte field is byte-swapped. `AssetCC` is cited here o
 reference behaviour for the rules argument; it was **not** the tool used for the round trip below.
 
 The round trip below was verified **off-game only**, on TDU2 `5.5.0-r1`, with our own unpublished
-local writer (`parse_hkx.py`; no public Havok writer exists): XML → binary with `04 01 00 01` →
-binary → XML — same
+local writer (`parse_hkx.py`): XML → binary with `04 01 00 01` → binary → XML — same
 32112-byte size as the source, reads back to the same object graph, and the re-extracted XML matches
 the original except for `-0.000000` → `0.000000` (negative zero). 357 of 32112 bytes differ, all of
 them either those signed zeros or 4-byte slots inside the rigid-body/motion structs that never appear

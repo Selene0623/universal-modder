@@ -86,7 +86,7 @@ per mesh.
    Limit**, and prefer ASCII-only names since non-ASCII is replaced, not encoded.
 
 2. **Mesh converts with `3ds2gbxml` but will not open in 3ds Max / other viewers.** Symptom: file rejected or
-   misread outside the game. Cause: the custom `0x4112`/`0x4115`/`0x4145` chunks are
+   misread by ordinary `.3ds` tools. Cause: the custom `0x4112`/`0x4115`/`0x4145` chunks are
    non-standard by design. Fix: this is expected for a TMF asset; if you need a portable
    copy, re-export with Vertex Normals, Vertex Colors and All UV Layers all OFF.
 

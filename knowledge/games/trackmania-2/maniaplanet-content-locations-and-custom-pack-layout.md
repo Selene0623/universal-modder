@@ -24,7 +24,7 @@ your own content, and what a community skin/model zip had to contain to be accep
 old Maniapark uploader. Everything here is client-facing asset packaging — no anti-cheat or
 ownership checks are involved. I did **not** run the game against these paths; the layout
 comes from a 2011 Mania-Creative tutorial and from Maniapark's own PHP upload validator. For the
-older TrackMania Forever `.3ds` model pipeline (a different era from ManiaPlanet `.Gbx`), see
+older TrackMania Forever `.3ds` model pipeline (TMF uses older GBX classes than ManiaPlanet), see
 `techniques/trackmania-forever-3ds-model-export-in-blender.md`.
 
 ## Setup
@@ -44,7 +44,7 @@ without digging through a 2011 forum thread.
 ## How the game works (what we had to learn)
 - **Two roots.** `[CommonFiles]` holds shipped content; `[Personalfiles]` holds yours. The client
   searches both, so your content is not a patch over the game files — it lives beside them.
-- **`.Gbx` is the Nadeo container** for meshes, packs, maps, replays and many other resources.
+- **`.Gbx` is the Nadeo container** for meshes, maps, replays and many other resources.
   A `.Pack.Gbx` is a distributable bundle of a model plus its skins; it is a `NadeoPak` archive,
   not a `.Gbx` object graph (`techniques/trackmania-gbx-containers-and-mesh-extraction.md`).
 - **`.dds`** textures are DDS; a skin is a set of DDS maps, a model is `.Gbx` meshes plus DDS maps.

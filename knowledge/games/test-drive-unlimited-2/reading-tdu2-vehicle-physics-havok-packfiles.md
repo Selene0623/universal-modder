@@ -24,7 +24,7 @@ tags: [havok, hkx, physics, packfile, bnk, knab, file-format, reverse-engineerin
 > embedded, uncompressed, in `KNAB` `.bnk` containers. No public HKX parser reads 5.5.0, so this note
 > documents the *format* — enough to write your own reader. Extraction, the self-describing
 > reflection, and the virtual/local/global fixup tables are verified; the write path is proven only
-> as an off-game round trip with an unpublished local script, and no public writer exists.
+> as an off-game round trip with an unpublished local script.
 
 ## Setup
 
@@ -149,8 +149,8 @@ formatting. Still unverified: that the retail game loads the repack — swapping
    start scripting around it. **Cause:** those Havok Content Tools builds are licensed/leaked and
    not redistributable. **Fix:** treat parsing as format work; the packfile is self-describing, so a
    standalone reader is both possible and the publishable result. The one piece the spec does not
-   give you for free is a *writer*, whose whole contract is the header's four `layoutRules` bytes
-   (see `techniques/havok-hkx-chunked-packfile-family.md`).
+   give you for free is a *writer*, which must at least match the header's four `layoutRules` bytes to
+   the target (see `techniques/havok-hkx-chunked-packfile-family.md`).
 6. **A "byte-exact" repack that is unreadable can be big-endian.** **Symptom:** you write the
    binary back, the size and the magic match, and the reader crashes. **Cause:** the rule bytes at
    header offset 16 were written for the wrong target — the console rules flip every `uint32` in the
