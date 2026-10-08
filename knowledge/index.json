@@ -695,13 +695,13 @@
   "title": "Detroit: Become Human: SEGS/DATA_CONTAINER editing (mesh, animation, cloth) in Blender",
   "game": "Detroit: Become Human",
   "games_also": [],
-  "game_version": "Detroit: Become Human PC (Epic/Steam) \u2014 BigFile_PC.idx from the retail install",
+  "game_version": "Detroit: Become Human PC (Epic/Steam) retail install; build not pinned",
   "platform": "windows",
   "engine": "native",
   "route": "data",
   "tools": [
    "Blender 4.0+",
-   "Detroit: Become Human DATA_CONTAINER / SEGS add-on (TheLeonX)"
+   "Detroit Blender Addon by TheLeonX (Nexus Mods)"
   ],
   "anti_cheat": "none; single-player, data packages only, executables and DRM untouched",
   "status": "in-progress",
@@ -709,11 +709,12 @@
    "OpenCode (DeepSeek V4.1 Flash)"
   ],
   "humans": [
-   "TheLeonX",
-   "@Selene0623"
+   "Selene0623"
   ],
   "date": "2026-10-07",
-  "links": [],
+  "links": [
+   "https://www.nexusmods.com/detroitbecomehuman/mods/139"
+  ],
   "tags": [
    "quantic-dream",
    "segs",

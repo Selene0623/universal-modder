@@ -3,17 +3,17 @@ kind: game
 title: "Detroit: Become Human: SEGS/DATA_CONTAINER editing (mesh, animation, cloth) in Blender"
 game: "Detroit: Become Human"
 games_also: []
-game_version: "Detroit: Become Human PC (Epic/Steam) — BigFile_PC.idx from the retail install"
+game_version: "Detroit: Become Human PC (Epic/Steam) retail install; build not pinned"
 platform: windows
 engine: native
 route: data
-tools: ["Blender 4.0+", "Detroit: Become Human DATA_CONTAINER / SEGS add-on (TheLeonX)"]
+tools: ["Blender 4.0+", "Detroit Blender Addon by TheLeonX (Nexus Mods)"]
 anti_cheat: "none; single-player, data packages only, executables and DRM untouched"
 status: in-progress
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
-humans: ["TheLeonX", "@Selene0623"]
+humans: ["Selene0623"]
 date: 2026-10-07
-links: []
+links: ["https://www.nexusmods.com/detroitbecomehuman/mods/139"]
 tags: [quantic-dream, segs, data-container, meshdata, havok, cloth, animdata, filetext, blender, bigfile, native-container]
 ---
 
@@ -23,10 +23,12 @@ tags: [quantic-dream, segs, data-container, meshdata, havok, cloth, animdata, fi
 > archive (`BigFile_PC.idx` plus its data file). Assets are `segs` members: chunked, individually
 > compressed blobs, each carrying a native container with `MESHDATA`, `ANIMDATA` or Havok blocks.
 > The route below is a Blender 4.0+ add-on, *Detroit: Become Human DATA_CONTAINER / SEGS*, written by
-> **TheLeonX**, that reads those members, lets you rebind a custom mesh to an existing slot, and writes
+> **TheLeonX** and published on Nexus Mods as
+> [Detroit Blender Addon](https://www.nexusmods.com/detroitbecomehuman/mods/139) (downloading it needs a
+> Nexus account). It reads those members, lets you rebind a custom mesh to an existing slot, and writes
 > the container back in the same layout. This note records the formats and the workflow as the add-on
-> implements them; we have not yet confirmed its exports in the running game, so the export paths are
-> marked unverified below.
+> implements them (the `.py` files cited below are its modules); we have not yet confirmed its exports in
+> the running game, so the export paths are marked unverified below.
 
 ## Setup
 - Detroit: Become Human, PC release (Epic or Steam). The add-on needs the game's `BigFile_PC.idx`; set it
@@ -45,37 +47,36 @@ tags: [quantic-dream, segs, data-container, meshdata, havok, cloth, animdata, fi
   record is 28 bytes (`reference_archive.py`). Parsing just needs that stride and the magic check.
 - **SEGS container.** One member is a header `<4sHHII` = magic `segs`, an attributes word, a block count,
   the total unpacked size and the packed span, followed by `<HHI` block entries (packed size, unpacked size,
-  offset) at 16-byte alignment (`segs.py:10-11`, `segs.py:57-90`). Blocks are chunked so each stays inside
-  the `uint16` size fields; a chunk that fails to shrink is stored raw (`segs.py:230-246`,
+  offset) at 16-byte alignment (`segs.py`). Blocks are chunked so each stays inside
+  the `uint16` size fields; a chunk that fails to shrink is stored raw (`segs.py`,
   `reference_archive.py:compressed_member`).
 - **Native container and geometry.** Members wrap a native container whose records point at payloads.
   Geometry is `MESHDATA` **version 41**: variable-buffer, submesh and group tables plus an optional
-  `CLUPSKME` block for skinned/cloth metadata and a `BLSHAPES` block. The decode order was verified against
-  the game's own v41 reader (`0x140296B40`) including the flag-1 case that embeds the first stream after the
-  header (`native.py:3`, `native.py:157`, `native.py:190`, `native.py:199`, `native.py:280-303`).
+  `CLUPSKME` block for skinned/cloth metadata and a `BLSHAPES` block. The add-on's source says its decoder
+  follows the game's v41 reader (`0x140296B40`), including the flag-1 case that embeds the first stream after
+  the header; not re-checked in the exe here (`native.py`).
 - **Replacement workflow.** Import the `.segs`/DATA_CONTAINER, keep the imported game rig, then select a
   custom mesh and run *Use Selected Mesh as Replacement*. The operator binds the mesh to the named game
   slot, transfers bone weights from the game rig and rebuilds the growing geometry buffers in place
-  (`__init__.py:45`, `native.py:369-435`). Unweighted vertices can be given nearest native weights, and a
+  (`__init__.py`, `native.py`). Unweighted vertices can be given nearest native weights, and a
   mesh can be attached to or detached from a game bone.
 - **Animation.** `ANIMDATA` **v13/v14** is read independently: rotations are `XYZW` quaternions and
   positions keep their bind-position coefficient; relative rotations keep track flag `0x40`
-  (`animation_codec.py:1-6`).
+  (`animation_codec.py`).
 - **Textures.** New images are written as experimental self-contained `FILETEXT` **v24** BGRA8 resources
   with their own SEGS streams rather than BigFile overrides; the author calls out the renderer paths
   `140258050`, `140256310` and `1402580B0` and marks each shader family as needing its own in-game check
-  (`texture_export.py:1-5`).
+  (`texture_export.py`).
 - **Cloth.** New-topology cloth is authored without the Havok SDK by copying a donor character's native
   `TYPE` table (Havok 20160200) and rebuilding allocations, item indexes and patch fixups from typed values.
   The route requires a character family that already has exactly one native cloth companion (record kind
-  `2150`) and only writes the verified 48-byte native cloth output layout (`cloth_build.py:1-5`,
-  `cloth_route.py:13-15`, `cloth_route.py:47`, `cloth_route.py:75-78`).
+  `2150`) and only writes the verified 48-byte native cloth output layout (`cloth_build.py`, `cloth_route.py`).
 
 ## Verification
-- **Verified from code and addresses:** the v41 `MESHDATA` decode against the game reader
-  (`0x140296B40`, `0x140321120`); the SEGS header/entry sizes and 16-byte alignment; the
-  `QUANTICDREAMTABINDEX` index layout (105 + 28·n); `ANIMDATA` v13/v14; the cloth donor requirement and
-  its record kind; `FILETEXT` v24.
+- **Read from the add-on's source (not checked against the exe or game files):** the v41 `MESHDATA` decode
+  and the game reader addresses it cites (`0x140296B40`, `0x140321120`); the SEGS header/entry sizes and
+  16-byte alignment; the `QUANTICDREAMTABINDEX` index layout (105 + 28·n); `ANIMDATA` v13/v14; the cloth
+  donor requirement and its record kind; `FILETEXT` v24.
 - **Not verified:** no export from this add-on has been confirmed in the running game by us. The author
   labels the texture and new-topology cloth exporters experimental, and the texture path is documented as
   per-shader-family. Treat mesh replacement as the solid part and cloth/texture authoring as trials.
