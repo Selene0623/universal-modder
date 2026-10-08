@@ -10,11 +10,13 @@ links: ["https://github.com/GreffMASTER/blender_export_tmf", "https://github.com
 
 # Exporting models to TrackMania Forever (TMF) with the Blender .3ds exporter
 
-> TrackMania Forever (the original 2008 TrackMania era) is not ManiaPlanet: it does not read
-> ManiaPlanet's `.Gbx` container. The model route documented here is Autodesk `.3ds`: a fork of
+> TrackMania Forever (the original 2008 TrackMania era) is not ManiaPlanet: it uses older GBX
+> classes (`.Challenge.Gbx`, `.Solid.Gbx`), not ManiaPlanet's newer `.Gbx` content. The model route
+> documented here is Autodesk `.3ds`: a fork of
 > the classic Blender 3DS exporter — GreffMASTER's `blender_export_tmf` — adds TMF-specific
 > chunks on top of the standard format (vertex normals, vertex colors, multiple UV layers, and a
-> lifted 12-character name limit), targeting the `3ds2gbxml` converter that feeds TMF. Those
+> lifted 12-character name limit), targeting the `3ds2gbxml` converter that feeds TMF and emits a
+> `.Solid.Gbx`. Those
 > chunks are what break a file for ordinary 3DS consumers. Whether the result loads straight
 > into a running TMF client is **not** verified here — the fork targets `3ds2gbxml`, not a direct
 > `.3ds` import (see Open questions).
@@ -28,7 +30,7 @@ links: ["https://github.com/GreffMASTER/blender_export_tmf", "https://github.com
 - You are reading a legacy TMF asset and want to recognize the custom chunk IDs.
 
 **Era check first.** This is the *old* TrackMania Forever pipeline. ManiaPlanet (TrackMania
-2 Canyon/Stadium, ShootMania) uses `.Gbx` files with a completely different content layout —
+2 Canyon/Stadium, ShootMania) uses newer `.Gbx` classes with a completely different content layout —
 see `games/trackmania-2/maniaplanet-content-locations-and-custom-pack-layout.md` in this
 knowledge base. Upstream `blender_export_tmf` also *claims* TM2 support, but GreffMASTER's fork
 is aimed at the `3ds2gbxml` converter that feeds TMF, so for a TM2/ShootMania target this is
@@ -83,7 +85,7 @@ per mesh.
    slice and a uniqueness pass whenever "Remove Name Limit" is off. Fix: enable **Remove Name
    Limit**, and prefer ASCII-only names since non-ASCII is replaced, not encoded.
 
-2. **Mesh opens in TMF but not in 3ds Max / other viewers.** Symptom: file rejected or
+2. **Mesh converts with `3ds2gbxml` but will not open in 3ds Max / other viewers.** Symptom: file rejected or
    misread outside the game. Cause: the custom `0x4112`/`0x4115`/`0x4145` chunks are
    non-standard by design. Fix: this is expected for a TMF asset; if you need a portable
    copy, re-export with Vertex Normals, Vertex Colors and All UV Layers all OFF.
@@ -124,5 +126,5 @@ per mesh.
 - Correctness of the derived-object/quaternion path is unproven: `re_create_derived_objects`
   is annotated "Broken for 2.80 at this moment", and parent-child rotation math uses
   quaternion ops whose exact behaviour under current Blender was not exercised.
-- Where in the TMF install a `.3ds` model is expected to be dropped for the client to pick it
-  up — not established by these sources (the add-on only emits the file).
+- Where the compiled `.Solid.Gbx` is expected to sit in a TMF install — not established by these
+  sources (the add-on plus `3ds2gbxml` only produce the file).

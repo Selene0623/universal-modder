@@ -164,9 +164,12 @@ own `AssetCC` demo converter takes the four as one argument (`--rules4101`) and 
 other than `[48][01][01][01]` ("Rules must be of the form [48][01][01][01] e.g. 4101"; first digit 4
 or 8, the rest 0 or 1). Getting it wrong for the target is the classic self-inflicted wound: writing
 the console rules on a PC packfile produces a file with the right size and the right (palindromic)
-magic in which every multi-byte field is byte-swapped.
+magic in which every multi-byte field is byte-swapped. `AssetCC` is cited here only as the SDK's
+reference behaviour for the rules argument; it was **not** the tool used for the round trip below.
 
-Verified end to end on TDU2 `5.5.0-r1` (XML → binary with `04 01 00 01` → binary → XML): same
+The round trip below was verified **off-game only**, on TDU2 `5.5.0-r1`, with our own unpublished
+local writer (`parse_hkx.py`; no public Havok writer exists): XML → binary with `04 01 00 01` →
+binary → XML — same
 32112-byte size as the source, reads back to the same object graph, and the re-extracted XML matches
 the original except for `-0.000000` → `0.000000` (negative zero). 357 of 32112 bytes differ, all of
 them either those signed zeros or 4-byte slots inside the rigid-body/motion structs that never appear
@@ -218,7 +221,7 @@ only; the in-game load is still the oracle.
    only bundle class definitions for 2010.2.0-r1 / 2014.x. **Fix:** don't reach for the licensed-era
    SDK; parse the file directly. A 5.x packfile is self-describing — read the `__types__` reflection
    into a class registry, then decode `__data__` against it, so you never hard-code a version.
-9. **A byte-exact repack can still be unreadable — and the usual cause is endianness.** **Symptom:**
+9. **A byte-exact repack can still be unreadable — check endianness first.** **Symptom:**
    you write the binary back, the size and the magic match, but the reader crashes. **Cause:** the
    rule bytes at header offset 16 were written for the wrong target (console rules flip every `uint32`
    in the file), and the magic `57 E0 E0 57 10 C0 C0 10` is byte-swap-invariant — so a "the magic is

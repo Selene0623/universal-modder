@@ -89,7 +89,7 @@ A real example — the ConstantPool that opens the 239-byte block:
 88 4B 00        ConstantPool, payload length 0x4B (count field + 73 string bytes)
 09 00           count = 9
 title_bar\0opened\0close_prompt\0gotoAndPlay\0money\0help\0close\0_root\0SetHelp\0
-9B 10 00 "ClosePrompt\0" 00 00 8D 00   DefineFunction2: name + numParams (u16 0) + codeSize (u16 0x8D)
+9B 10 00 "ClosePrompt\0" 00 00 8D 00   DefineFunction: name + numParams (u16 0) + codeSize (u16 0x8D)
 96 02 00 08 00  1C                     Push const[0]; GetVariable
 96 04 00 08 04 08 05  4F              Push two constants; SetMember
 96 05 00 07 01 00 00 00                Push a number

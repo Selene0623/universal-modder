@@ -107,7 +107,7 @@ block size. The header section sits at offset 0, so the file begins:
 ```
 
 `_HEADER_LENGTH = 64` and `_SECTION_HEADER_LENGTH = 8` in `Bnk.cs`, matching the observed
-`40 00 00 00 <crc> KNAB` opening. (The tdumt2 `AGENTS.md` calls these "BNDL archives", but
+`40 00 00 00 <crc> KNAB` opening. (The tdumt2 `AGENTS.md` — unpublished local notes — calls these "BNDL archives", but
 "BNDL" does not appear anywhere in the source — the parser calls it a *packed hierarchy*
 rooted at `PackedRoot`. Treat "BNDL" as a label, not a signature.)
 

@@ -59,17 +59,17 @@ Repacking Legion means writing the header's version fields to match the retail f
 ### Compression schemes
 
 From the decompressor (upstream `Gibbed.Disrupt` exposes compression schemes V0, V4, V5,
-V6, V8 and V9; a community fork adds `CompressionSchemeV2`/`CompressionSchemeV9B` and the
-`EntryDecompression.cs` path):
+V6, V8 and V9 plus the `EntryDecompression.cs` entry-decompression path; a community fork
+adds `CompressionSchemeV2`/`CompressionSchemeV9B`):
 
 - Scheme 0, size 0 = stored (raw).
 - Scheme 0, size > 0 = LZMA, with one leading flag byte before a standard LZMA
   header.
 - WD1 PC uses compression version 5, whose ids are **1 = LZO1x**, **2 = Zlib**,
   **3 = XMemCompress** — there is no LZ4LW under version 5.
-- LZ4LW (an in-place LZ4 variant) is only in the fork's later tables (id **3** under
-  compression versions 8/9, id **2** under version 6, id **4** under the fork's
-  `V9B`), so always check which table the archive's compression version selects.
+- LZ4LW (an in-place LZ4 variant) is id **2** under upstream's `CompressionSchemeV6` and id
+  **3** under versions 8/9 (upstream `V8`/`V9`); only id **4** under the fork's `V9B` table is
+  fork-only. Always check which table the archive's compression version selects.
 
 LZ4LW block layout: `[header varint tailCount][LZ4 block][raw tail]`. The
 decoder emits the match **offset before** the match-length extension, which is
@@ -155,7 +155,7 @@ Gibbed tools.
 ## Seen in
 
 - `Gibbed.Disrupt` (upstream) — `BigFileV3`/`V5`, `ConvertBinaryObject`, `BinaryObjectInfo`, plus compression schemes V0/V4/V5/V6/V8/V9.
-- A community fork of `Gibbed.Disrupt` — adds `BigFileV13`/`V11`, `EntryDecompression.cs`, and the `CompressionSchemeV2`/`CompressionSchemeV9B` tables.
+- A community fork of `Gibbed.Disrupt` — adds `BigFileV13`/`V11` and the `CompressionSchemeV2`/`CompressionSchemeV9B` tables.
 - `DisruptEd` / `FCBastard` — Nomad serializers (`CombinedMoveFile`, `FCXMap`,
   `EntityLibrary`, `Oasis`, generic/RML/XML) and the `encryptedsfbc` branch.
 - `fcb_tool.py` (Disrupt project root) — minimal FCB reader/writer with a

@@ -23,7 +23,8 @@ tags: [havok, hkx, physics, packfile, bnk, knab, file-format, reverse-engineerin
 > TDU2 (Eden engine) ships its vehicle physics as **Havok 5.5.0-r1 classic binary packfiles**
 > embedded, uncompressed, in `KNAB` `.bnk` containers. No public HKX parser reads 5.5.0, so this note
 > documents the *format* — enough to write your own reader. Extraction, the self-describing
-> reflection, and the virtual/local/global fixup tables are verified; a writer is still unproven.
+> reflection, and the virtual/local/global fixup tables are verified; the write path is proven only
+> as an off-game round trip with an unpublished local script, and no public writer exists.
 
 ## Setup
 
@@ -38,7 +39,8 @@ Data-only route: read the physics assets to learn the format, then decode them. 
 HKX parsers first (`hkxpack`, `hkxpack-plus`, `HKX2-Enhanced-Library`, `havoklib`); all stop at
 2014.x and reject 5.5.0. The same-era Havok Content Tools are a licensed/leaked build, so the
 deliberate choice was **not** to depend on them: document the on-disk format instead, so readers and
-writers can be built from the bytes.
+writers can be built from the bytes. The round-trip writer used below is our own unpublished local
+script (`parse_hkx.py`) — the SDK converter was never run.
 
 ## How the game works (what we had to learn)
 
@@ -121,10 +123,11 @@ landing on a valid class name (`__data__`+0 → `hkpPhysicsSystem`, the root). T
 census-confirmed across 285 `Vehicules/` `.bnk` (all `Havok-5.5.0-r1`, none other).
 
 Not verified: a reader built solely from this spec (the object-field decode was cross-checked during
-research against a converter's output, not reconstructed independently). The **write** path is now
-verified off-game: XML → binary → XML round-trips at the same 32112 bytes and yields the same object
-graph, differing only in negative-zero formatting. Still unverified: that the retail game loads the
-repack — swapping it back into the `.bnk` remains the end-to-end oracle, and it has not been done.
+research against a converter's output, not reconstructed independently). The **write** path is
+verified off-game only, with our unpublished local writer (`parse_hkx.py`): XML → binary → XML
+round-trips at the same 32112 bytes and yields the same object graph, differing only in negative-zero
+formatting. Still unverified: that the retail game loads the repack — swapping it back into the
+`.bnk` remains the end-to-end oracle, and it has not been done.
 
 ## Gotchas
 
@@ -148,7 +151,7 @@ repack — swapping it back into the `.bnk` remains the end-to-end oracle, and i
    standalone reader is both possible and the publishable result. The one piece the spec does not
    give you for free is a *writer*, whose whole contract is the header's four `layoutRules` bytes
    (see `techniques/havok-hkx-chunked-packfile-family.md`).
-6. **A "byte-exact" repack that is unreadable is usually big-endian.** **Symptom:** you write the
+6. **A "byte-exact" repack that is unreadable can be big-endian.** **Symptom:** you write the
    binary back, the size and the magic match, and the reader crashes. **Cause:** the rule bytes at
    header offset 16 were written for the wrong target — the console rules flip every `uint32` in the
    file, and the magic is byte-swap-invariant so "the magic is right" proves nothing. **Fix:** copy

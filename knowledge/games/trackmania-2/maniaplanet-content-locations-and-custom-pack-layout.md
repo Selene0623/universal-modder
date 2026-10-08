@@ -45,7 +45,8 @@ without digging through a 2011 forum thread.
 - **Two roots.** `[CommonFiles]` holds shipped content; `[Personalfiles]` holds yours. The client
   searches both, so your content is not a patch over the game files — it lives beside them.
 - **`.Gbx` is the Nadeo container** for meshes, packs, maps, replays and many other resources.
-  A `.Pack.Gbx` is a distributable bundle of a model plus its skins.
+  A `.Pack.Gbx` is a distributable bundle of a model plus its skins; it is a `NadeoPak` archive,
+  not a `.Gbx` object graph (`techniques/trackmania-gbx-containers-and-mesh-extraction.md`).
 - **`.dds`** textures are DDS; a skin is a set of DDS maps, a model is `.Gbx` meshes plus DDS maps.
 - **Locators (`.loc`).** A small text file whose entire body is one URL; renamed `<content>.loc`
   it tells the game "fetch/download this content". They exist so other players can see your skin
@@ -120,6 +121,6 @@ Small: one source tutorial plus one PHP validator read, plus a Docusaurus/site s
 ## Open questions
 - Which of these paths still hold in the final ManiaPlanet/Nations Forever builds, and how they map on
   Linux via Proton.
-- Whether `.Pack.Gbx` has a documented binary grammar beyond the Nadeo `.Gbx` header.
+- Whether `.Pack.Gbx` has a documented binary grammar beyond its `NadeoPak` header.
 - The exact `.loc` fetch/verification flow between clients (who serves the asset, and how conflicts resolve).
 - Later title (Stadium/ShootMania) skin directories beyond the Canyon ones listed here.
