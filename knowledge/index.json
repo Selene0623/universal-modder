@@ -2535,8 +2535,7 @@
    "python3 + zlib",
    "strings",
    "REDkit bundlebuilder.exe",
-   "REDkit wcc_lite.exe",
-   "WolvenKit (libkraken.so, for the Cyberpunk side)"
+   "REDkit wcc_lite.exe"
   ],
   "anti_cheat": "none; single player. The official mod channel is the in-game mod.io Mods menu, and -disablemods is a real command-line flag.",
   "status": "in-progress",
@@ -2545,7 +2544,9 @@
   ],
   "humans": [],
   "date": "2026-10-06",
-  "links": [],
+  "links": [
+   "https://github.com/WolvenKit/WolvenKit-7"
+  ],
   "tags": [
    "bundle",
    "cr2w",
