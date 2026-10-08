@@ -5,13 +5,13 @@ tags: ["forzatech", "modelbin", "carbin", "burg", "mesh", "vertex-buffer", "make
 date: 2026-10-06
 agents: ["OpenCode (DeepSeek V4.1 Flash)"]
 humans: ["Selene0623"]
-links: ["https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256", "https://github.com/noidex0/fh6-model-tools", "https://github.com/Nenkai/ForzaTools", "https://github.com/D3FEKT/ForzaTechStudio", "https://github.com/morluto/rea/issues/821"]
+links: ["https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256", "https://github.com/noidex0/fh6-model-tools", "https://github.com/Nenkai/ForzaTools/tree/master/ForzaTools.Bundles"]
 ---
 
 # Reading old ForzaTech .modelbin containers (burG), and the MakeH2O tool lineage
 
-> Two things are recorded here. First, what an **old-format** ForzaTech `.modelbin` actually
-> contains: the `burG` container, its reversed tag names, the vertex-buffer layout, and how
+> Two things are recorded here. First, what a **v1.0/v1.1 `burG`** ForzaTech `.modelbin` actually
+> contains: the container, its reversed tag names, the vertex-buffer layout, and how
 > positions are decoded. Second, the history and internals of **MakeH2O** — the 2017 community
 > converter for these files — including why it no longer reads 2017-era files cleanly. The
 > container facts were read off real files; the tool facts were read by disassembly, and the
@@ -41,12 +41,12 @@ Header layout observed on real files:
 | offset | v1.0 (`01 00`) | v1.1 (`01 01`) |
 |---|---|---|
 | 0x00 | `"burG"` | `"burG"` |
-| 0x04 | u16 version `00 01` | u16 version `01 01` |
-| 0x06 | u16 | u16 |
-| 0x08 | u32 | u32 |
+| 0x04 | u8 major / u8 minor `01 00` | u8 major / u8 minor `01 01` |
+| 0x06 | u16 chunk count | u16 |
+| 0x08 | u32 | u32 header size |
 | 0x0C | u32 file size | u32 file size |
-| 0x10 | — | u32 chunk count |
-| then | chunk table | chunk table |
+| 0x10 | chunk table | u32 chunk count |
+| 0x14 | | chunk table |
 
 Two real headers:
 
@@ -60,7 +60,7 @@ is the tag name **reversed**:
 
 | on disk | reads as | meaning |
 |---|---|---|
-| `kelS` | `Skel` | skeleton |
+| `lekS` | `Skel` | skeleton |
 | `hprM` | `Mrph` | morph |
 | `hseM` | `Mesh` | mesh (26 of them in one tyre file) |
 | `BdnI` | `IndB` | index buffer |
@@ -71,10 +71,8 @@ is the tag name **reversed**:
 | `emaN` | `Name` | LOD name metadata record |
 
 Per entry the fields are id, flags, a metadata/unknown pointer, an offset, a compressed size and an
-uncompressed size — the public FH6-era spec calls the entry 24 bytes. Note honestly: I could **not**
-reconcile the table stride between the v1.0 and v1.1 variants by hand; the entry boundaries drift
-depending on which stride is assumed. If you are writing a parser, take the stride from a reference
-implementation rather than guessing it from hexdumps.
+uncompressed size. Entries are 24 bytes in both versions; the table starts at 0x10 in v1.0 (u16 count at
+0x06) and at 0x14 in v1.1 (header size at 0x08, file size at 0x0C, count at 0x10), per Nenkai's `Bundle.cs`.
 
 A real `hseM` entry, 26 of them in a row:
 
@@ -83,6 +81,9 @@ A real `hseM` entry, 26 of them in a row:
 ```
 
 ### The vertex buffer
+
+The stride-40 layout, the bbox decode and the axes below come from the FH6-era spec
+(`noidex0/fh6-model-tools`) and are not yet checked on FH3 v1.x files.
 
 Each `VerB` chunk payload opens with a 16-byte header, `<IIHHI`:
 
@@ -107,7 +108,7 @@ The per-LOD bounding box comes from the `Name` metadata region: an `emaN` record
 the four bytes `xoBB`, a `u16` `0x0180`, a `u16` count `N`, then `N` records of a name followed by
 six floats (min and max for x, y, z). Coordinates are Y-up, Z-forward, left-handed.
 
-That bbox decode is the whole reason the old tool fails where a modern parser succeeds — see below.
+That bbox decode is the whole reason the old tool fails — see below.
 
 ### What MakeH2O is
 
@@ -131,9 +132,9 @@ The binaries found in the forum archive are `-gc` (Jan 2017), `-j2`, `-jq`, `-jl
 than even `-gc` and matching none of the archived builds by size or hash. The shared `DLL_MakeH2O.dll`
 (62,464 bytes, 2015-04-06) *is* identical across the workspace copy and the archive.
 
-The executable is a **GCJ-compiled Java program** (Java compiled to native): it imports
-`libgcj_s.dll`, its entry stub calls `_Jv_RegisterClasses`, and its resources still carry the frozen
-GCJ runtime banner strings. So there is no `.class` file to decompile; the logic is native x86.
+The executable is a **native C program built with MinGW GCC**, not Java: its `libgcj_s.dll` and
+`_Jv_RegisterClasses` strings are GCC startup boilerplate found in nearly every MinGW exe. The logic is
+native x86.
 
 ### What the tool does, from its disassembly
 
@@ -168,7 +169,7 @@ GCJ runtime banner strings. So there is no `.class` file to decompile; the logic
   terminated by the value `1`), shared with its siblings for Wipeout, Star Wars, MLP, Sly Cooper and
   others.
 
-### Why it fails on the files it was written for
+### Why the `_f` build finds nothing in two FH3 tyre files
 
 The patterns are frozen to one exact 2017 build. Re-implementing the tool's own scan loop in Python
 and running it over real FH3 tyre modelbins finds **zero** matches for both the vertex pattern and
@@ -178,8 +179,7 @@ the face-index pattern, at which point the tool's own consistency check
 That is the mechanical reason behind the author's own list of parts with **no scale found**
 (`hood_a`, `trunk_a`, `wingMirrorL_a`, `headlightLBulbs_a`, `CAD_ATSV_16_wheelLF`, …) and the
 `UVB28` UV complaints: when the pattern hit is a coincidence, the scale/pos-offset record it reads
-next is garbage or absent. The modern decode does not depend on any of that — it takes the bounding
-box from the `Name` metadata region and normalises each `SNORM16` against it.
+next is garbage or absent.
 
 The author's own documented issues (relayed from the readme, not re-verified here) agree with this:
 moveable parts such as hoods, doors and wipers "seem to be bound to the skeleton" and need their
@@ -218,17 +218,16 @@ have **two** layouts, so the same settings give UV2 on some meshes and UV1 on ot
   the FH6-era files but the container lineage is the same family.
 - `Nenkai/ForzaTools` — C# classes per blob type (`ModelBlob`, `MeshBlob`, `VertexBufferBlob`,
   `VertexLayoutBlob`, `IndexBufferBlob`, `MaterialBlob`, `MorphBlob`, `SkeletonBlob`, …).
-- `D3FEKT/ForzaTechStudio` — a modelbin editor with a conversion service.
-- For the newer `Grub`/`.carbin` line (FH4/FH5) the same public ForzaTech extraction toolkit and the
-  `Nenkai/ForzaTools` blob classes are the starting point; those targets are a different container
-  generation and are not covered here.
+- FH4, FH5 and FH6 modelbins use the same `burG` container with later version bytes (`Grub` is just that
+  magic read as a little-endian u32); the `Nenkai/ForzaTools` blob classes are the starting point there.
+  Those later versions are not covered here.
 
 ## Gotchas
 
 1. **The tool appears to do nothing and the log stays empty.** MakeH2O ignores command-line
    arguments; there is no CLI mode. Open it, use *File → Open…*, and pick the `*modelbins.txt`.
 2. **`This doesn't seem to be a ForzaHor'...' file!`** The file's first byte is not `'b'`. The tool
-   only accepts `burG` containers; a `Grub`/`.carbin` file from a later title is refused outright.
+   only accepts `burG` containers; a `.carbin` file (the older FM3/FM4-era format) is refused outright.
 3. **`error uv sum !=  vCnt`, or an empty OBJ with no groups.** Its hardcoded block patterns did not
    match this build — the heuristic is frozen to the build it was written for. Reach for a
    burG-aware parser instead of retrying.
@@ -243,11 +242,6 @@ have **two** layouts, so the same settings give UV2 on some meshes and UV1 on ot
    separate file lists per `\Exterior` subfolder so a run cannot go all-in-one.
 7. **UV channels look shifted or blank.** OBJ has one UV channel; use the uvb-size table above to
    pick the channel offset, and expect the first selected channel to be zero-filled.
-8. **A reversing tool reports `provider_unavailable` even though Ghidra is installed and working.**
-   REA (the reverse-engineering agent tooling) compares the Ghidra version as an **exact string**
-   (`"12.1.4"`) and the Java major as **exactly 21**, so a newer JDK or a slightly older Ghidra is
-   rejected even though `analyzeHeadless` runs fine under both. Work around it with `analyzeHeadless`
-   plus `JAVA_HOME`, or install exactly Ghidra 12.1.4 with a JDK 21. Filed upstream as issue #821.
 
 ## Seen in
 
