@@ -693,6 +693,48 @@
   ]
  },
  {
+  "path": "games/cyberpunk-2077/cyberpunk-2077-native-modding-address-hashes.md",
+  "kind": "game",
+  "title": "Cyberpunk 2077 native modding: address hashes for update-proof hooks, and which source wins",
+  "game": "Cyberpunk 2077",
+  "engine": "redengine",
+  "platform": "windows",
+  "route": "native-hook",
+  "game_version": "Steam PC build; bin/x64/Cyberpunk2077.exe is 59,945,608 B (mtime 2026-08-07) and the shipped cyberpunk2077_addresses.json carries the linker-map stamp 68af45ea (2025-08-27)",
+  "status": "in-progress",
+  "date": "2026-10-10",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "tags": [
+   "cyberpunk2077",
+   "redengine",
+   "red4ext",
+   "redlib",
+   "redscript",
+   "address-hash",
+   "rva",
+   "relocations",
+   "native-hook",
+   "ida",
+   "agent-skills"
+  ],
+  "tools": [
+   "Python 3.14",
+   "Ghidra/IDA",
+   "llvm-readobj"
+  ],
+  "links": [
+   "https://github.com/alphanin9/CP2077AgentSkills",
+   "https://github.com/wopss/RED4ext.SDK",
+   "https://github.com/psiberx/cp2077-red-lib",
+   "https://codeberg.org/adamsmasher/cyberpunk"
+  ]
+ },
+ {
   "path": "games/dark-souls-remastered/portal-gun-prototype-via-dinput8-proxy-dll-player-camera-and.md",
   "kind": "game",
   "title": "Portal gun prototype via dinput8 proxy DLL: player, camera and angle offsets",
