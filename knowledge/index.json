@@ -3436,6 +3436,55 @@
   ]
  },
  {
+  "path": "games/trackmania/trackmania-2020-custom-3d-skins.md",
+  "kind": "game",
+  "title": "Custom 3D car skins in Trackmania (2020) with Blender, Blendermania and gbx-py",
+  "game": "Trackmania",
+  "games_also": [
+   "ManiaPlanet"
+  ],
+  "game_version": "Trackmania (2020), live build; the tutorial does not pin a build, and none was tested here",
+  "platform": "windows",
+  "engine": "unknown",
+  "route": "asset-only",
+  "tools": [
+   "Blender 4.x",
+   "Blendermania addon",
+   "NadeoImporter (ships with Blendermania)",
+   "NICE (ships with Blendermania)",
+   "gbx-py (skinfix)",
+   "Openplanet"
+  ],
+  "anti_cheat": "none for this route: it is client-side cosmetic meshes and textures, and online visibility only needs the skin uploaded to your own Club. The tutorial still warns that console players can crash on custom 3D skins and that Nadeo is not enthusiastic about them, so it asks for restraint.",
+  "status": "idea",
+  "agents": [
+   "OpenCode (DeepSeek V4.1 Flash)"
+  ],
+  "humans": [
+   "Selene0623"
+  ],
+  "date": "2026-10-10",
+  "links": [
+   "https://github.com/skyslide22/blendermania-addon",
+   "https://github.com/schadocalex/gbx-py",
+   "https://github.com/drunub/tm-pf-converter",
+   "https://openplanet.dev/file/119",
+   "https://bmx.sh/3dskindiscord"
+  ],
+  "tags": [
+   "trackmania",
+   "gbx",
+   "3d-skins",
+   "blender",
+   "nadeo-importer",
+   "blendermania",
+   "lod",
+   "vertex-groups",
+   "decal-uv",
+   "openplanet"
+  ]
+ },
+ {
   "path": "games/trackmania-2/maniaplanet-content-locations-and-custom-pack-layout.md",
   "kind": "game",
   "title": "TrackMania 2 custom content: where it lives, and how a skin/model pack is assembled",
