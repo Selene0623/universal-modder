@@ -37,7 +37,7 @@ Pick your agent. Each gets the same skills (Agent Skills format), the fal MCP se
 | **Gemini CLI** | `gemini extensions install https://github.com/rehan-remade/universal-modder` |
 | **VS Code / Copilot** | Enable `chat.plugins.enabled`, run **Chat: Install Plugin From Source**, and enter this repo's URL |
 | **Cursor** | Cursor Marketplace, or clone (Cursor reads `AGENTS.md` and `.cursor/mcp.json`) |
-| **OpenCode** | Clone and run `opencode` inside it (`opencode.json` adds the skills and the fal MCP server) |
+| **OpenCode** | `opencode plugin add 'github:rehan-remade/universal-modder#main::path:plugins/opencode'`<br>or clone and run `opencode` inside it |
 | **Skills only**<br>(any agent) | `npx skills add https://github.com/rehan-remade/universal-modder` |
 | **Anything else** | `git clone https://github.com/rehan-remade/universal-modder` and start your agent inside it |
 
@@ -45,6 +45,10 @@ Inside a clone, each agent finds the skills where it looks for them: `.agents/sk
 Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code) are copies of `skills/`. Instructions are in
 `AGENTS.md`, which `CLAUDE.md` and `GEMINI.md` point to. MCP config is in `.mcp.json`, `.codex/config.toml`,
 `.cursor/mcp.json`, `.vscode/mcp.json` and `opencode.json` (which also points OpenCode at `skills/`).
+
+OpenCode additionally loads the plugin in `plugins/opencode/`: one `um` tool that runs the CLI
+(`um_run`, arguments passed straight through) plus the fal MCP server, so an installed plugin needs no
+clone. See `plugins/opencode/README.md`.
 
 **The `um` CLI.** Plugin installs and clones put it on PATH. Anywhere else:
 ```bash
