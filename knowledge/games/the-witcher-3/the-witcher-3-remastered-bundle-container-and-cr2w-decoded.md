@@ -59,8 +59,8 @@ Preamble (32 bytes), as observed on the shipped files:
 | offset | size | meaning | retail value |
 |---|---|---|---|
 | 0 | 8 | stamp | `POTATO70` |
-| 8 | 4 | file size | wraps above 4 GiB (see gotcha 3) |
-| 12 | 4 | burst size | 1 on exactly the two bundles over 4 GiB, 0 on the rest |
+| 8 | 4 | file size, low half | file size mod 2^32 (see gotcha 3) |
+| 12 | 4 | file size, high half | 1 on exactly the two bundles over 4 GiB, 0 on the rest |
 | 16 | 4 | header size | `data offset - 32` |
 | 20 | 2 | format version | **5** in every shipped bundle |
 | 22 | 4 | data offset | `32 + header size` |
@@ -69,7 +69,9 @@ Preamble (32 bytes), as observed on the shipped files:
 Entries are a **304-byte** stride: a 256-byte null-terminated resource path, a 16-byte resource hash, then
 eight `u32` words in this order — data-offset low half, data-offset high half, uncompressed size, on-disk
 size, payload CRC32, compression word, and two reserved words that are always 0. 365,866 entries in total;
-188,762 of them are compressed.
+188,762 of them are compressed. WolvenKit-7's pre-Remastered 320-byte entry orders its fields differently (an
+`Empty` word, the two sizes, a u32 offset, date, time, 16 zero bytes, CRC, compression), so port the order
+along with the stride.
 
 The second word is **not** a flag: it is the high half of a **u64** offset. It is 0 in the 29 bundles under
 4 GiB, and 0 or 1 in `buffers.bundle` (52,989 of 113,009 entries) and `movies.bundle` (624 of 1,236). Read the
@@ -84,7 +86,7 @@ The engine source also names Snappy, DOBOZ, LZ4, LZ4HC and chained zlib, but thi
 
 Offsets are **u64, split across two words**, which only shows up in the two files over 4 GiB:
 `buffers.bundle` (7.6 GB) and `movies.bundle` (7.7 GB) — the only two whose high half is ever 1, and the only
-two whose preamble file-size word also wraps mod 2^32. 111 of 251 sampled entries in `buffers.bundle` decoded
+two whose preamble file size has a non-zero high word. 111 of 251 sampled entries in `buffers.bundle` decoded
 only after adding 2^32, because the high half was being ignored.
 
 Entry-name census: `levels` 117,802, `dlc` 94,896, `environment` 52,407, `characters` 30,633. All 113,009
@@ -128,8 +130,8 @@ bundle definition through an initialised depot, which is a real limitation (gotc
 
 ## Build steps
 1. Install the game through Steam so `content/content0/bundles/` exists.
-2. Read a preamble: open `<bundle>`, read 32 bytes, unpack the first 26 with `<8sIIIHI` (bytes 26–31 are
-   zero) — stamp, file size, burst size, header size, version, data offset.
+2. Read a preamble: open `<bundle>`, read 32 bytes, unpack the first 26 with `<8sQIHI` (bytes 26–31 are
+   zero) — stamp, file size (u64), header size, version, data offset.
 3. Walk entries from offset 32 in **304-byte** steps until you reach the data offset: `path = raw[:256]`
    split at the first NUL, then the 16-byte hash `raw[256:272]` and eight `u32`s from `raw[272:304]`.
 4. For an entry with compression word `1`, slice on-disk-size bytes from `offset = w0 | (w1 << 32)` and
@@ -172,11 +174,11 @@ stride; the offset pair is plain little-endian u64.
 3. **Offsets in `buffers.bundle` and `movies.bundle` point at the wrong place.** **Cause:** the data offset
    is **two `u32` words** — low, then high — and reading the high word as a 0/1 flag drops it, so every entry
    past 4 GiB wraps. **Fix:** read `offset = w0 | (w1 << 32)`; the pair is monotonic across all 113,009
-   entries of `buffers.bundle`. The preamble's file-size word is a single `u32` and does genuinely wrap on the
-   two bundles over 4 GiB.
+   entries of `buffers.bundle`. The preamble's file size is the same kind of pair: low word at offset 8, high
+   word at offset 12.
 4. **`zlib.decompress` throws `Error -3` on some entries.** **Cause:** usually an offset read without its
-   high half, pointing you into the wrong bytes — not a codec the parser does not know. **Fix:** fix the offset first; of roughly
-   3,700 compressed samples only a handful start with bytes other than `78 da`.
+   high half, pointing you into the wrong bytes — not a codec the parser does not know. **Fix:** fix the
+   offset first; of roughly 3,700 compressed samples only a handful start with bytes other than `78 da`.
 5. **`bundlebuilder.exe` rejects every definition file, including a minimal empty one, with "Definition
    file does not contain valid json data".** **Cause:** it resolves the definition through an initialised
    depot (`GDepot->GetBundles()`), which exists only after you run Generate depot in the editor (about
