@@ -72,11 +72,11 @@ tags: [quantic-dream, segs, data-container, meshdata, havok, cloth, animdata, fi
   `2150`) and only writes the verified 48-byte native cloth output layout (`cloth_build.py`, `cloth_route.py`).
 
 ## Verification
-- **Read from the add-on's source (not checked against the exe or game files):** the v41 `MESHDATA` decode
-  and the game reader addresses it cites (`0x140296B40`, `0x140321120`); the SEGS header/entry sizes and
-  16-byte alignment; the `QUANTICDREAMTABINDEX` index layout (105 + 28·n); the v41 variant whose flag 1 embeds the first
-  stream after the header; `ANIMDATA` v13/v14; the cloth
-  donor requirement and its record kind; `FILETEXT` v24.
+- **Read from the add-on's source (not checked against the exe or game files):** the v41 `MESHDATA` decode,
+  including the variant whose flag 1 embeds the first stream after the header, and the game reader
+  addresses it cites (`0x140296B40`, `0x140321120`); the SEGS header/entry sizes and 16-byte alignment; the
+  `QUANTICDREAMTABINDEX` index layout (105 + 28·n); `ANIMDATA` v13/v14; the cloth donor requirement and its
+  record kind; `FILETEXT` v24.
 - **Not verified:** no export from this add-on has been confirmed in the running game by us. The author
   labels the texture and new-topology cloth exporters experimental, and the texture path is documented as
   per-shader-family. Treat mesh replacement as the solid part and cloth/texture authoring as trials.

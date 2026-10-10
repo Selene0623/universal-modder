@@ -31,9 +31,9 @@ links: ["https://web.archive.org/web/20231023061958/https://forum.xentax.com/vie
 
 ### The container
 
-A `.modelbin` of this generation starts with the four bytes `62 75 72 47` — ASCII `burG`; read as a
-little-endian `u32` it is `0x47727562`, the `BundleTag` Nenkai's ForzaTools names (`Grub` written
-backwards). Every one of the 53 `.modelbin` files in an FH3 sample tree starts this
+A `.modelbin` of this generation starts with the four bytes `62 75 72 47` — ASCII `burG`, which is
+`Grub` written backwards; read as a little-endian `u32` it is `0x47727562`, the `BundleTag` in
+Nenkai's ForzaTools. Every one of the 53 `.modelbin` files in an FH3 sample tree starts this
 way. The first byte is therefore `'b'` (`0x62`) — remember that byte, because it is exactly the
 test MakeH2O applies as its format gate.
 
@@ -215,20 +215,15 @@ have **two** layouts, so the same settings give UV2 on some meshes and UV1 on ot
 ### Modern alternatives
 
 - `noidex0/fh6-model-tools` — a Python-stdlib spec plus OBJ/GLB/DDS converter validated against 638
-  cars. This is where the container layout and the bbox position decode above come from. It targets
-  the FH6-era files but the container lineage is the same family.
+  cars. This is where the stride-40 layout, the axes and the bbox position decode above come from; the
+  container table follows Nenkai's `Bundle.cs`. It targets the FH6-era files but the container lineage
+  is the same family.
 - `Nenkai/ForzaTools` — C# classes per blob type (`ModelBlob`, `MeshBlob`, `VertexBufferBlob`,
   `VertexLayoutBlob`, `IndexBufferBlob`, `MaterialBlob`, `MorphBlob`, `SkeletonBlob`, …).
-- The newer desktop editors parse the container and blob layouts themselves, then hand the layers the
-  platform DLLs own to native imports: XMem/LZX compression (`XMemCreateDecompressionContext` /
-  `XMemDecompress`, codec id `1`), the Xbox texture tilings (`XG_TILE_MODE_2D_THIN` / `1D_THIN`) and
-  Granny for animation. That split is why such a project can be MIT and still ship proprietary
-  binaries (`xcompress64.dll`, `xg.dll`, `granny2_x64.dll`); swapping those three for open codecs is
-  all an open-source-only build needs.
-- The archive layer has an open text route instead of a DLL: the QuickBMS script `forza_horizon.bms`
-  shipped with *Forza Studio* walks the zip central directory and maps its compression method — `0`
-  stored, `8` deflate, `13`/`15`/`21` XMem/LZX — onto QuickBMS's own `XMemDecompress` codec, so it
-  decompresses those packages with no proprietary binary at all.
+- The archive layer has an open text route instead of a DLL: aluigi's QuickBMS script
+  `forza_horizon.bms` (its header says Forza Horizon 2) walks the zip central directory and maps its
+  compression method — `0` stored, `8` deflate, `13`/`15`/`21` XMem/LZX — onto QuickBMS's own
+  `XMemDecompress` codec, so it decompresses those packages with no proprietary binary at all.
 - FH4, FH5 and FH6 modelbins use the same `burG` container with later version bytes (`Grub` is just that
   magic read as a little-endian u32); the `Nenkai/ForzaTools` blob classes are the starting point there.
   Those later versions are not covered here.
