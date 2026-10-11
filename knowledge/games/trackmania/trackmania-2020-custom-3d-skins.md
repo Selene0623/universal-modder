@@ -31,32 +31,46 @@ tags: [trackmania, gbx, 3d-skins, blender, nadeo-importer, blendermania, lod, ve
   add-on's own copies are not overridden.
 - **gbx-py** (schadocalex) with **drunub's `skinfix` script** next to it. Newer builds merge gbx-py
   and the script into one `skinfix.exe` (Openplanet file 119): drag the produced `.gbx` onto it.
+  gbx-py needs `python-lzo`; drunub's tm-pf-converter README says it has to be compiled from source on
+  Python 3.14 and that build fails, so use Python 3.11 or `skinfix.exe`.
 - **Openplanet** if you want to pull apart an existing skin.
-- Folders that matter, under `Documents\TrackMania\`: the FBX and its `.MeshParams.xml` go in
-  `Work\Skins\Models\<SkinName>\`, and the finished ZIP goes in `Skins\Models\Carport\`.
+- Folders that matter, under the Trackmania user folder (`Documents\Trackmania\`, or
+  `Documents\Trackmania2020\` on some installs; drunub's example config shows both): the FBX and its
+  `.MeshParams.xml` go in `Work\Skins\Models\<SkinName>\`, and the finished ZIP goes in
+  `Skins\Models\CarSport\`.
 - An existing skin to start from, or a template. `.Solid.Gbx` opens directly in Blender through NICE;
-  `.Pack.Gbx` does not (see gotcha 11).
+  `.Pack.Gbx` does not (see gotcha 11). Someone else's skin is for learning from: don't upload it, or a
+  conversion of it, without its author's permission (drunub's converter README asks the same).
 
 ## Route and why
 `route: asset-only`. The game loads a **GBX model** and **DDS textures** from a ZIP in the user's
-`Carport` folder; nothing in the executable is patched and no DLL is injected, so this stays inside
+`CarSport` folder; nothing in the executable is patched and no DLL is injected, so this stays inside
 the "own assets, own client" line. The two alternatives the tutorial mentions and does not use are a
-TM²/TMNF converter and a map-to-Blender ripper — both aimed at *porting existing* content, not at
-authoring a new skin.
+converter for existing TM2 skins (drunub's tm-pf-converter in `links`; its README says it only takes skins
+built with TM2's NadeoImporter, not TMNF meshes) and a map-to-Blender ripper — both aimed at *porting
+existing* content, not at authoring a new skin.
 
-The container half of this route is already covered in this base by *Reading TrackMania GBX containers
-and getting meshes out without Nadeo tooling* (`techniques/`); this note is the authoring half.
+The container half of this route is already covered in this base by
+[*Reading TrackMania GBX containers and getting meshes out without Nadeo tooling*](../../techniques/trackmania-gbx-containers-and-mesh-extraction.md),
+and the ManiaPlanet folder layout that gotcha 11 relies on by
+[*TrackMania 2 custom content*](../trackmania-2/maniaplanet-content-locations-and-custom-pack-layout.md);
+this note is the TM2020 authoring half.
 
 ## How the game works (what the tutorial explains)
 - **Two container shapes.** `.Solid.Gbx` is the simple mesh and converts straight to Blender. `.Pack.Gbx`
   is a package whose members (`.Solid.Gbx` and textures) have to be extracted first.
-- **Materials are named by convention, not by path.** The four the tutorial creates:
-  `SkinDmg_Skin` → `SkinD.DDS`, `DetailsDmgNormal_<name>` → `DetailsB.DDS`,
+- **Materials are named by convention, not by path.** The four the tutorial creates, as transcribed:
+  `SkinDmg_Skin` → `Skin_D.DDS`, `DetailsDmgNormal_<name>` → `Details_B.DDS`,
   `DetailsDmgNormal_Details` → `Details_D.DDS`, `GlassDmgCrack_<name>` → `GlassO_T.DDS`. Extra
-  materials are allowed as long as the prefix matches.
+  materials are allowed as long as the prefix matches. drunub's converter template uses the same models
+  as `SkinDmg_Skin`, `DetailsDmgNormal_Details`, `DetailsDmgNormal_Wheels` and `GlassDmgCrack_Glass`
+  (plus `...Decal` variants), with textures named after the part after the underscore (`Skin_*`,
+  `Details_*`, `Wheels_*`).
 - **`SkinDmg_Skin` carries no normal map.** If a part needs normal detail, put it in
   `DetailsDmgNormal_*`. TM2020 skin textures take the same `_R` (roughness) and `_N` (normal)
-  suffixes as other TM2020 textures.
+  suffixes as other TM2020 textures. drunub's README adds that the TM2-style `_D` texture only works on
+  the skin material (details and wheels take `_B` plus an optional `_R`) and that `Skin_B` needs a
+  `Skin_R`, so check the `Details_D` mapping above on a real build.
 - **Textures do not tile.** A model whose UVs run outside the texture limits loses the texture, so
   fitting the UVs to the image is part of modelling, not an afterthought.
 - **LODs are duplicated meshes with a bone/skeleton binding.** The usual count is three, up to five
@@ -88,14 +102,14 @@ Second-hand, in the tutorial's order:
    modify their UVs**. Their material is `SkinDmgTrigram_Skin` → `SkinD.DDS`, and each decal material
    needs a second UV layer named `Decal`, identical to the `BaseMaterial` layer.
 9. Export FBX with **Add Leaf Bones unchecked**, as
-   `Documents\TrackMania\Work\Skins\Models\<SkinName>\<SkinName>.fbx`, and copy
+   `Documents\Trackmania\Work\Skins\Models\<SkinName>\<SkinName>.fbx`, and copy
    `<SkinName>.MeshParams.xml` beside it.
 10. Run `NadeoImporter.exe Mesh Skins\Models\<SkinName>\<SkinName>.fbx` from the Trackmania install
     folder (a PowerShell window opened there).
 11. Repair/convert with `python skinfix.py <path>\<SkinName>.gbx`, or `--fakeshad` when you supply a
     FakeShad DDS. The script writes `MainBody.Mesh.Gbx` next to `<SkinName>.Mesh.Gbx`.
 12. ZIP the textures together with `MainBody.Mesh.Gbx` into
-    `Documents\Trackmania\Skins\Models\Carport\<SkinName>.zip`.
+    `Documents\Trackmania\Skins\Models\CarSport\<SkinName>.zip`.
 13. In game: plugins → classic menu → editors → **paint a car** → pick the skin. Refresh the garage
     with M (stops the car spinning) then Ctrl+R. Check bone rotations in Cam 7 with the camera locked
     to the car. Upload to your Club to let other players see it.
