@@ -49,8 +49,11 @@ Verification), and it needed a one-character-class fix to run on current Python 
 3. **Look it up** in `cyberpunk2077_addresses.json`. A hit gives the address `hash` and `secondary hash`
    plus the linker-map `symbol`, which is the readable name you actually wanted.
 4. **Use the hash, not the RVA.** `RED4ext::UniversalRelocFunc` with an address hash is the update-agnostic
-   form; a hardcoded RVA is version-sensitive and should be marked as such. A missing match is not a
-   conversion failure — it usually means the database predates your build.
+   form (`UniversalRelocPtr` and `UniversalRelocVtbl` do the same for data and vtables); a hardcoded RVA is
+   version-sensitive and should be marked as such. A missing match is not a conversion failure — it usually
+   means the database predates your build. RED4ext's resolver (`src/dll/Addresses.cpp`) reads only `hash`
+   and `offset`, and only rebases sections `0001`-`0003`, matched by name to `.text`, `.rdata` and `.data`,
+   so the 49 section-`0005` entries don't resolve to the right address through it.
 5. **Pick the source that is authoritative for the question** (skill's ground-truth order): local project
    code, then fetched upstream trees, then **RED4ext.SDK** for native type names, layouts, RTTI and plugin
    lifecycle, then **RedLib** when it cleanly covers the task, then the **decompiled scripts** for script
@@ -88,17 +91,22 @@ Run on 2026-10-10, Python 3.14.7, from the install's `bin/x64/`, against
   `.rdata` `0x2A8D000`, `.data` `0x32E6000`, and the script's `span = max(VirtualSize, RawDataSize)` rule
   agrees with it.
 - **Not verified**: that the symbols are correct (that needs disassembly, not a table lookup), and no plugin
-  was built, injected or run. Note the stamp gap — the table is stamped 2025-08-27 while the exe here is
-  mtime 2026-08-07 — yet the one sampled RVA still resolved, so do not assume a stale stamp is harmless.
+  was built, injected or run. The table is stamped 2025-08-27 and the exe's mtime is 2026-08-07, but an
+  mtime is when Steam wrote the file, not when it was linked. The comparison that matters is the table's
+  `Linker map timestamp` against the exe's PE header `TimeDateStamp` (`llvm-readobj --file-headers`), and
+  that wasn't checked here.
 
 ## Gotchas
 
 1. **The published address-hash script is dead on arrival in Python 3.14.** `add_argument(help=…)` help
-   strings are `%`-formatted by argparse, so a literal `%CP2077_PATH%` raises
-   `ValueError: unsupported format character 'C' (0x43) at index 65` before any argument is read. Escape it
-   as `%%CP2077_PATH%%`, or drop the `%` signs. (Found here; patched locally, not yet sent upstream.)
-2. **The database is per-build.** Compare `Linker map timestamp` with your executable; after a game patch a
-   miss usually means the JSON is older than the exe, not that the conversion is wrong.
+   strings are `%`-formatted by argparse, and 3.14 started checking them inside `add_argument`, so a
+   literal `%CP2077_PATH%` raises `ValueError: badly formed help string` (from `unsupported format
+   character 'C' (0x43) at index 65`) before any argument is read. On 3.13 and older the script runs and
+   only `--help` crashes. Escape it as `%%CP2077_PATH%%`, or drop the `%` signs. (Found here; patched
+   locally, not yet sent upstream.)
+2. **The database is per-build.** Compare `Linker map timestamp` with your executable's PE header
+   `TimeDateStamp` (not its file mtime); after a game patch a miss usually means the JSON is older than the
+   exe, not that the conversion is wrong.
 3. **Section-relative, 1-based.** The offset is `section index in PE order : RVA minus that section's base`.
    Feeding an image-relative value produces a plausible-looking offset that silently misses.
 4. **Do not vendor the upstreams.** RED4ext.SDK, RedLib and the decompiled scripts are fetched into a cache;
@@ -115,3 +123,6 @@ Run on 2026-10-10, Python 3.14.7, from the install's `bin/x64/`, against
 9. **The skill's scope is deliberately narrow**: it says it focuses on native/Redscript rather than
    WolvenKit because LLM work there is harder. That is a statement about tooling maturity, not about
    WolvenKit being unnecessary for asset work.
+
+For the archive and asset side (CR2W, RDAR/KARK, Oodle) see
+[`techniques/redengine-container-and-asset-format-lineage.md`](../../techniques/redengine-container-and-asset-format-lineage.md).
