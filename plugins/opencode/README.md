@@ -5,22 +5,21 @@ API (`@opencode/plugin`), so it needs OpenCode 2; OpenCode 1.x doesn't load it.
 
 ## Install
 
-Inside a clone there is nothing to install: the repo's `opencode.json` loads this directory
-(`"plugins": ["./plugins/opencode"]`) and adds the skills. OpenCode 1.x skips that key from 1.18.16 on;
-1.18.15 and older reject the whole file, so update OpenCode first.
-
-Without a clone:
-
 ```sh
 opencode plugin add 'github:rehan-remade/universal-modder#main::path:plugins/opencode'
 uv tool install git+https://github.com/rehan-remade/universal-modder   # the `um` CLI the tool runs
 ```
 
-The installed plugin brings the tool and the fal MCP server, not the skills; add those with
+The plugin brings the tool and the fal MCP server, not the skills; add those with
 `npx skills add https://github.com/rehan-remade/universal-modder`. `opencode plugin update` picks up new
 commits on `main`.
 
-To use a checkout's `bin/um` instead of `um` on `PATH`, point the plugin at it in `opencode.json`:
+A clone doesn't need the plugin: the repo's `opencode.json` adds the skills and the fal MCP server, and
+`bin/um` is right there. That file doesn't load the plugin, because OpenCode 1.18.15 and older reject the
+whole file over a `plugins` key.
+
+To use a checkout's `bin/um` instead of `um` on `PATH`, point the plugin at it in your global
+`opencode.json`:
 
 ```jsonc
 {
@@ -49,7 +48,7 @@ One passthrough tool rather than one per group: `um --help` and `um <group> --he
 groups, and each extra tool costs context in every session.
 
 The tool shells out to the same `um` launcher a human would use. The plugin never reimplements the
-toolkit, so the CLI stays the single source of truth. Skills come from the repo's `skills/` directory
-(`skills.paths` in `opencode.json`), not from this plugin.
+toolkit, so the CLI stays the single source of truth. Skills come from a clone (`skills.paths` in the
+repo's `opencode.json`) or `npx skills add`, not from this plugin.
 
 `tests/test_opencode_plugin.py` asserts the group list in `index.ts` against `GROUPS` in `um/cli.py`.
