@@ -26,11 +26,15 @@ repo, they almost always want to **mod a game**, or to learn how a game was modd
     - `backup`: snapshot and restore saves
     - `publish`: pre-release lint
     - `kb`: the knowledge base
-- **fal MCP server:** `https://mcp.fal.ai/mcp` with header `Authorization: Bearer $FAL_KEY`.
+- **fal MCP server:** `https://mcp.fal.ai/mcp`, authenticated with a bearer token in the agent's config
+  (`FAL_KEY`). Store the key with `um fal key set` and derive that variable from the keyring when you launch
+  the agent: `export FAL_KEY="$(secret-tool lookup service fal.ai key api)"`. Never paste a key into a config
+  or commit a `.env`. (fal advertises OAuth, but `https://auth.fal.ai/oidc/register` returns "dynamic client
+  registration is disabled", so the header is what works today.)
   - It's pre-configured per agent: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex),
     `.cursor/mcp.json` (Cursor), `.vscode/mcp.json` (VS Code / Copilot), `gemini-extension.json`
     (Gemini CLI), `opencode.json` (OpenCode).
-  - No MCP? `um fal` does the same over REST.
+  - No MCP? `um fal` does the same over REST, reading the keyring itself.
 - **Skills** (`skills/*/SKILL.md`, Agent Skills format) are copied where agents look for them in a clone:
   `.agents/skills` (Codex, Gemini CLI, Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code). Edit
   `skills/`, then copy it over; a test fails while the copies differ.

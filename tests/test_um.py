@@ -4,6 +4,7 @@
 """
 import json
 import shutil
+import stat
 import struct
 import subprocess
 import sys
@@ -232,6 +233,41 @@ def test_kv_and_urls(tmp_path):
     res = {"images": [{"url": "https://v3.fal.media/a.png", "content_type": "image/png"}, {"url": "https://v3.fal.media/b.png"}],
            "mask_image": {"url": "https://v3.fal.media/m.png"}}
     assert [u for _, u, _ in fal._urls_in(res)] == ["https://v3.fal.media/a.png", "https://v3.fal.media/b.png", "https://v3.fal.media/m.png"]
+
+
+def test_fal_key_sources_and_permissions(tmp_path, monkeypatch):
+    # The keyring beats a plaintext file; FAL_KEY (CI) beats the keyring; nothing configured dies.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("UM_FAL_KEY_FILE", str(tmp_path / "absent"))
+    monkeypatch.setattr(fal, "key_file", lambda: tmp_path / "no-file")
+    monkeypatch.setattr(fal, "keyring_get", lambda: "kr-key")
+    monkeypatch.setattr(fal, "_KEY_CACHE", None)
+
+    assert fal.key_sources() == [(f"OS keyring ({' '.join(fal.KEYRING_ATTRS)})", "kr-key")]
+    assert fal.fal_key() == "kr-key"
+
+    monkeypatch.setenv("FAL_KEY", "env-key")
+    monkeypatch.setattr(fal, "_KEY_CACHE", None)
+    assert fal.key_sources()[0] == ("FAL_KEY environment variable", "env-key")
+    assert fal.fal_key() == "env-key"
+
+    monkeypatch.delenv("FAL_KEY")
+    monkeypatch.setattr(fal, "keyring_get", lambda: None)
+    monkeypatch.setattr(fal, "_KEY_CACHE", None)
+    assert fal.key_sources() == []
+    with pytest.raises(SystemExit):
+        fal.fal_key()
+
+    # an explicit fallback file is written 0600, and a `.env` is the last resort
+    monkeypatch.delenv("UM_FAL_KEY_FILE")
+    p = fal.write_key_file("plain-key", tmp_path / "sub" / "fal-key")
+    assert p.read_text().strip() == "plain-key"
+    assert oct(stat.S_IMODE(p.stat().st_mode)) == "0o600"
+    (tmp_path / ".env").write_text('FAL_KEY="from-dotenv"\n')
+    monkeypatch.setattr(fal, "key_file", lambda: p)
+    monkeypatch.setattr(fal, "_KEY_CACHE", None)
+    assert fal.key_sources() == [(f"plaintext file {p} (mode 0o600)", "plain-key"),
+                                 (f".env file {tmp_path / '.env'}", "from-dotenv")]
 
 
 # --------------------------------------------------------------------------- publish

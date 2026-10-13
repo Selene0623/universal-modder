@@ -45,11 +45,19 @@ Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code) are copies of `ski
 ```bash
 uv tool install git+https://github.com/rehan-remade/universal-modder     # or: pipx install git+...
 ```
-**For assets,** get a [fal API key](https://fal.ai/dashboard/keys). It powers both the fal MCP server and
-`um fal` (for images without a key, `um comfy` uses a local ComfyUI server):
+**For assets,** get a [fal API key](https://fal.ai/dashboard/keys) and store it once in your desktop keyring —
+no key in a config file, no plaintext dotfile:
 ```bash
-export FAL_KEY=...
+um fal key set        # hidden prompt; KWallet / gnome-keyring
+um fal key status     # show which source is active
 ```
+`um fal` reads the keyring itself. The fal MCP server still takes a bearer token, so hand your agent one
+derived from the keyring when you launch it (every pre-configured server reads `FAL_KEY`):
+```bash
+export FAL_KEY="$(secret-tool lookup service fal.ai key api)"   # fish: set -x FAL_KEY (secret-tool …)
+```
+`FAL_KEY` alone (CI, headless) and a plaintext `~/.secrets/fal-key` still work as fallbacks. For images with
+no key at all, `um comfy` uses a local ComfyUI server.
 You also need Python 3.10+ and ffmpeg. `uv` is recommended. Blender is needed for 3D → sprite renders.
 Windows games are driven natively or from WSL.
 

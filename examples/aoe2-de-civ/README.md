@@ -97,7 +97,7 @@ back as soon as the mod isn't picked in the lobby.
    (effect commands plus their description lines), `UNITS` (the first is the unique unit) and
    `UNIQUE_TECHS` (Castle Age, Imperial Age). Each unit names a stock `template` unit and only the
    stats you give change. New string ids must be unused in the stock tables.
-2. **Art.** Edit the prompts in `assets/gen.sh` and run it (needs `FAL_KEY`), or put your own files in
+2. **Art.** Edit the prompts in `assets/gen.sh` and run it (needs a fal key: `um fal key set`), or put your own files in
    `assets/gen/` under the names `civ.py` uses (`.png` or `.jpg`; the newest wins). You need a concept image
    per unit on white with the player-colour parts in saturated blue, a portrait per unit, a round emblem
    on white, and the wonder on white in AoE2's three-quarter view.
