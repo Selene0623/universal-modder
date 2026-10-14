@@ -1,9 +1,6 @@
-# Codex: project-scoped MCP (trusted projects).
-#
-# fal's hosted MCP server takes a bearer token. Don't paste the key here or commit a .env — store it once
-# with `um fal key set` and export it for the agent's process:
-#   export FAL_KEY="$(secret-tool lookup service fal.ai key api)"     # bash
-#   set -x FAL_KEY (secret-tool lookup service fal.ai key api)        # fish
+# Codex: project-scoped MCP (trusted projects). fal's hosted MCP server, key from $FAL_KEY.
+# Never paste the key here. On Linux, after `um fal key set`, start Codex with
+#   export FAL_KEY="$(secret-tool lookup service fal.ai key api)"
 [mcp_servers.fal]
 url = "https://mcp.fal.ai/mcp"
 bearer_token_env_var = "FAL_KEY"

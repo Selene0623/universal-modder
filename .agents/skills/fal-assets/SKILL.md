@@ -10,13 +10,13 @@ doesn't exist yet: a weapon sprite, a boss, a unit rendered from 16 angles, a ti
 boss music, a voiced line.
 
 ## Setup (check once per session)
-- **Key.** Get one at https://fal.ai/dashboard/keys, then `um fal key set` (hidden prompt; stores it in the
-  desktop keyring — libsecret: KWallet, gnome-keyring — so it is never written in plaintext).
-  `um fal key status` shows which source is live; `um fal key migrate` moves an old plaintext
-  `~/.secrets/fal-key` into the keyring. Precedence: `FAL_KEY` (CI) → OS keyring → plaintext file
-  → `.env`. Never paste a key into a config or commit a `.env`; `um publish check` flags leaked keys.
-- **MCP.** fal's hosted MCP server is `https://mcp.fal.ai/mcp` and wants a bearer token. The repo
-  pre-configures it for each agent:
+- **Key.** Create one at https://fal.ai/dashboard/keys. `um fal` takes `FAL_KEY` from the environment first,
+  then the key the human stored with `um fal key set` (a hidden prompt: the desktop keyring on Linux, through
+  libsecret's `secret-tool`; an owner-only `~/.secrets/fal-key` where there's no `secret-tool`), then
+  `FAL_KEY=...` in a `.env` in the working folder. `um fal key status` shows which source is used, with keys
+  masked. Never write the key into mod files or configs; `um publish check` flags leaked keys.
+- **MCP.** fal's hosted MCP server is `https://mcp.fal.ai/mcp` with header `Authorization: Bearer $FAL_KEY`.
+  The repo pre-configures it for each agent:
   - Claude Code: `.mcp.json`
   - Codex: `.codex/config.toml`
   - Cursor: `.cursor/mcp.json`
@@ -24,14 +24,19 @@ boss music, a voiced line.
   - Gemini CLI: `gemini-extension.json`
   - OpenCode: `opencode.json`
 
-  Every one of those reads `FAL_KEY`, so hand the agent a value derived from the keyring instead of a pasted
-  literal:
-  ```bash
-  export FAL_KEY="$(secret-tool lookup service fal.ai key api)"     # bash
-  set -x FAL_KEY (secret-tool lookup service fal.ai key api)        # fish
-  ```
-  fal advertises OAuth, but `https://auth.fal.ai/oidc/register` answers `400 dynamic client registration is
-  disabled`, so clients that self-register cannot use it — the header is what works today.
+  They read `FAL_KEY` from the agent's environment, and without it the server doesn't connect. If the fal
+  MCP tools are missing, use `um fal` meanwhile and tell the human. They can start the agent with `FAL_KEY`
+  set (on Linux, from the keyring:
+  `export FAL_KEY="$(secret-tool lookup service fal.ai key api)"`), or add fal's OAuth endpoint, which takes
+  a browser sign-in instead of a key:
+  - Claude Code: `claude mcp add --transport http fal-oauth https://mcp.fal.ai/mcp-relay`, then
+    Authenticate it in `/mcp`
+  - Codex: `codex mcp add fal-oauth --url https://mcp.fal.ai/mcp-relay`, then `codex mcp login fal-oauth`
+  - anything else: a Streamable HTTP server at `https://mcp.fal.ai/mcp-relay` with OAuth and no header
+    (https://fal.ai/docs/documentation/setting-up/mcp)
+
+  Outside a clone, with a key: Codex takes `[mcp_servers.fal]` with `url = "https://mcp.fal.ai/mcp"` and
+  `bearer_token_env_var = "FAL_KEY"` in `~/.codex/config.toml`.
   MCP tools: `search_models`, `recommend_model`, `get_model_schema`, `get_pricing`, `run_model`,
   `submit_job`/`check_job`/`get_job_result`, `upload_file`, `search_docs`.
 - **No fal key?** For images, `um comfy` uses a local ComfyUI server instead (`um comfy status`, then

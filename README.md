@@ -45,19 +45,18 @@ Copilot, Cursor, OpenCode) and `.claude/skills` (Claude Code) are copies of `ski
 ```bash
 uv tool install git+https://github.com/rehan-remade/universal-modder     # or: pipx install git+...
 ```
-**For assets,** get a [fal API key](https://fal.ai/dashboard/keys) and store it once in your desktop keyring —
-no key in a config file, no plaintext dotfile:
+**For assets,** get a [fal API key](https://fal.ai/dashboard/keys). It powers both the fal MCP server and
+`um fal`. Rather than exporting it from a shell profile or a `.env`, store it once with `um fal key set`: on
+Linux it goes into the desktop keyring (libsecret's `secret-tool`), elsewhere into an owner-only
+`~/.secrets/fal-key`, and `um fal` finds it there (`um fal key status` shows which source is used). `FAL_KEY`
+in the environment still works and wins. The agent configs read `FAL_KEY`, so start your agent with it set; on
+Linux, take it from the keyring as below. With no key, fal's OAuth endpoint `https://mcp.fal.ai/mcp-relay`
+signs you in through the browser instead ([fal's MCP guides](https://fal.ai/docs/documentation/setting-up/mcp)),
+and `um comfy` makes images on a local ComfyUI server.
 ```bash
-um fal key set        # hidden prompt; KWallet / gnome-keyring
-um fal key status     # show which source is active
+um fal key set                                                   # hidden prompt
+export FAL_KEY="$(secret-tool lookup service fal.ai key api)"    # Linux: before starting the agent
 ```
-`um fal` reads the keyring itself. The fal MCP server still takes a bearer token, so hand your agent one
-derived from the keyring when you launch it (every pre-configured server reads `FAL_KEY`):
-```bash
-export FAL_KEY="$(secret-tool lookup service fal.ai key api)"   # fish: set -x FAL_KEY (secret-tool …)
-```
-`FAL_KEY` alone (CI, headless) and a plaintext `~/.secrets/fal-key` still work as fallbacks. For images with
-no key at all, `um comfy` uses a local ComfyUI server.
 You also need Python 3.10+ and ffmpeg. `uv` is recommended. Blender is needed for 3D → sprite renders.
 Windows games are driven natively or from WSL.
 
