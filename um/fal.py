@@ -41,7 +41,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from um.common import die
+from um.common import die, text_utf8
 
 QUEUE = "https://queue.fal.run"
 REST = "https://rest.fal.ai"
@@ -107,7 +107,7 @@ def _secret_tool(*args: str, value: str | None = None) -> subprocess.CompletedPr
     if not st:
         return None
     try:
-        return subprocess.run([st, *args], input=value, capture_output=True, text=True, timeout=KEYRING_TIMEOUT)
+        return subprocess.run([st, *args], input=value, capture_output=True, timeout=KEYRING_TIMEOUT, **text_utf8())
     except (OSError, subprocess.SubprocessError):
         return None
 
