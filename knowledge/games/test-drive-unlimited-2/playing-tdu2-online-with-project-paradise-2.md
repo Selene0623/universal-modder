@@ -23,10 +23,13 @@ tags: [tdu2, project-paradise, multiplayer, p2p, nat, upnp, port-forwarding, amd
 # Playing Test Drive Unlimited 2 online with Project Paradise 2
 
 > TDU2's official servers are gone; **Project Paradise 2** (project-paradise2.de) is the community
-> revival. The server does **matchmaking only** — gameplay is peer-to-peer — so "I can see my friend
-> on the map but not in the game" is a NAT/port problem, not a server fault. Separately, **AMD drivers
-> released after February 2025 break the game** (rendering issues, driver timeouts, system freezes),
-> and neither dgVoodoo2 nor DXVK fixes it — only a driver downgrade does.
+> revival. The server is **not** matchmaking-only: it runs the full backend — accounts and profiles,
+> cloud savegames, clubs, the Community Racing Center, leaderboards and the DLC-token store — and it
+> places you into a session with nearby players automatically. The **lobby itself is player-hosted
+> (peer-to-peer)**, so "I can see my friend on the map but not in the game" is a NAT/port problem, not
+> a server fault. Separately, **AMD drivers released after February 2025 break the game** (rendering
+> issues, driver timeouts, system freezes), and neither dgVoodoo2 nor DXVK fixes it — only a driver
+> downgrade does.
 
 ## Setup
 
@@ -48,10 +51,12 @@ regression, and which is a launcher/wrapper problem. Those get misattributed con
 
 ## How the game works (what we had to learn)
 
-- **P2P gameplay, server-side matchmaking.** The server only *connects players to each other*. Actual
-  gameplay data (positions, cars, movement) is exchanged **directly between peers**, and at least one
-  player in a session must accept incoming connections. There is no relay/NAT server — the game is old
-  and uses its original networking stack.
+- **Player-hosted lobbies on a full community backend.** The server does much more than matchmaking: it
+  holds accounts and profiles, cloud savegames, clubs, the Community Racing Center, leaderboards and the
+  DLC-token store, and it assigns you to a session with nearby players automatically. The *lobby*,
+  however, is **peer-to-peer and player-hosted** — actual gameplay data (positions, cars, movement) is
+  exchanged **directly between peers**, and at least one player in a session must accept incoming
+  connections. There is no relay/NAT server; the game uses its original networking stack.
 - **NAT types** shown in the launcher: **Green = Open:FullCone** (fully open, can host), **Orange =
   RestrictedCone / Moderate**, **Red = Strict:Symmetric / UdpBlocked**. Red or Orange can still play
   online but **cannot host sessions** — you depend on someone else hosting to see other players in
@@ -109,6 +114,10 @@ regression, and which is a launcher/wrapper problem. Those get misattributed con
   PP2 guides PDFs (2025-11-09): port forwarding, troubleshooting, offline→online, modding, launcher.
 - **NOT independently verified in-game** by this agent. Treat driver-regression versions and network
   behaviour as community-reported; re-confirm against the current server/FAQ before relying on them.
+- **Correction (2026-10-13):** a Project Paradise 2 developer confirmed the server is **not
+  matchmaking-only** — it runs the full backend (accounts and profiles, cloud savegames, clubs, the
+  Community Racing Center, leaderboards, DLC-token store) and brokers proximity sessions; the *lobby*
+  is player-hosted. The earlier "matchmaking only" framing was wrong and has been corrected here.
 
 ## Gotchas
 
